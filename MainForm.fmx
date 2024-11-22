@@ -3105,13 +3105,13 @@ object Form1: TForm1
   object Button7: TButton
     Position.X = 7.000000000000000000
     Position.Y = 465.000000000000000000
-    TabOrder = 47
+    TabOrder = 48
     Text = 'Button7'
     TextSettings.Trimming = None
   end
   object Edit3: TEdit
     Touch.InteractiveGestures = [LongTap, DoubleTap]
-    TabOrder = 53
+    TabOrder = 54
     Position.X = 168.000000000000000000
     Position.Y = 465.000000000000000000
     Size.Width = 233.000000000000000000
@@ -3124,7 +3124,7 @@ object Form1: TForm1
     Size.Width = 21.000000000000000000
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 55
+    TabOrder = 56
     Visible = False
     AutoHide = False
     Viewport.Width = 5.000000000000000000
