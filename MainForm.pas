@@ -864,7 +864,8 @@ begin
     end;
     for i := 0 to High(Rulings) do
     begin
-      ShowMessage('Ruling: ' + Rulings[i].Comment);
+      ShowMessage('Ruling: ' + Rulings[i].Comment + Rulings[i].Comment);
+
     end;
   finally
     ScryfallAPI.Free;

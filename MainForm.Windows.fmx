@@ -7,14 +7,7 @@ inherited Form1_Windows: TForm1_Windows
   inherited Label1: TLabel
     TextSettings.Font.StyleExt = {00070000000000000004000000}
   end
-  inherited Button7: TButton
-    TabOrder = 49
-  end
-  inherited Edit3: TEdit
-    TabOrder = 55
-  end
   inherited ScrollBoxDetails: TScrollBox
-    TabOrder = 57
     Viewport.Width = 400.000000000000000000
     Viewport.Height = 333.000000000000000000
   end
