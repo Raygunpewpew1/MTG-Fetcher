@@ -18,7 +18,7 @@ uses
   FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs,
   FireDAC.Phys.SQLiteWrapper.Stat, System.JSON, REST.JSON, FMX.Effects,
   System.IOUtils, HighResForm, DataModuleUnit, FMX.Surfaces, CardCollectionForm,
-  System.Hash, System.StrUtils, FMX.WebBrowser, System.Skia,
+  System.Hash, CollectionForm, System.StrUtils, FMX.WebBrowser, System.Skia,
   FMX.Skia, RegularExpressions, System.NetEncoding, System.Rtti,System.TypInfo;
 
 type
@@ -111,8 +111,8 @@ var
 implementation
 
 {$R *.fmx}
-
-
+{$R *.Windows.fmx MSWINDOWS}
+{$R *.NmXhdpiPh.fmx ANDROID}
 { TCardLayout }
 
 destructor TCardLayout.Destroy;
