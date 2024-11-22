@@ -247,12 +247,12 @@
             <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="CardCollectionform.pas">
-            <Form>CollectionsForm</Form>
-            <FormType>fmx</FormType>
-        </DCCReference>
         <DCCReference Include="HighResForm.pas">
             <Form>HighResImageForm</Form>
+            <FormType>fmx</FormType>
+        </DCCReference>
+        <DCCReference Include="CollectionForm.pas">
+            <Form>Form2</Form>
             <FormType>fmx</FormType>
         </DCCReference>
         <None Include="Amakrits.Style"/>
@@ -859,6 +859,12 @@
                 <DeployFile LocalName="Win64\Debug\mtgfetchV2.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>mtgfetchV2.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win64\Debug\mtgfetchV2.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>mtgfetchV2.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
