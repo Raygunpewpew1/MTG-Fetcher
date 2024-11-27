@@ -1,0 +1,30 @@
+inherited Form1_SmXhdpiPh: TForm1_SmXhdpiPh
+  ClientHeight = 376
+  ClientWidth = 248
+  DesignerMasterStyle = 3
+  inherited LayoutMain: TLayout
+    Size.Width = 248.000000000000000000
+    Size.Height = 376.000000000000000000
+    inherited LayoutControls: TLayout
+      Size.Width = 228.000000000000000000
+    end
+    inherited LayoutContent: TLayout
+      Size.Width = 248.000000000000000000
+      Size.Height = 216.000000000000000000
+      inherited ListViewCards: TListView
+        Size.Height = 216.000000000000000000
+      end
+      inherited SplitterMain: TSplitter
+        Size.Height = 216.000000000000000000
+      end
+      inherited WebBrowser1: TWebBrowser
+        Size.Width = 0.000000000000000000
+        Size.Height = 216.000000000000000000
+      end
+    end
+    inherited LayoutButtons: TLayout
+      Position.Y = 326.000000000000000000
+      Size.Width = 228.000000000000000000
+    end
+  end
+end

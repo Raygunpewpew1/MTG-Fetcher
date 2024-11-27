@@ -1,0 +1,22 @@
+inherited Form1_XLgXhdpiTb: TForm1_XLgXhdpiTb
+  ClientHeight = 1256
+  DesignerMasterStyle = 3
+  inherited LayoutMain: TLayout
+    Size.Height = 1256.000000000000000000
+    inherited LayoutContent: TLayout
+      Size.Height = 1096.000000000000000000
+      inherited ListViewCards: TListView
+        Size.Height = 1096.000000000000000000
+      end
+      inherited SplitterMain: TSplitter
+        Size.Height = 1096.000000000000000000
+      end
+      inherited WebBrowser1: TWebBrowser
+        Size.Height = 1096.000000000000000000
+      end
+    end
+    inherited LayoutButtons: TLayout
+      Position.Y = 1206.000000000000000000
+    end
+  end
+end
