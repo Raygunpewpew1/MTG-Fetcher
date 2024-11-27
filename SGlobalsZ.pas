@@ -23,6 +23,8 @@ type
     Normal: string;
     Large: string;
     PNG: string;
+    border_crop: string;
+    art_crop: string;
   end;
 
   // Legalities for different formats
@@ -127,6 +129,10 @@ type
     TotalCards: Integer;
   end;
 
+const
+  LegalitiesArray: array [0 .. 15] of string = ('Standard', 'Pioneer', 'Modern',
+    'Legacy', 'Commander', 'Vintage', 'Pauper', 'Historic', 'Explorer',
+    'Alchemy', 'Brawl', 'Future', 'Oldschool', 'Premodern', 'Duel', 'Penny');
 
 implementation
 
@@ -135,14 +141,14 @@ implementation
 // Clear method to reset all fields to default values
 procedure TCardDetails.Clear;
 begin
-  Self := Default(TCardDetails);
+  Self := Default (TCardDetails);
 end;
 
 { TSetDetails }
 
 procedure TSetDetails.Clear;
 begin
-  Self := Default(TSetDetails);
+  Self := Default (TSetDetails);
 end;
 
 end.

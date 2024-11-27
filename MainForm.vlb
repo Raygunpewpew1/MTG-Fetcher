@@ -1,19 +1,43 @@
 ﻿[Edit1]
 Coordinates=294,10,44,58
 
-[FlowLayout1]
-Coordinates=96,78,87,36
-
 [Button1]
 Coordinates=79,10,59,58
 
 [Label1]
 Coordinates=148,10,53,58
 
-[ScrollBox1]
-Coordinates=10,78,76,36
-
 []
-Coordinates=211,10,73,58
+Coordinates=230,87,107,168
 Visible=True
+
+[WebBrowser1]
+Coordinates=376,78,95,36
+
+[LayoutButtons]
+Coordinates=376,133,97,36
+
+[LabelSearch]
+Coordinates=376,1,87,58
+
+[ShowHighResButton]
+Coordinates=78,1,133,58
+
+[ProgressBar1]
+Coordinates=131,87,93,58
+
+[SplitterMain]
+Coordinates=376,188,83,36
+
+[LayoutControls]
+Coordinates=376,243,101,36
+
+[Button4]
+Coordinates=0,0,59,58
+
+[LayoutMain]
+Coordinates=357,293,81,36
+
+[Button5]
+Coordinates=59,77,59,58
 

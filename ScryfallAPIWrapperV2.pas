@@ -16,40 +16,45 @@ type
   /// Provides methods to interact with the Scryfall API.
   /// </summary>
   TScryfallAPI = class
-  private
-    const
-      BaseUrl = 'https://api.scryfall.com/';
-      UserAgent = 'MTGCardFetch/1.0';
-      AcceptHeader = 'application/json';
+  private const
+    BaseUrl = 'https://api.scryfall.com/';
+    UserAgent = 'MTGCardFetch/1.0';
+    AcceptHeader = 'application/json';
 
-      // API Endpoints
-      EndpointCards = 'cards/';
-      EndpointNamed = 'cards/named';
-      EndpointSearch = 'cards/search';
-      EndpointSets = 'sets/';
-      EndpointBulkData = 'bulk-data';
-      EndpointAutocomplete = 'cards/autocomplete';
-      EndpointSymbology = 'symbology';
-      EndpointCardNames = 'catalog/card-names';
+    // API Endpoints
+    EndpointCards = 'cards/';
+    EndpointNamed = 'cards/named';
+    EndpointSearch = 'cards/search';
+    EndpointSets = 'sets/';
+    EndpointBulkData = 'bulk-data';
+    EndpointAutocomplete = 'cards/autocomplete';
+    EndpointSymbology = 'symbology';
+    EndpointCardNames = 'catalog/card-names';
 
-    var
-      FClient: TRESTClient;
-      FRequest: TRESTRequest;
-      FResponse: TRESTResponse;
+  var
+    FClient: TRESTClient;
+    FRequest: TRESTRequest;
+    FResponse: TRESTResponse;
 
     // Helper methods
     procedure AddCustomHeaders;
     procedure LogError(const Msg: string);
     function ExecuteRequest(const Endpoint: string): TJSONObject;
-    function ParseJSONArray<T>(const JSONArray: TJSONArray; ParseItem: TFunc<TJSONObject, T>): TArray<T>;
+    function ParseJSONArray<T>(const JSONArray: TJSONArray;
+      ParseItem: TFunc<TJSONObject, T>): TArray<T>;
 
     // Parsing methods
-    procedure FillCardDetailsFromJson(const JsonObj: TJSONObject; out CardDetails: TCardDetails);
-    procedure ParseImageUris(const JsonObj: TJSONObject; out ImageUris: TImageUris);
-    procedure ParseLegalities(const JsonObj: TJSONObject; out Legalities: TCardLegalities);
+    procedure FillCardDetailsFromJson(const JsonObj: TJSONObject;
+      out CardDetails: TCardDetails);
+    procedure ParseImageUris(const JsonObj: TJSONObject;
+      out ImageUris: TImageUris);
+    procedure ParseLegalities(const JsonObj: TJSONObject;
+      out Legalities: TCardLegalities);
     procedure ParsePrices(const JsonObj: TJSONObject; out Prices: TCardPrices);
-    procedure ParseCardFaces(const JsonObj: TJSONObject; out CardFaces: TArray<TCardFace>);
-    procedure FillSetDetailsFromJson(const JsonObj: TJSONObject; out SetDetails: TSetDetails);
+    procedure ParseCardFaces(const JsonObj: TJSONObject;
+      out CardFaces: TArray<TCardFace>);
+    procedure FillSetDetailsFromJson(const JsonObj: TJSONObject;
+      out SetDetails: TSetDetails);
 
     // Internal methods
     function InternalSearchCards(const Query, SetCode, Rarity, Colors: string;
@@ -59,13 +64,15 @@ type
     destructor Destroy; override;
 
     // Public API methods
-    function GetCardByName(const CardName: string; Fuzzy: Boolean = False): TCardDetails;
+    function GetCardByName(const CardName: string; Fuzzy: Boolean = False)
+      : TCardDetails;
     function SearchCards(const Query, SetCode, Rarity, Colors: string;
       Fuzzy, Unique: Boolean; Page: Integer = 1): TArray<TCardDetails>;
     function FetchUniquePrints(const CardName: string): TArray<TCardDetails>;
     function GetCardByMultiverseID(const MultiverseID: Integer): TCardDetails;
     function GetCardByScryfallID(const ScryfallID: string): TCardDetails;
-    function GetCardBySetAndCollectorNumber(const SetCode, CollectorNumber: string): TCardDetails;
+    function GetCardBySetAndCollectorNumber(const SetCode, CollectorNumber
+      : string): TCardDetails;
     function GetAllSets: TArray<TSetDetails>;
     function GetSetByCode(const SetCode: string): TSetDetails;
     function GetRulingsByScryfallID(const ScryfallID: string): TArray<TRuling>;
@@ -75,8 +82,8 @@ type
     function GetCardNameCatalog: TArray<string>;
     function SearchAllCards(const Query, SetCode, Rarity, Colors: string;
       Fuzzy, Unique: Boolean): TArray<TCardDetails>;
-    function SearchCardsWithPagination(const Query, SetCode, Rarity, Colors: string;
-      Fuzzy, Unique: Boolean; Page: Integer = 1): TSearchResult;
+    function SearchCardsWithPagination(const Query, SetCode, Rarity,
+      Colors: string; Fuzzy, Unique: Boolean; Page: Integer = 1): TSearchResult;
   end;
 
 implementation
@@ -111,8 +118,8 @@ end;
 
 procedure TScryfallAPI.LogError(const Msg: string);
 begin
-//  TFile.AppendAllText('debug_log_mtgcards.txt', Format('DEBUG [%s]: %s%s',
-//    [DateTimeToStr(Now), Msg, sLineBreak]), TEncoding.UTF8);
+  // TFile.AppendAllText('debug_log_mtgcards.txt', Format('DEBUG [%s]: %s%s',
+  // [DateTimeToStr(Now), Msg, sLineBreak]), TEncoding.UTF8);
 end;
 
 function TScryfallAPI.ExecuteRequest(const Endpoint: string): TJSONObject;
@@ -150,7 +157,8 @@ begin
   end;
 end;
 
-function TScryfallAPI.ParseJSONArray<T>(const JSONArray: TJSONArray; ParseItem: TFunc<TJSONObject, T>): TArray<T>;
+function TScryfallAPI.ParseJSONArray<T>(const JSONArray: TJSONArray;
+  ParseItem: TFunc<TJSONObject, T>): TArray<T>;
 var
   I: Integer;
 begin
@@ -161,15 +169,18 @@ begin
   end;
 end;
 
-function TScryfallAPI.GetCardByName(const CardName: string; Fuzzy: Boolean): TCardDetails;
+function TScryfallAPI.GetCardByName(const CardName: string; Fuzzy: Boolean)
+  : TCardDetails;
 var
   Endpoint: string;
   JsonResponse: TJSONObject;
 begin
   if Fuzzy then
-    Endpoint := Format('%s?fuzzy=%s', [EndpointNamed, TNetEncoding.URL.Encode(CardName)])
+    Endpoint := Format('%s?fuzzy=%s',
+      [EndpointNamed, TNetEncoding.URL.Encode(CardName)])
   else
-    Endpoint := Format('%s?exact=%s', [EndpointNamed, TNetEncoding.URL.Encode(CardName)]);
+    Endpoint := Format('%s?exact=%s',
+      [EndpointNamed, TNetEncoding.URL.Encode(CardName)]);
 
   LogError('GetCardByName Endpoint: ' + Endpoint);
 
@@ -189,14 +200,16 @@ function TScryfallAPI.SearchCards(const Query, SetCode, Rarity, Colors: string;
 var
   SearchResult: TSearchResult;
 begin
-  SearchResult := InternalSearchCards(Query, SetCode, Rarity, Colors, Fuzzy, Unique, Page);
+  SearchResult := InternalSearchCards(Query, SetCode, Rarity, Colors, Fuzzy,
+    Unique, Page);
   Result := SearchResult.Cards;
 end;
 
 function TScryfallAPI.SearchCardsWithPagination(const Query, SetCode, Rarity,
   Colors: string; Fuzzy, Unique: Boolean; Page: Integer): TSearchResult;
 begin
-  Result := InternalSearchCards(Query, SetCode, Rarity, Colors, Fuzzy, Unique, Page);
+  Result := InternalSearchCards(Query, SetCode, Rarity, Colors, Fuzzy,
+    Unique, Page);
 end;
 
 function TScryfallAPI.InternalSearchCards(const Query, SetCode, Rarity,
@@ -207,10 +220,12 @@ var
   CardsArray: TJSONArray;
 begin
   if Fuzzy then
-    SearchUrl := Format('%s?fuzzy=%s', [EndpointNamed, TNetEncoding.URL.Encode(Query)])
+    SearchUrl := Format('%s?fuzzy=%s',
+      [EndpointNamed, TNetEncoding.URL.Encode(Query)])
   else
   begin
-    SearchUrl := Format('%s?q=%s', [EndpointSearch, TNetEncoding.URL.Encode(Query)]);
+    SearchUrl := Format('%s?q=%s',
+      [EndpointSearch, TNetEncoding.URL.Encode(Query)]);
 
     if SetCode <> '' then
       SearchUrl := SearchUrl + '+set%3A' + TNetEncoding.URL.Encode(SetCode);
@@ -262,19 +277,22 @@ begin
   end;
 end;
 
-function TScryfallAPI.FetchUniquePrints(const CardName: string): TArray<TCardDetails>;
+function TScryfallAPI.FetchUniquePrints(const CardName: string)
+  : TArray<TCardDetails>;
 var
   SearchUrl: string;
   JsonResponse: TJSONObject;
   CardsArray: TJSONArray;
 begin
-  SearchUrl := Format('%s?q=%s&unique=prints', [EndpointSearch, TNetEncoding.URL.Encode(CardName)]);
+  SearchUrl := Format('%s?q=%s&unique=prints',
+    [EndpointSearch, TNetEncoding.URL.Encode(CardName)]);
 
   LogError('FetchUniquePrints Endpoint: ' + SearchUrl);
 
   JsonResponse := ExecuteRequest(SearchUrl);
   try
-    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data', CardsArray) then
+    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data',
+      CardsArray) then
     begin
       Result := ParseJSONArray<TCardDetails>(CardsArray,
         function(CardObj: TJSONObject): TCardDetails
@@ -292,7 +310,8 @@ begin
   end;
 end;
 
-function TScryfallAPI.GetCardByMultiverseID(const MultiverseID: Integer): TCardDetails;
+function TScryfallAPI.GetCardByMultiverseID(const MultiverseID: Integer)
+  : TCardDetails;
 var
   Endpoint: string;
   JsonResponse: TJSONObject;
@@ -312,7 +331,8 @@ begin
   end;
 end;
 
-function TScryfallAPI.GetCardByScryfallID(const ScryfallID: string): TCardDetails;
+function TScryfallAPI.GetCardByScryfallID(const ScryfallID: string)
+  : TCardDetails;
 var
   Endpoint: string;
   JsonResponse: TJSONObject;
@@ -338,7 +358,8 @@ var
   Endpoint: string;
   JsonResponse: TJSONObject;
 begin
-  Endpoint := Format('%s%s/%s', [EndpointCards, TNetEncoding.URL.Encode(SetCode),
+  Endpoint := Format('%s%s/%s', [EndpointCards,
+    TNetEncoding.URL.Encode(SetCode),
     TNetEncoding.URL.Encode(CollectorNumber)]);
 
   LogError('GetCardBySetAndCollectorNumber Endpoint: ' + Endpoint);
@@ -366,7 +387,8 @@ begin
 
   JsonResponse := ExecuteRequest(Endpoint);
   try
-    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data', SetsArray) then
+    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data',
+      SetsArray) then
     begin
       Result := ParseJSONArray<TSetDetails>(SetsArray,
         function(SetObj: TJSONObject): TSetDetails
@@ -404,19 +426,22 @@ begin
   end;
 end;
 
-function TScryfallAPI.GetRulingsByScryfallID(const ScryfallID: string): TArray<TRuling>;
+function TScryfallAPI.GetRulingsByScryfallID(const ScryfallID: string)
+  : TArray<TRuling>;
 var
   Endpoint: string;
   JsonResponse: TJSONObject;
   RulingsArray: TJSONArray;
 begin
-  Endpoint := Format('%s%s/rulings', [EndpointCards, TNetEncoding.URL.Encode(ScryfallID)]);
+  Endpoint := Format('%s%s/rulings',
+    [EndpointCards, TNetEncoding.URL.Encode(ScryfallID)]);
 
   LogError('GetRulingsByScryfallID Endpoint: ' + Endpoint);
 
   JsonResponse := ExecuteRequest(Endpoint);
   try
-    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data', RulingsArray) then
+    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data',
+      RulingsArray) then
     begin
       Result := ParseJSONArray<TRuling>(RulingsArray,
         function(RulingObj: TJSONObject): TRuling
@@ -448,7 +473,8 @@ begin
 
   JsonResponse := ExecuteRequest(Endpoint);
   try
-    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data', DataArray) then
+    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data',
+      DataArray) then
     begin
       Result := ParseJSONArray<TBulkData>(DataArray,
         function(DataObj: TJSONObject): TBulkData
@@ -476,13 +502,15 @@ var
   DataArray: TJSONArray;
   I: Integer;
 begin
-  Endpoint := Format('%s?q=%s', [EndpointAutocomplete, TNetEncoding.URL.Encode(Query)]);
+  Endpoint := Format('%s?q=%s', [EndpointAutocomplete,
+    TNetEncoding.URL.Encode(Query)]);
 
   LogError('Autocomplete Endpoint: ' + Endpoint);
 
   JsonResponse := ExecuteRequest(Endpoint);
   try
-    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data', DataArray) then
+    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data',
+      DataArray) then
     begin
       SetLength(Result, DataArray.Count);
       for I := 0 to DataArray.Count - 1 do
@@ -510,7 +538,8 @@ begin
 
   JsonResponse := ExecuteRequest(Endpoint);
   try
-    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data', SymbolsArray) then
+    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data',
+      SymbolsArray) then
     begin
       Result := ParseJSONArray<TSymbol>(SymbolsArray,
         function(SymbolObj: TJSONObject): TSymbol
@@ -543,7 +572,8 @@ begin
 
   JsonResponse := ExecuteRequest(Endpoint);
   try
-    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data', DataArray) then
+    if Assigned(JsonResponse) and JsonResponse.TryGetValue<TJSONArray>('data',
+      DataArray) then
     begin
       SetLength(Result, DataArray.Count);
       for I := 0 to DataArray.Count - 1 do
@@ -559,7 +589,8 @@ begin
   end;
 end;
 
-procedure TScryfallAPI.FillCardDetailsFromJson(const JsonObj: TJSONObject; out CardDetails: TCardDetails);
+procedure TScryfallAPI.FillCardDetailsFromJson(const JsonObj: TJSONObject;
+out CardDetails: TCardDetails);
 var
   I: Integer;
   FaceManaCosts, FaceTypeLines, FaceOracleTexts: TStringList;
@@ -578,7 +609,8 @@ begin
   CardDetails.Rarity := JsonObj.GetValue<string>('rarity', '');
   CardDetails.Power := JsonObj.GetValue<string>('power', '');
   CardDetails.Toughness := JsonObj.GetValue<string>('toughness', '');
-  CardDetails.PrintsSearchUri := JsonObj.GetValue<string>('prints_search_uri', '');
+  CardDetails.PrintsSearchUri := JsonObj.GetValue<string>
+    ('prints_search_uri', '');
   CardDetails.OracleID := JsonObj.GetValue<string>('oracle_id', '');
 
   // Parse nested objects
@@ -607,7 +639,8 @@ begin
       try
         for I := 0 to High(CardDetails.CardFaces) do
           FaceTypeLines.Add(CardDetails.CardFaces[I].TypeLine);
-        CardDetails.TypeLine := String.Join(' // ', FaceTypeLines.ToStringArray);
+        CardDetails.TypeLine := String.Join(' // ',
+          FaceTypeLines.ToStringArray);
       finally
         FaceTypeLines.Free;
       end;
@@ -620,7 +653,8 @@ begin
       try
         for I := 0 to High(CardDetails.CardFaces) do
           FaceOracleTexts.Add(CardDetails.CardFaces[I].OracleText);
-        CardDetails.OracleText := String.Join(sLineBreak + '//' + sLineBreak, FaceOracleTexts.ToStringArray);
+        CardDetails.OracleText := String.Join(sLineBreak + '//' + sLineBreak,
+          FaceOracleTexts.ToStringArray);
       finally
         FaceOracleTexts.Free;
       end;
@@ -638,7 +672,8 @@ begin
           FaceToughnesses.Add(CardDetails.CardFaces[I].Toughness);
         end;
         CardDetails.Power := String.Join(' // ', FacePowers.ToStringArray);
-        CardDetails.Toughness := String.Join(' // ', FaceToughnesses.ToStringArray);
+        CardDetails.Toughness := String.Join(' // ',
+          FaceToughnesses.ToStringArray);
       finally
         FacePowers.Free;
         FaceToughnesses.Free;
@@ -654,7 +689,8 @@ begin
   end;
 end;
 
-procedure TScryfallAPI.ParseImageUris(const JsonObj: TJSONObject; out ImageUris: TImageUris);
+procedure TScryfallAPI.ParseImageUris(const JsonObj: TJSONObject;
+out ImageUris: TImageUris);
 var
   ImageUrisObj: TJSONObject;
 begin
@@ -664,12 +700,15 @@ begin
     ImageUris.Normal := ImageUrisObj.GetValue<string>('normal', '');
     ImageUris.Large := ImageUrisObj.GetValue<string>('large', '');
     ImageUris.PNG := ImageUrisObj.GetValue<string>('png', '');
+    ImageUris.border_crop := ImageUrisObj.GetValue<string>('border_crop', '');
+    ImageUris.art_crop := ImageUrisObj.GetValue<string>('art_crop', '');
   end
   else
-    ImageUris := Default(TImageUris);
+    ImageUris := Default (TImageUris);
 end;
 
-procedure TScryfallAPI.ParseLegalities(const JsonObj: TJSONObject; out Legalities: TCardLegalities);
+procedure TScryfallAPI.ParseLegalities(const JsonObj: TJSONObject;
+out Legalities: TCardLegalities);
 var
   LegalitiesObj: TJSONObject;
 begin
@@ -693,10 +732,11 @@ begin
     Legalities.Penny := LegalitiesObj.GetValue<string>('penny', '');
   end
   else
-    Legalities := Default(TCardLegalities);
+    Legalities := Default (TCardLegalities);
 end;
 
-procedure TScryfallAPI.ParsePrices(const JsonObj: TJSONObject; out Prices: TCardPrices);
+procedure TScryfallAPI.ParsePrices(const JsonObj: TJSONObject;
+out Prices: TCardPrices);
 var
   PricesObj: TJSONObject;
 begin
@@ -708,10 +748,11 @@ begin
     Prices.Tix := PricesObj.GetValue<string>('tix', '');
   end
   else
-    Prices := Default(TCardPrices);
+    Prices := Default (TCardPrices);
 end;
 
-procedure TScryfallAPI.ParseCardFaces(const JsonObj: TJSONObject; out CardFaces: TArray<TCardFace>);
+procedure TScryfallAPI.ParseCardFaces(const JsonObj: TJSONObject;
+out CardFaces: TArray<TCardFace>);
 var
   CardFacesArray: TJSONArray;
   I: Integer;
@@ -726,7 +767,8 @@ begin
       CardFaces[I].Name := CardFaceObj.GetValue<string>('name', '');
       CardFaces[I].ManaCost := CardFaceObj.GetValue<string>('mana_cost', '');
       CardFaces[I].TypeLine := CardFaceObj.GetValue<string>('type_line', '');
-      CardFaces[I].OracleText := CardFaceObj.GetValue<string>('oracle_text', '');
+      CardFaces[I].OracleText := CardFaceObj.GetValue<string>
+        ('oracle_text', '');
       CardFaces[I].Power := CardFaceObj.GetValue<string>('power', '');
       CardFaces[I].Toughness := CardFaceObj.GetValue<string>('toughness', '');
       ParseImageUris(CardFaceObj, CardFaces[I].ImageUris);
@@ -736,7 +778,8 @@ begin
     SetLength(CardFaces, 0);
 end;
 
-procedure TScryfallAPI.FillSetDetailsFromJson(const JsonObj: TJSONObject; out SetDetails: TSetDetails);
+procedure TScryfallAPI.FillSetDetailsFromJson(const JsonObj: TJSONObject;
+out SetDetails: TSetDetails);
 begin
   SetDetails.Clear;
 
@@ -757,8 +800,8 @@ begin
   SetDetails.SearchURI := JsonObj.GetValue<string>('search_uri', '');
 end;
 
-function TScryfallAPI.SearchAllCards(const Query, SetCode, Rarity, Colors: string;
-  Fuzzy, Unique: Boolean): TArray<TCardDetails>;
+function TScryfallAPI.SearchAllCards(const Query, SetCode, Rarity,
+  Colors: string; Fuzzy, Unique: Boolean): TArray<TCardDetails>;
 var
   PageNumber: Integer;
   SearchResult: TSearchResult;
@@ -768,7 +811,8 @@ begin
   try
     PageNumber := 1;
     repeat
-      SearchResult := SearchCardsWithPagination(Query, SetCode, Rarity, Colors, Fuzzy, Unique, PageNumber);
+      SearchResult := SearchCardsWithPagination(Query, SetCode, Rarity, Colors,
+        Fuzzy, Unique, PageNumber);
       AllCards.AddRange(SearchResult.Cards);
       Inc(PageNumber);
     until not SearchResult.HasMore;

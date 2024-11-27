@@ -6,10 +6,11 @@ object HighResImageForm: THighResImageForm
   ClientWidth = 392
   Quality = HighQuality
   StyleBook = StyleBook1
+  FormStyle = StayOnTop
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
-  DesignerMasterStyle = 0
+  DesignerMasterStyle = 3
   object CloseButton: TButton
     Align = Bottom
     Position.Y = 546.000000000000000000

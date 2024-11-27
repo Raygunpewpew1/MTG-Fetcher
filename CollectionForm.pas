@@ -3,9 +3,11 @@ unit CollectionForm;
 interface
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
+  System.SysUtils, System.Types, System.UITypes, System.Classes,
+  System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.Edit, FMX.ListBox, FMX.Layouts,DataModuleUnit,Data.DB,FireDAC.Comp.Client,
+  FMX.Controls.Presentation, FMX.Edit, FMX.ListBox, FMX.Layouts, DataModuleUnit,
+  Data.DB, FireDAC.Comp.Client,
   FMX.Objects, FMX.StdCtrls;
 
 type
@@ -35,7 +37,8 @@ implementation
 
 {$R *.fmx}
 
-procedure TForm2.AddCardToListBox(const CardName, CardType, ManaCost: string; CardImage: TBitmap);
+procedure TForm2.AddCardToListBox(const CardName, CardType, ManaCost: string;
+  CardImage: TBitmap);
 var
   ListItem: TListBoxItem;
   Image: TImage;
@@ -43,22 +46,23 @@ var
 begin
   // Create a new ListBoxItem
   ListItem := TListBoxItem.Create(ListBox1);
-  ListItem.Parent := ListBox1;  // Add it to the ListBox
-  ListItem.Height := 100;  // Set the height of each item
+  ListItem.Parent := ListBox1; // Add it to the ListBox
+  ListItem.Height := 100; // Set the height of each item
 
   // Add Image to ListBoxItem
   Image := TImage.Create(ListItem);
   Image.Parent := ListItem;
-  Image.Bitmap := CardImage;  // Assign the image for the card
-  Image.Align := TAlignLayout.Left;  // Align it to the left side of the item
-  Image.Width := 80;  // Set the image width (adjust as needed)
+  Image.Bitmap := CardImage; // Assign the image for the card
+  Image.Align := TAlignLayout.Left; // Align it to the left side of the item
+  Image.Width := 80; // Set the image width (adjust as needed)
 
   // Add Card Name Label
   NameLabel := TLabel.Create(ListItem);
   NameLabel.Parent := ListItem;
   NameLabel.Align := TAlignLayout.Top;
   NameLabel.Text := CardName;
-  NameLabel.TextSettings.Font.Style := [TFontStyle.fsBold];  // Make the card name bold
+  NameLabel.TextSettings.Font.Style := [TFontStyle.fsBold];
+  // Make the card name bold
 
   // Add Type Label (card type)
   TypeLabel := TLabel.Create(ListItem);
@@ -73,7 +77,6 @@ begin
   ManaCostLabel.Text := 'Mana Cost: ' + ManaCost;
 end;
 
-
 procedure TForm2.LoadCardsFromDatabase;
 var
   Query: TFDQuery;
@@ -83,8 +86,9 @@ var
 begin
   Query := TFDQuery.Create(nil);
   try
-    Query.Connection := DataModule1.FDConnection1;  // Your FireDAC connection
-    Query.SQL.Text := 'SELECT CardName, TypeLine, ManaCost, ImageBlob FROM CardDetails';
+    Query.Connection := DataModule1.FDConnection1; // Your FireDAC connection
+    Query.SQL.Text :=
+      'SELECT CardName, TypeLine, ManaCost, ImageBlob FROM CardDetails';
     Query.Open;
 
     while not Query.Eof do
@@ -119,11 +123,9 @@ begin
   end;
 end;
 
-
-
 procedure TForm2.Edit1Change(Sender: TObject);
 begin
-FilterListBoxCards(edit1.Text);
+  FilterListBoxCards(Edit1.Text);
 end;
 
 procedure TForm2.FilterListBoxCards(const SearchText: string);
@@ -143,10 +145,9 @@ begin
   end;
 end;
 
-
 procedure TForm2.FormCreate(Sender: TObject);
 begin
-LoadCardsFromDatabase;
+  LoadCardsFromDatabase;
 end;
 
 end.
