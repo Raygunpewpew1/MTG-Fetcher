@@ -21,12 +21,18 @@ function ReplaceManaSymbolsWithImages(const OracleText: string): string;
 function ImageToBase64(const ImagePath: string): string;
 function GetLegalStatus(const Legalities: TCardLegalities;
   const FieldName: string): string;
+function GetTemplatePath: string;
+procedure CopyTemplateToInternalStorage;
+function LoadTemplate(const FileName: string;
+  const DefaultTemplate: string = ''): string;
 
 var
   FManaSymbolMap: TDictionary<string, string>;
   FBase64ImageCache: TDictionary<string, string>;
 
 implementation
+
+
 
 function GetDatabasePath: string;
 begin
@@ -61,6 +67,64 @@ begin
     end;
   end;
 end;
+
+
+
+{template}
+function GetTemplatePath: string;
+begin
+  // Android sandbox-compatible path
+  Result := TPath.Combine(TPath.GetDocumentsPath, 'card_template.html');
+end;
+
+procedure CopyTemplateToInternalStorage;
+var
+  SourcePath, DestinationPath: string;
+begin
+  DestinationPath := GetTemplatePath;
+
+  // Only copy if the database does not already exist
+  if not TFile.Exists(DestinationPath) then
+  begin
+{$IFDEF ANDROID}
+    // Path to assets for Android
+    SourcePath := TPath.Combine(TPath.GetDocumentsPath, 'card_template.html');
+{$ELSE}
+    // Path for Windows
+    SourcePath := TPath.Combine(TPath.GetHomePath, 'card_template.html');
+{$ENDIF}
+    try
+      if TFile.Exists(SourcePath) then
+        TFile.Copy(SourcePath, DestinationPath)
+      else
+        raise Exception.Create('Template file not found: ' + SourcePath);
+    except
+      on E: Exception do
+        ShowMessage('Error copying template: ' + E.Message);
+    end;
+  end;
+end;
+
+
+
+function LoadTemplate(const FileName: string;
+  const DefaultTemplate: string = ''): string;
+var
+  FullPath: string;
+begin
+  CopyTemplateToInternalStorage;
+
+  // Read the template from internal storage
+  FullPath := TPath.Combine(TPath.GetDocumentsPath, FileName);
+  if TFile.Exists(FullPath) then
+    Result := TFile.ReadAllText(FullPath, TEncoding.UTF8)
+  else if DefaultTemplate <> '' then
+    Result := DefaultTemplate
+  else
+    raise Exception.Create('Template file not found: ' + FullPath);
+end;
+
+
 
 procedure InitializeManaSymbolMap;
 begin
@@ -173,7 +237,7 @@ begin
   if SameText(LegalityStatus, 'legal') then
     Result := 'legal'
   else if SameText(LegalityStatus, 'not_legal') then
-    Result := 'not-legal'
+    Result := 'not legal'
   else if SameText(LegalityStatus, 'banned') then
     Result := 'banned'
   else if SameText(LegalityStatus, 'restricted') then
@@ -281,9 +345,9 @@ begin
       // Construct the data URI
       ImagePath := Format('data:%s;base64,%s', [ImageMimeType, ImageBase64]);
 
-      // Append the <img> tag with adjusted vertical alignment
+      // Append the <img> tag with improved vertical alignment
       Result := Result +
-        Format('<img src="%s" alt="%s" style="display:inline; width:16px; height:16px; vertical-align:-12px;">',
+        Format('<img src="%s" alt="%s" style="display:inline-block; width:16px; height:16px; vertical-align:middle; margin:0 2px;">',
         [ImagePath, TNetEncoding.HTML.Encode(Part)]);
     end
     else

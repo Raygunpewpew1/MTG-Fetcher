@@ -10,16 +10,16 @@ inherited Form1_SmXhdpiPh: TForm1_SmXhdpiPh
     end
     inherited LayoutContent: TLayout
       Size.Width = 248.000000000000000000
-      Size.Height = 216.000000000000000000
+      Size.Height = 176.000000000000000000
       inherited ListViewCards: TListView
-        Size.Height = 216.000000000000000000
+        Size.Height = 176.000000000000000000
       end
       inherited SplitterMain: TSplitter
-        Size.Height = 216.000000000000000000
+        Size.Height = 176.000000000000000000
       end
       inherited WebBrowser1: TWebBrowser
         Size.Width = 0.000000000000000000
-        Size.Height = 216.000000000000000000
+        Size.Height = 176.000000000000000000
       end
     end
     inherited LayoutButtons: TLayout

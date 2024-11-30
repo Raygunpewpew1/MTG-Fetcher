@@ -6,11 +6,16 @@ uses
   System.Classes, System.SysUtils, REST.Client, REST.Types, JSON,
   Data.Bind.Components, Data.Bind.ObjectScope, System.NetEncoding,
   System.Generics.Collections, System.IOUtils, System.Net.HttpClient,
-  SGlobalsZ;
+  SGlobalsZ, system.Threading;
 
 type
   // Custom exception class for Scryfall API errors
   EScryfallAPIError = class(Exception);
+
+
+  type
+  TOnSearchComplete = reference to procedure(Success: Boolean; Cards: TArray<TCardDetails>; ErrorMsg: string);
+
 
   /// <summary>
   /// Provides methods to interact with the Scryfall API.
@@ -30,6 +35,7 @@ type
     EndpointAutocomplete = 'cards/autocomplete';
     EndpointSymbology = 'symbology';
     EndpointCardNames = 'catalog/card-names';
+
 
   var
     FClient: TRESTClient;
@@ -84,6 +90,8 @@ type
       Fuzzy, Unique: Boolean): TArray<TCardDetails>;
     function SearchCardsWithPagination(const Query, SetCode, Rarity,
       Colors: string; Fuzzy, Unique: Boolean; Page: Integer = 1): TSearchResult;
+    procedure SearchAllCardsAsync(const Query, SetCode, Rarity, Colors: string;
+      Fuzzy, Unique: Boolean; Callback: TOnSearchComplete);
   end;
 
 implementation
@@ -131,23 +139,36 @@ begin
     FRequest.Params.Clear;
     FRequest.Resource := Endpoint;
     FRequest.Method := TRESTRequestMethod.rmGET;
+    Sleep(200);
     FRequest.Execute;
 
-    if FResponse.StatusCode = 200 then
-    begin
-      JsonValue := TJSONObject.ParseJSONValue(FResponse.Content);
-      if JsonValue is TJSONObject then
-        Result := TJSONObject(JsonValue)
-      else
-        JsonValue.Free;
-    end
-    else
-    begin
-      LogError(Format('API Error [%s]: %d - %s',
-        [Endpoint, FResponse.StatusCode, FResponse.StatusText]));
-      raise EScryfallAPIError.CreateFmt('API Error [%s]: %d - %s',
-        [Endpoint, FResponse.StatusCode, FResponse.StatusText]);
+    case FResponse.StatusCode of
+      200: // Success
+      begin
+        JsonValue := TJSONObject.ParseJSONValue(FResponse.Content);
+        if JsonValue is TJSONObject then
+          Result := TJSONObject(JsonValue)
+        else
+          JsonValue.Free;
+      end;
+
+      404: // Card or resource not found
+      begin
+        LogError(Format('Resource not found [%s]: %d - %s',
+          [Endpoint, FResponse.StatusCode, FResponse.StatusText]));
+        raise EScryfallAPIError.CreateFmt('Card not found [%s]: %s',
+          [Endpoint, FResponse.StatusText]);
+      end;
+
+      else // Other errors
+      begin
+        LogError(Format('API Error [%s]: %d - %s',
+          [Endpoint, FResponse.StatusCode, FResponse.StatusText]));
+        raise EScryfallAPIError.CreateFmt('API Error [%s]: %d - %s',
+          [Endpoint, FResponse.StatusCode, FResponse.StatusText]);
+      end;
     end;
+
   except
     on E: Exception do
     begin
@@ -411,16 +432,14 @@ var
   Endpoint: string;
   JsonResponse: TJSONObject;
 begin
-  Endpoint := EndpointSets + TNetEncoding.URL.Encode(SetCode);
-
-  LogError('GetSetByCode Endpoint: ' + Endpoint);
+  Endpoint := Format('%s%s', [EndpointSets, TNetEncoding.URL.Encode(SetCode)]);
 
   JsonResponse := ExecuteRequest(Endpoint);
   try
     if Assigned(JsonResponse) then
       FillSetDetailsFromJson(JsonResponse, Result)
     else
-      Result.Clear;
+      raise EScryfallAPIError.Create('Set details not found.');
   finally
     JsonResponse.Free;
   end;
@@ -589,12 +608,12 @@ begin
   end;
 end;
 
-procedure TScryfallAPI.FillCardDetailsFromJson(const JsonObj: TJSONObject;
-out CardDetails: TCardDetails);
+procedure TScryfallAPI.FillCardDetailsFromJson(const JsonObj: TJSONObject; out CardDetails: TCardDetails);
 var
   I: Integer;
   FaceManaCosts, FaceTypeLines, FaceOracleTexts: TStringList;
-  FacePowers, FaceToughnesses: TStringList;
+  Layout: string;
+  SetDetails: TSetDetails;
 begin
   CardDetails.Clear;
 
@@ -609,85 +628,88 @@ begin
   CardDetails.Rarity := JsonObj.GetValue<string>('rarity', '');
   CardDetails.Power := JsonObj.GetValue<string>('power', '');
   CardDetails.Toughness := JsonObj.GetValue<string>('toughness', '');
-  CardDetails.PrintsSearchUri := JsonObj.GetValue<string>
-    ('prints_search_uri', '');
+  CardDetails.Loyalty := JsonObj.GetValue<string>('loyalty', '');
+  CardDetails.PrintsSearchUri := JsonObj.GetValue<string>('prints_search_uri', '');
   CardDetails.OracleID := JsonObj.GetValue<string>('oracle_id', '');
+  CardDetails.FlavorText := JsonObj.GetValue<string>('flavor_text', '');
 
+
+
+  // Get the card layout
+  CardDetails.Layout := JsonObj.GetValue<string>('layout', '').ToLower;
+  Layout := CardDetails.Layout;
   // Parse nested objects
   ParseImageUris(JsonObj, CardDetails.ImageUris);
   ParseLegalities(JsonObj, CardDetails.Legalities);
   ParsePrices(JsonObj, CardDetails.Prices);
   ParseCardFaces(JsonObj, CardDetails.CardFaces);
 
-  // Handle double-faced cards
+
+     try
+    SetDetails := GetSetByCode(CardDetails.SetCode);
+    CardDetails.SetIconURI := SetDetails.IconSVGURI; // Assign the set icon URI
+  except
+    on E: Exception do
+      LogError('Failed to fetch set details: ' + E.Message);
+  end;
+
+
+  // Handle cards with multiple faces or special layouts
   if Length(CardDetails.CardFaces) > 0 then
   begin
-    // Aggregate Mana Cost
     FaceManaCosts := TStringList.Create;
+    FaceTypeLines := TStringList.Create;
+    FaceOracleTexts := TStringList.Create;
+
     try
       for I := 0 to High(CardDetails.CardFaces) do
-        FaceManaCosts.Add(CardDetails.CardFaces[I].ManaCost);
-      CardDetails.ManaCost := String.Join(' // ', FaceManaCosts.ToStringArray);
+      begin
+        if CardDetails.CardFaces[I].ManaCost <> '' then
+          FaceManaCosts.Add(CardDetails.CardFaces[I].ManaCost);
+
+        if CardDetails.CardFaces[I].TypeLine <> '' then
+          FaceTypeLines.Add(CardDetails.CardFaces[I].TypeLine);
+
+        if CardDetails.CardFaces[I].OracleText <> '' then
+          FaceOracleTexts.Add(CardDetails.CardFaces[I].OracleText);
+      end;
+
+      // Aggregate fields if main fields are empty
+      if CardDetails.ManaCost = '' then
+        CardDetails.ManaCost := String.Join(' // ', FaceManaCosts.ToStringArray);
+
+      if CardDetails.TypeLine = '' then
+        CardDetails.TypeLine := String.Join(' // ', FaceTypeLines.ToStringArray);
+
+      if CardDetails.OracleText = '' then
+        CardDetails.OracleText := String.Join(sLineBreak + '//' + sLineBreak, FaceOracleTexts.ToStringArray);
+
+      // Handle image URIs based on layout
+      if (Layout = 'transform') or (Layout = 'modal_dfc') then
+      begin
+        if Length(CardDetails.CardFaces) > 1 then
+        begin
+          CardDetails.ImageUris.Normal := CardDetails.CardFaces[0].ImageUris.Normal;
+          CardDetails.ImageUris.BackFace := CardDetails.CardFaces[1].ImageUris.Normal;
+        end;
+      end
+      else if (Layout = 'split') or (Layout = 'adventure') then
+      begin
+        if Length(CardDetails.CardFaces) > 0 then
+          CardDetails.ImageUris.Normal := CardDetails.ImageUris.Normal;
+      end;
+
+
+
     finally
       FaceManaCosts.Free;
+      FaceTypeLines.Free;
+      FaceOracleTexts.Free;
     end;
 
-    // Aggregate Type Line
-    if CardDetails.TypeLine = '' then
-    begin
-      FaceTypeLines := TStringList.Create;
-      try
-        for I := 0 to High(CardDetails.CardFaces) do
-          FaceTypeLines.Add(CardDetails.CardFaces[I].TypeLine);
-        CardDetails.TypeLine := String.Join(' // ',
-          FaceTypeLines.ToStringArray);
-      finally
-        FaceTypeLines.Free;
-      end;
-    end;
-
-    // Aggregate Oracle Text
-    if CardDetails.OracleText = '' then
-    begin
-      FaceOracleTexts := TStringList.Create;
-      try
-        for I := 0 to High(CardDetails.CardFaces) do
-          FaceOracleTexts.Add(CardDetails.CardFaces[I].OracleText);
-        CardDetails.OracleText := String.Join(sLineBreak + '//' + sLineBreak,
-          FaceOracleTexts.ToStringArray);
-      finally
-        FaceOracleTexts.Free;
-      end;
-    end;
-
-    // Handle Power and Toughness
-    if (CardDetails.Power = '') and (CardDetails.Toughness = '') then
-    begin
-      FacePowers := TStringList.Create;
-      FaceToughnesses := TStringList.Create;
-      try
-        for I := 0 to High(CardDetails.CardFaces) do
-        begin
-          FacePowers.Add(CardDetails.CardFaces[I].Power);
-          FaceToughnesses.Add(CardDetails.CardFaces[I].Toughness);
-        end;
-        CardDetails.Power := String.Join(' // ', FacePowers.ToStringArray);
-        CardDetails.Toughness := String.Join(' // ',
-          FaceToughnesses.ToStringArray);
-      finally
-        FacePowers.Free;
-        FaceToughnesses.Free;
-      end;
-    end;
-
-    // Handle Image URIs
-    if CardDetails.ImageUris.Small = '' then
-    begin
-      // Use the image URIs of the first face as a default
-      CardDetails.ImageUris := CardDetails.CardFaces[0].ImageUris;
-    end;
   end;
 end;
+
 
 procedure TScryfallAPI.ParseImageUris(const JsonObj: TJSONObject;
 out ImageUris: TImageUris);
@@ -751,8 +773,7 @@ begin
     Prices := Default (TCardPrices);
 end;
 
-procedure TScryfallAPI.ParseCardFaces(const JsonObj: TJSONObject;
-out CardFaces: TArray<TCardFace>);
+procedure TScryfallAPI.ParseCardFaces(const JsonObj: TJSONObject; out CardFaces: TArray<TCardFace>);
 var
   CardFacesArray: TJSONArray;
   I: Integer;
@@ -767,8 +788,7 @@ begin
       CardFaces[I].Name := CardFaceObj.GetValue<string>('name', '');
       CardFaces[I].ManaCost := CardFaceObj.GetValue<string>('mana_cost', '');
       CardFaces[I].TypeLine := CardFaceObj.GetValue<string>('type_line', '');
-      CardFaces[I].OracleText := CardFaceObj.GetValue<string>
-        ('oracle_text', '');
+      CardFaces[I].OracleText := CardFaceObj.GetValue<string>('oracle_text', '');
       CardFaces[I].Power := CardFaceObj.GetValue<string>('power', '');
       CardFaces[I].Toughness := CardFaceObj.GetValue<string>('toughness', '');
       ParseImageUris(CardFaceObj, CardFaces[I].ImageUris);
@@ -822,5 +842,44 @@ begin
     AllCards.Free;
   end;
 end;
+
+procedure TScryfallAPI.SearchAllCardsAsync(const Query, SetCode, Rarity, Colors: string;
+  Fuzzy, Unique: Boolean; Callback: TOnSearchComplete);
+begin
+  // Run the blocking operation in a background thread
+  TTask.Run(
+    procedure
+    var
+      Cards: TArray<TCardDetails>;
+      ErrorMessage: string;
+    begin
+      try
+        // Perform the blocking call
+        Cards := SearchAllCards(Query, SetCode, Rarity, Colors, Fuzzy, Unique);
+
+        // Call the callback on the main thread with the results
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            if Assigned(Callback) then
+              Callback(True, Cards, '');
+          end);
+      except
+        on E: Exception do
+        begin
+          // Handle any errors
+          ErrorMessage := E.Message;
+
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              if Assigned(Callback) then
+                Callback(False, nil, ErrorMessage);
+            end);
+        end;
+      end;
+    end);
+end;
+
 
 end.

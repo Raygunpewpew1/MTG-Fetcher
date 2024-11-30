@@ -22,6 +22,7 @@ type
     Small: string;
     Normal: string;
     Large: string;
+    BackFace: string;
     PNG: string;
     border_crop: string;
     art_crop: string;
@@ -70,6 +71,10 @@ type
     Rarity: string;
     Power: string;
     Toughness: string;
+    Loyalty: string;
+    Layout: string;
+    FlavorText: string;
+    SetIconURI: string;
     PrintsSearchUri: string;
     ImageUris: TImageUris;
     Legalities: TCardLegalities;

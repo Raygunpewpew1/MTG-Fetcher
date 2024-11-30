@@ -1,7 +1,7 @@
 object HighResImageForm: THighResImageForm
   Left = 0
   Top = 0
-  BorderStyle = Single
+  BorderStyle = None
   ClientHeight = 568
   ClientWidth = 392
   Quality = HighQuality

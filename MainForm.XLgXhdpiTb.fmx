@@ -4,15 +4,15 @@ inherited Form1_XLgXhdpiTb: TForm1_XLgXhdpiTb
   inherited LayoutMain: TLayout
     Size.Height = 1256.000000000000000000
     inherited LayoutContent: TLayout
-      Size.Height = 1096.000000000000000000
+      Size.Height = 1056.000000000000000000
       inherited ListViewCards: TListView
-        Size.Height = 1096.000000000000000000
+        Size.Height = 1056.000000000000000000
       end
       inherited SplitterMain: TSplitter
-        Size.Height = 1096.000000000000000000
+        Size.Height = 1056.000000000000000000
       end
       inherited WebBrowser1: TWebBrowser
-        Size.Height = 1096.000000000000000000
+        Size.Height = 1056.000000000000000000
       end
     end
     inherited LayoutButtons: TLayout
