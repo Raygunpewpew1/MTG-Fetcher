@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: rgb(32, 38, 47);
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      color: gold;
+      font-size: 24px;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .card-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .flip-card, .single-card {
+      position: relative;
+      width: 240px;
+      height: 360px;
+      margin: 10px auto;
+    }
+    .flip-card {
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform 0.8s;
+    }
+    .flip-card.show-back {
+      transform: rotateY(180deg);
+    }
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border: 2px solid #444;
+      cursor: pointer;
+    }
+    .card-face img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .card-face.back {
+      transform: rotateY(180deg);
+    }
+    .single-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border: 2px solid #444;
+    }
+    .card-details {
+      padding: 10px;
+      text-align: left;
+      width: 80%;
+      max-width: 500px;
+      margin: auto;
+    }
+    .rarity {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .rarity.common {
+      background-color: #B0BEC5;
+      color: black;
+    }
+    .rarity.uncommon {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .rarity.rare {
+      background-color: #FFD700;
+      color: black;
+    }
+    .rarity.mythic {
+      background-color: #FF4500;
+      color: white;
+    }
+    .mana-symbol {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      margin: 0 2px;
+    }
+    .prices, .legalities {
+      margin-top: 10px;
+    }
+    .prices ul, .legalities ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    .prices li, .legalities li {
+      margin: 5px 0;
+    }
+    .prices li span {
+      font-weight: bold;
+      color: #FFD700;
+    }
+    .legalities li span.legal {
+      color: #4CAF50; /* Green */
+    }
+    .legalities li span.not-legal {
+      color: gray; /* Gray */
+    }
+    .legalities li span.banned {
+      color: red; /* Red */
+    }
+    .legalities li span.restricted {
+      color: orange; /* Orange */
+    }
+    button {
+      margin: 10px;
+      padding: 10px;
+      background: gold;
+      color: black;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: darkgoldenrod;
+    }
+  </style>
+  <script>
+    document.addEventListener("contextmenu", function(e) {
+      e.preventDefault();
+    });
+
+    function flipCard() {
+      const card = document.querySelector(".flip-card");
+      if (card) {
+        card.classList.toggle("show-back");
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="card-container">
+    <h1>{{CardName}}</h1>
+    {{CardImages}}
+    <div class="card-details">
+      <p><strong>Type:</strong> {{TypeLine}}</p>
+      <p><strong>Mana Cost:</strong> {{ManaCost}}</p>
+      <p><strong>Rarity:</strong> <span class="rarity {{RarityClass}}">{{Rarity}}</span></p>
+      <p><strong>Oracle Text:</strong> {{OracleText}}</p>
+      {{PowerToughness}}
+      <div class="legalities">
+        <h2>Legalities</h2>
+        <ul>{{Legalities}}</ul>
+      </div>
+      <div class="prices">
+        <h2>Prices</h2>
+        <ul>
+          <li>USD: <span>${{USD}}</span></li>
+          <li>USD (Foil): <span>${{USD_Foil}}</span></li>
+          <li>EUR: <span>€{{EUR}}</span></li>
+          <li>TIX: <span>{{Tix}}</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
