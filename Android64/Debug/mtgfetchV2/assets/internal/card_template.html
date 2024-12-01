@@ -2,7 +2,6 @@
 <html>
 <head>
   <style>
-    /* General Body Styling */
     body {
       font-family: Arial, sans-serif;
       background-color: rgb(32, 38, 47);
@@ -10,249 +9,116 @@
       margin: 0;
       padding: 0;
     }
-
     h1 {
       color: gold;
-      font-size: 28px;
+      font-size: 24px;
       text-align: center;
       margin: 20px 0;
     }
-
-    /* Card Container */
     .card-container {
       display: flex;
       justify-content: center;
       align-items: center;
       flex-direction: column;
     }
-
-    /* Flip Card Design */
     .flip-card, .single-card {
       position: relative;
       width: 240px;
       height: 360px;
       margin: 10px auto;
-      border-radius: 10px;
-      background: #222;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     }
-
     .flip-card {
       perspective: 1000px;
       transform-style: preserve-3d;
       transition: transform 0.8s;
     }
-
     .flip-card.show-back {
       transform: rotateY(180deg);
     }
-
     .card-face {
       position: absolute;
       width: 100%;
       height: 100%;
       backface-visibility: hidden;
-      border-radius: 10px;
-      overflow: hidden;
+      border: 2px solid #444;
       cursor: pointer;
     }
-
     .card-face img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-
     .card-face.back {
       transform: rotateY(180deg);
     }
-
     .single-card img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 10px;
+      border: 2px solid #444;
     }
-
-    /* Card Details Styling */
     .card-details {
       padding: 10px;
       text-align: left;
-      width: 90%;
-      max-width: 400px;
+      width: 80%;
+      max-width: 500px;
       margin: auto;
-      background: rgba(0, 0, 0, 0.85);
-      border-radius: 10px;
-      border: 2px solid #444;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     }
-
-    /* Card Name */
-    .card-name {
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 5px;
-      text-shadow: 0 2px 2px black;
-    }
-
-    /* Mana Cost */
-    .mana-cost {
-      background: rgba(0, 0, 0, 0.85);
-      color: white;
-      padding: 5px 10px;
-      font-size: 16px;
-      border-radius: 5px;
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    /* Align type line and set details */
-    .type-set-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin: 5px 0; /* Add vertical spacing */
-      padding: 0 10px; /* Add horizontal padding */
-    }
-
-    /* Type line styling */
-    .type-line {
-      font-size: 14px;
-      font-style: italic;
-      flex-grow: 1; /* Ensures it stretches */
-      margin-right: 10px; /* Space between type line and set details */
-    }
-
-    /* Set details align icon and name */
-    .set-details {
-      display: flex;
-      align-items: center;
-      font-size: 12px;
-    }
-
-    /* Set icon styling */
-    .set-icon {
-      width: 24px;
-      height: 24px;
-      margin-right: 5px; /* Space between icon and set name */
-      filter: invert(100%) brightness(150%); /* Adjust for dark background */
-    }
-
-    /* Oracle Text */
-    .oracle-text {
-      margin-top: 10px;
-      line-height: 1.5;
-      font-size: 13px;
-    }
-
-    /* Flavor Text */
-    .flavor-text {
-      font-style: italic;
-      color: #888;
-      margin-top: 10px;
-      padding-left: 10px;
-      border-left: 2px solid rgba(255, 255, 255, 0.2);
-    }
-
-    /* Power/Toughness or Loyalty */
-    .power-toughness {
-      font-weight: bold;
-      text-align: right;
-      margin-top: 10px;
-      border-top: 1px solid #333;
-      padding-top: 5px;
-    }
-
-    /* Rarity Styling */
     .rarity {
       display: inline-block;
       padding: 5px 10px;
       border-radius: 5px;
       font-weight: bold;
-      margin-top: 10px;
     }
-
     .rarity.common {
       background-color: #B0BEC5;
       color: black;
     }
-
     .rarity.uncommon {
       background-color: #4CAF50;
       color: white;
     }
-
     .rarity.rare {
       background-color: #FFD700;
       color: black;
     }
-
     .rarity.mythic {
       background-color: #FF4500;
       color: white;
     }
-
-    /* Prices */
-    .prices-grid {
-      width: 100%;
-      border-collapse: collapse;
+    .mana-symbol {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      margin: 0 2px;
+    }
+    .prices, .legalities {
       margin-top: 10px;
     }
-
-    .prices-grid td {
-      padding: 5px;
-      border: 1px solid #444;
+    .prices ul, .legalities ul {
+      list-style-type: none;
+      padding: 0;
     }
-
-    .prices-grid td:first-child {
-      text-align: left;
+    .prices li, .legalities li {
+      margin: 5px 0;
+    }
+    .prices li span {
       font-weight: bold;
+      color: #FFD700;
     }
-
-    .prices-grid td:last-child {
-      text-align: right;
-      color: #FFD700; /* Gold */
-    }
-
-    .legalities-grid {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    .legalities-grid td {
-      padding: 5px;
-      border: 1px solid #444;
-    }
-
-    .legalities-grid td.format-name {
-      text-align: left;
-      font-weight: bold;
-      color: #FFD700; /* Gold for format names */
-    }
-
-    .legalities-grid td.status {
-      text-align: right;
-    }
-
-    .legalities-grid span.legal {
+    .legalities li span.legal {
       color: #4CAF50; /* Green */
     }
-
-    .legalities-grid span.not-legal {
+    .legalities li span.not-legal {
       color: gray; /* Gray */
     }
-
-    .legalities-grid span.banned {
+    .legalities li span.banned {
       color: red; /* Red */
     }
-
-    .legalities-grid span.restricted {
+    .legalities li span.restricted {
       color: orange; /* Orange */
     }
-
-    /* Button */
     button {
       margin: 10px;
       padding: 10px;
@@ -262,7 +128,6 @@
       cursor: pointer;
       font-weight: bold;
     }
-
     button:hover {
       background: darkgoldenrod;
     }
@@ -282,35 +147,26 @@
 </head>
 <body>
   <div class="card-container">
-    <h1 class="card-name">{{CardName}}</h1>
+    <h1>{{CardName}}</h1>
     {{CardImages}}
-    <div class="mana-cost">{{ManaCost}}</div>
     <div class="card-details">
-      <div class="type-set-row">
-        <div class="type-line">{{TypeLine}}</div>
-        <div class="set-details">
-          <img src="{{SetIcon}}" class="set-icon" alt="Set Icon">
-          <span>{{SetName}}</span>
-        </div>
-      </div>
-      <div class="oracle-text">{{OracleText}}</div>
-      <div class="flavor-text">{{FlavorText}}</div>
+      <p><strong>Type:</strong> {{TypeLine}}</p>
+      <p><strong>Mana Cost:</strong> {{ManaCost}}</p>
+      <p><strong>Rarity:</strong> <span class="rarity {{RarityClass}}">{{Rarity}}</span></p>
+      <p><strong>Oracle Text:</strong> {{OracleText}}</p>
       {{PowerToughness}}
-      <div class="rarity {{RarityClass}}">{{Rarity}}</div>
       <div class="legalities">
         <h2>Legalities</h2>
-        <table class="legalities-grid">
-          {{Legalities}}
-        </table>
+        <ul>{{Legalities}}</ul>
       </div>
       <div class="prices">
         <h2>Prices</h2>
-        <table class="prices-grid">
-          <tr><td>USD:</td><td>${{USD}}</td></tr>
-          <tr><td>USD (Foil):</td><td>${{USD_Foil}}</td></tr>
-          <tr><td>EUR:</td><td>€{{EUR}}</td></tr>
-          <tr><td>TIX:</td><td>{{Tix}}</td></tr>
-        </table>
+        <ul>
+          <li>USD: <span>${{USD}}</span></li>
+          <li>USD (Foil): <span>${{USD_Foil}}</span></li>
+          <li>EUR: <span>€{{EUR}}</span></li>
+          <li>TIX: <span>{{Tix}}</span></li>
+        </ul>
       </div>
     </div>
   </div>

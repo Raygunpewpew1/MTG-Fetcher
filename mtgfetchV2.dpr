@@ -10,8 +10,7 @@ uses
   DataModuleUnit in 'DataModuleUnit.pas' {DataModule1: TDataModule},
   HighResForm in 'HighResForm.pas' {HighResImageForm},
   CollectionForm in 'CollectionForm.pas' {Form2},
-  MLogic in 'MLogic.pas',
-  JSONHelper in 'JSONHelper.pas';
+  MLogic in 'MLogic.pas';
 
 {$R *.res}
 

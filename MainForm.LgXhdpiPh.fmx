@@ -1,24 +1,39 @@
 inherited Form1_LgXhdpiPh: TForm1_LgXhdpiPh
   ClientHeight = 696
   ClientWidth = 448
-  DesignerMasterStyle = 3
+  DesignerMasterStyle = 0
   inherited LayoutMain: TLayout
     Size.Width = 448.000000000000000000
     Size.Height = 696.000000000000000000
     inherited LayoutControls: TLayout
       Size.Width = 428.000000000000000000
+      inherited ComboBoxSetCode: TComboBox
+        Position.X = 75.000000000000000000
+        Position.Y = 40.000000000000000000
+      end
+      inherited ComboBoxColors: TComboBox
+        Position.X = 8.000000000000000000
+        Position.Y = 80.000000000000000000
+      end
+      inherited ComboBoxRarity: TComboBox
+        Position.X = 208.000000000000000000
+        Position.Y = 80.000000000000000000
+      end
     end
     inherited LayoutContent: TLayout
       Size.Width = 448.000000000000000000
       Size.Height = 496.000000000000000000
       inherited ListViewCards: TListView
+        Size.Width = 241.000000000000000000
         Size.Height = 496.000000000000000000
       end
       inherited SplitterMain: TSplitter
+        Position.X = 241.000000000000000000
+        Size.Width = 8.000000000000000000
         Size.Height = 496.000000000000000000
       end
       inherited WebBrowser1: TWebBrowser
-        Size.Width = 34.000000000000000000
+        Size.Width = 189.000000000000000000
         Size.Height = 496.000000000000000000
       end
     end

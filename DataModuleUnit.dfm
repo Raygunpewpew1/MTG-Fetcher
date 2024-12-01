@@ -9,6 +9,7 @@ object DataModule1: TDataModule1
   end
   object FDConnection1: TFDConnection
     Params.Strings = (
+      'Database=C:\FMMagicFetch\Collection.db'
       'DriverID=SQLite')
     LoginPrompt = False
     Left = 824

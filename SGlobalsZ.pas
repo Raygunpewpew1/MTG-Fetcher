@@ -134,8 +134,6 @@ type
     TotalCards: Integer;
   end;
 
-
-
 const
   LegalitiesArray: array [0 .. 15] of string = ('Standard', 'Pioneer', 'Modern',
     'Legacy', 'Commander', 'Vintage', 'Pauper', 'Historic', 'Explorer',
