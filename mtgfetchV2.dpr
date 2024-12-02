@@ -11,7 +11,7 @@ uses
   HighResForm in 'HighResForm.pas' {HighResImageForm},
   CollectionForm in 'CollectionForm.pas' {Form2},
   MLogic in 'MLogic.pas',
-  JSONHelper in 'JSONHelper.pas';
+  JsonDataObjects in 'JsonDataObjects.pas';
 
 {$R *.res}
 

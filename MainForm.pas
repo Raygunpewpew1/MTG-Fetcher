@@ -145,7 +145,7 @@ begin
   // InitializeManaSymbolMap;
   FBase64ImageCache := TDictionary<string, string>.Create;
   BrIsLoaded := False;
-  DelayTimer.Enabled := True;
+ // DelayTimer.Enabled := True;
   WebBrowser1.URL := 'about:blank';
   // ListViewCards.ItemAppearanceName := 'ImageListItem';
   ListViewCards.OnItemClick := ListViewCardsItemClick;
@@ -154,6 +154,7 @@ begin
 
   ScryfallAPIHold := TScryfallAPI.Create;
   try
+    ScryfallAPIHold.PreloadAllSets;
     SetDetailsArray := ScryfallAPIHold.GetAllSets; // Fetch all sets from Scryfall
     for SetDetails in SetDetailsArray do
     begin
@@ -409,21 +410,21 @@ end;
 procedure TForm1.AddCardToListView(const Card: TCardDetails);
 var
   ListViewItem: TListViewItem;
-  // Button: TListItemButton;
 begin
-  // Add a new item to the ListView
+  // Skip invalid cards
+  if Card.CardName.IsEmpty or Card.SFID.IsEmpty then
+  begin
+    //LogError('Skipping card: missing "name" or "id".');
+    Exit;
+  end;
+
+  // Create a new ListView item
   ListViewItem := ListViewCards.Items.Add;
 
-  // Set item text (card name)
+  // Set item properties
   ListViewItem.Text := Card.CardName;
-
-  // Store the card details in the item's TagObject
-  ListViewItem.TagObject := TCardDetailsObject.Create(Card);
-
-
-  // Load and assign the card art crop image as the item's background
-//  if Card.ImageUris.art_crop <> '' then
-//    LoadImageToListViewItemAsync(Card.ImageUris.art_crop, ListViewItem);
+  ListViewItem.Detail := Card.TypeLine; // Optional: additional info
+  ListViewItem.TagObject := TCardDetailsObject.Create(Card); // Store the card object
 end;
 
 procedure TForm1.LoadImageToListViewItemAsync(const URL: string;
@@ -458,7 +459,7 @@ var
 begin
   ScryfallAPI := TScryfallAPI.Create;
   try
-    Result := ScryfallAPI.GetRulingsByScryfallID(cardId);
+    //Result := ScryfallAPI.GetRulingsByScryfallID(cardId);
   finally
     ScryfallAPI.Free;
   end;
@@ -726,7 +727,7 @@ begin
   ScryfallAPI := TScryfallAPI.Create;
   try
     // Use the Scryfall ID of the card
-    Rulings := ScryfallAPI.GetRulingsByScryfallID(cardId);
+  //  Rulings := ScryfallAPI.GetRulingsByScryfallID(cardId);
     if Length(Rulings) = 0 then
     begin
       ShowMessage('No rulings available for this card.');
