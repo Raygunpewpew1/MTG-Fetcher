@@ -4,7 +4,7 @@
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <PropertyGroup>
-        <DeviceId Condition="'$(Platform)'=='Android'"/>
+        <DeviceId Condition="'$(Platform)'=='Android'">R3CR40B2VXD</DeviceId>
         <DeviceId Condition="'$(Platform)'=='Android64'">R3CR40B2VXD</DeviceId>
     </PropertyGroup>
     <ItemGroup Condition="'$(Platform)'=='Win32'">
@@ -685,7 +685,7 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\card_template.html" Condition="'$(Config)'=='Release'">
+        <DeployFile Include="C:\Users\raygu\Documents\card_template.html" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
             <RemoteName>card_template.html</RemoteName>
             <DeployClass>File</DeployClass>
@@ -694,7 +694,7 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\card_template.html" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="C:\Users\raygu\Documents\card_template.html" Condition="'$(Config)'=='Release'">
             <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
             <RemoteName>card_template.html</RemoteName>
             <DeployClass>File</DeployClass>

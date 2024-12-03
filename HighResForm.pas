@@ -4,7 +4,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, FMX.Controls, FMX.Forms, FMX.Objects,
-  System.Net.HttpClient, FMX.Controls.Presentation, FMX.StdCtrls, FMX.Types, FMX.Dialogs;
+  System.Net.HttpClient, FMX.Controls.Presentation, FMX.StdCtrls, FMX.Types,
+  FMX.Dialogs;
 
 type
   THighResImageForm = class(TForm)
@@ -60,11 +61,12 @@ begin
   end;
 end;
 
-procedure THighResImageForm.ShowImage(const ImageURL: string; const CardName: string);
+procedure THighResImageForm.ShowImage(const ImageURL: string;
+  const CardName: string);
 begin
-  Caption := CardName;  // Set form caption
-  LoadImage(ImageURL);  // Load the image
-  Self.Show;            // Use non-modal display on Android
+  Caption := CardName; // Set form caption
+  LoadImage(ImageURL); // Load the image
+  Self.Show; // Use non-modal display on Android
 end;
 
 end.

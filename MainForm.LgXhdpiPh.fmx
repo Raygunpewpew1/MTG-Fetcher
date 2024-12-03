@@ -13,11 +13,9 @@ inherited Form1_LgXhdpiPh: TForm1_LgXhdpiPh
       end
       inherited ComboBoxColors: TComboBox
         Position.X = 8.000000000000000000
-        Position.Y = 80.000000000000000000
       end
       inherited ComboBoxRarity: TComboBox
         Position.X = 208.000000000000000000
-        Position.Y = 80.000000000000000000
       end
     end
     inherited LayoutContent: TLayout

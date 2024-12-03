@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
   System.RegularExpressions, System.Hash, System.Classes, System.NetEncoding,
-  FMX.Dialogs, SGlobalsZ;
+  FMX.Dialogs, SGlobalsZ, FMX.Graphics,System.Net.HttpClient,FMX.StdCtrls,System.Threading;
 
 procedure CopyDatabaseToInternalStorage;
 procedure InitializeManaSymbolMap;
@@ -29,10 +29,9 @@ function LoadTemplate(const FileName: string;
 var
   FManaSymbolMap: TDictionary<string, string>;
   FBase64ImageCache: TDictionary<string, string>;
+  HttpClient: THTTPClient;
 
 implementation
-
-
 
 function GetDatabasePath: string;
 begin
@@ -68,9 +67,7 @@ begin
   end;
 end;
 
-
-
-{template}
+{ template }
 function GetTemplatePath: string;
 begin
   // Android sandbox-compatible path
@@ -105,8 +102,6 @@ begin
   end;
 end;
 
-
-
 function LoadTemplate(const FileName: string;
   const DefaultTemplate: string = ''): string;
 var
@@ -123,8 +118,6 @@ begin
   else
     raise Exception.Create('Template file not found: ' + FullPath);
 end;
-
-
 
 procedure InitializeManaSymbolMap;
 begin
@@ -396,6 +389,77 @@ begin
   else
     Result := '';
 end;
+
+
+procedure LoadCachedOrDownloadImage(const URL: string; Bitmap: TBitmap);
+var
+  FilePath: string;
+  MemoryStream: TMemoryStream;
+begin
+  FilePath := GetCachedImagePath(URL);
+
+
+
+  if TFile.Exists(FilePath) then
+  begin
+    Bitmap.LoadFromFile(FilePath);
+
+  end
+  else
+  begin
+    MemoryStream := TMemoryStream.Create;
+    try
+      try
+        HttpClient.Get(URL, MemoryStream);
+        MemoryStream.Position := 0;
+        MemoryStream.SaveToFile(FilePath);
+        MemoryStream.Position := 0;
+        Bitmap.LoadFromStream(MemoryStream);
+
+      except
+        on E: ENetHTTPRequestException do
+          TThread.Queue(nil,
+            procedure
+            begin
+              ShowMessage('Network error: ' + E.Message);
+            end);
+        on E: Exception do
+          TThread.Queue(nil,
+            procedure
+            begin
+              ShowMessage('Error loading image: ' + E.Message);
+            end);
+      end;
+    finally
+      MemoryStream.Free;
+    end;
+  end;
+end;
+
+procedure LoadCachedOrDownloadImageAsync(const URL: string;
+ImageControl: TImageControl);
+begin
+  TTask.Run(
+    procedure
+    var
+      Bitmap: TBitmap;
+    begin
+      Bitmap := TBitmap.Create;
+      try
+        LoadCachedOrDownloadImage(URL, Bitmap);
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            ImageControl.Bitmap.Assign(Bitmap);
+          end);
+      finally
+        Bitmap.Free;
+      end;
+    end);
+end;
+
+
+
 
 initialization
 

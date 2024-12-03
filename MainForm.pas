@@ -44,22 +44,19 @@ type
     ComboBoxSetCode: TComboBox;
     ComboBoxColors: TComboBox;
     ComboBoxRarity: TComboBox;
+    CountLabel: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure Button3Click(Sender: TObject);
     procedure ShowHighResButtonClick(Sender: TObject);
     procedure Button4Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
-    procedure Button6Click(Sender: TObject);
     procedure DelayTimerTimer(Sender: TObject);
     procedure ListViewCardsItemClick(const Sender: TObject;
       const AItem: TListViewItem);
     procedure ListViewCardsButtonClick(const Sender: TObject;
       const AItem: TListItem; const AObject: TListItemSimpleControl);
 
-    // procedure ListView1ItemClick(const Sender: TObject;
-    // const AItem: TListViewItem);
   private
     HttpClient: THTTPClient;
     FCardDetailsObject: TCardDetailsObject; // Private field
@@ -68,30 +65,23 @@ type
     // Encapsulated within the form
     CardCount: Integer; // Encapsulated within the form
     AppClose: Boolean; // Encapsulated within the form
+    FScryfallAPI: TScryfallAPI; // Instance of TScryfallAPI
+
+
 
     BrIsLoaded: Boolean;
     procedure DisplayCardArtworks(const CardName: string);
 
     procedure ShowCardDetails(Sender: TObject);
 
-    procedure LoadCachedOrDownloadImage(const URL: string; Bitmap: TBitmap);
-    // Changed parameter to TBitmap
-    // procedure FilterDisplayedCards(const FilterText: string);
-    procedure LoadCachedOrDownloadImageAsync(const URL: string;
-      ImageControl: TImageControl);
-    // procedure AddTextToHighlightRectangle(Rectangle: TRectangle;
-    // const Text: string);
     procedure SaveSelectedCardToDatabase;
     procedure ShowCardCollection;
-    procedure GetSelectedCardRulings(const cardId: string);
 
     procedure DisplayCardInBrowser(const CardDetails: TCardDetails;
       const Rulings: TArray<TRuling>);
 
-    function FetchRulingsAsync(const cardId: string): TArray<TRuling>;
     procedure AddCardToListView(const Card: TCardDetails);
-    procedure LoadImageToListViewItemAsync(const URL: string;
-      ListViewItem: TListViewItem);
+    function IsCardValid(const Card: TCardDetails): Boolean;
 
   public
     // Public declarations
@@ -99,7 +89,6 @@ type
 
 var
   Form1: TForm1;
-
 
 implementation
 
@@ -130,10 +119,10 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 var
-  ScryfallAPIHold: TScryfallAPI;
   SetDetailsArray: TArray<TSetDetails>;
   SetDetails: TSetDetails;
 begin
+  FScryfallAPI := TScryfallAPI.Create;
   HttpClient := THTTPClient.Create;
   CardDataList := TList<TCardDetails>.Create;
   // DataModule1.CreateCardDetailsTable;
@@ -145,29 +134,29 @@ begin
   // InitializeManaSymbolMap;
   FBase64ImageCache := TDictionary<string, string>.Create;
   BrIsLoaded := False;
- // DelayTimer.Enabled := True;
-  WebBrowser1.URL := 'about:blank';
-  // ListViewCards.ItemAppearanceName := 'ImageListItem';
+
+  // WebBrowser1.URL := 'about:blank';
+
   ListViewCards.OnItemClick := ListViewCardsItemClick;
 
   ComboBoxSetCode.Items.Add('All Sets');
 
-  ScryfallAPIHold := TScryfallAPI.Create;
   try
-    ScryfallAPIHold.PreloadAllSets;
-    SetDetailsArray := ScryfallAPIHold.GetAllSets; // Fetch all sets from Scryfall
+    //FScryfallAPI.PreloadAllSets;
+   // SetDetailsArray := FScryfallAPI.GetAllSets;
+    // Fetch all sets from Scryfall
     for SetDetails in SetDetailsArray do
     begin
-      ComboBoxSetCode.Items.Add(SetDetails.Code + ' - ' + SetDetails.Name);
+      //ComboBoxSetCode.Items.Add(SetDetails.Code + ' - ' + SetDetails.Name);
       // Example: "KHM - Kaldheim"
     end;
   finally
-    ScryfallAPIHold.Free;
+
     ComboBoxSetCode.ItemIndex := 0;
     ComboBoxColors.ItemIndex := 0;
     ComboBoxRarity.ItemIndex := 0;
   end;
-
+DelayTimer.Enabled := True;
   // Form1.StyleBook := HighResForm.HighResImageForm.StyleBook1;
 end;
 
@@ -180,6 +169,7 @@ begin
     FreeAndNil(CardDataList);
   // FreeAndNil(FManaSymbolMap);
   FreeAndNil(FBase64ImageCache);
+  FScryfallAPI.Free;
 end;
 
 procedure TForm1.ListViewCardsButtonClick(const Sender: TObject;
@@ -218,74 +208,6 @@ begin
     ShowMessage('No card details are available for this item.');
 end;
 
-procedure TForm1.LoadCachedOrDownloadImage(const URL: string; Bitmap: TBitmap);
-var
-  FilePath: string;
-  MemoryStream: TMemoryStream;
-begin
-  FilePath := GetCachedImagePath(URL);
-
-  if AppClose then
-    Exit;
-
-  if TFile.Exists(FilePath) then
-  begin
-    Bitmap.LoadFromFile(FilePath);
-    Inc(CardCount);
-  end
-  else
-  begin
-    MemoryStream := TMemoryStream.Create;
-    try
-      try
-        HttpClient.Get(URL, MemoryStream);
-        MemoryStream.Position := 0;
-        MemoryStream.SaveToFile(FilePath);
-        MemoryStream.Position := 0;
-        Bitmap.LoadFromStream(MemoryStream);
-        Inc(CardCount);
-      except
-        on E: ENetHTTPRequestException do
-          TThread.Queue(nil,
-            procedure
-            begin
-              ShowMessage('Network error: ' + E.Message);
-            end);
-        on E: Exception do
-          TThread.Queue(nil,
-            procedure
-            begin
-              ShowMessage('Error loading image: ' + E.Message);
-            end);
-      end;
-    finally
-      MemoryStream.Free;
-    end;
-  end;
-end;
-
-procedure TForm1.LoadCachedOrDownloadImageAsync(const URL: string;
-ImageControl: TImageControl);
-begin
-  TTask.Run(
-    procedure
-    var
-      Bitmap: TBitmap;
-    begin
-      Bitmap := TBitmap.Create;
-      try
-        LoadCachedOrDownloadImage(URL, Bitmap);
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            ImageControl.Bitmap.Assign(Bitmap);
-          end);
-      finally
-        Bitmap.Free;
-      end;
-    end);
-end;
-
 procedure TForm1.DelayTimerTimer(Sender: TObject);
 begin
   if BrIsLoaded then
@@ -317,9 +239,14 @@ begin
     end);
 end;
 
+
+function TForm1.IsCardValid(const Card: TCardDetails): Boolean;
+begin
+  Result := not Card.CardName.IsEmpty and not Card.SFID.IsEmpty;
+end;
+
 procedure TForm1.DisplayCardArtworks(const CardName: string);
 var
-  ScryfallAPI: TScryfallAPI;
   SelectedSetCode: string;
   SelectedColorCode: string;
   SelectedRareCode: string;
@@ -329,82 +256,104 @@ begin
   ProgressBar1.Visible := True;
   ProgressBar1.Value := 0;
 
+  // Get the selected set code
   if ComboBoxSetCode.Selected.Text = 'All Sets' then
     SelectedSetCode := ''
   else
     SelectedSetCode := ComboBoxSetCode.Selected.Text.Split([' - '])[0];
 
+  // Get the selected rarity
   if ComboBoxRarity.Text = 'All Rarities' then
     SelectedRareCode := ''
   else
     SelectedRareCode := ComboBoxRarity.Text;
 
-  // All Colors
+  // Get the selected colors
   if ComboBoxColors.Text = 'All Colors' then
     SelectedColorCode := ''
   else
     SelectedColorCode := ComboBoxColors.Text;
 
-  // Create the API instance
-  ScryfallAPI := TScryfallAPI.Create;
-
-
-
   // Call the asynchronous method
-  ScryfallAPI.SearchAllCardsAsync(CardName, SelectedSetCode, SelectedRareCode,
+  FScryfallAPI.SearchAllCardsAsync(CardName, SelectedSetCode, SelectedRareCode,
     SelectedColorCode, False, False,
     procedure(Success: Boolean; Cards: TArray<TCardDetails>; ErrorMsg: string)
     begin
-      // Hide the progress bar
-      ProgressBar1.Visible := False;
-
-      try
-        if not Success then
+      TThread.Synchronize(nil,
+        procedure
         begin
-          ShowMessage('Error searching cards: ' + ErrorMsg);
-          Exit;
-        end;
+          // Hide the progress bar when done
+          ProgressBar1.Visible := False;
 
-        if Length(Cards) = 0 then
-        begin
-          ShowMessage('No results found for "' + CardName + '".');
-          Exit;
-        end;
+          try
+            // Handle errors
+            if not Success then
+            begin
+              ShowMessage('Error searching cards: ' + ErrorMsg);
+              Button1.Enabled := True;
+              Exit;
+            end;
 
-        if Length(Cards) > 800 then
-        begin
-          ShowMessage('Too many results. Please refine your search.');
-          Exit;
-        end;
+            // Handle empty results
+            if Length(Cards) = 0 then
+            begin
+              ShowMessage('No results found for "' + CardName + '".');
+              Button1.Enabled := True;
+              Exit;
+            end;
 
-        // Clear the ListView and internal card list
-        ListViewCards.Items.Clear;
-        CardDataList.Clear;
-        ProgressBar1.Max := Length(Cards);
+            // Handle excessive results
+            if Length(Cards) > 800 then
+            begin
+              ShowMessage('Too many results. Please refine your search.');
+              Button1.Enabled := True;
+              Exit;
+            end;
 
+            // Clear the ListView and internal card list
+            ListViewCards.Items.Clear;
+            CardDataList.Clear;
 
-          //ScryfallAPI.GetSetByCode(DCardSet.Code);
-   //     DCardSet := ScryfallAPI.GetAllSets;
+            ProgressBar1.Max := Length(Cards);
 
+            // Add valid cards to the ListView and internal card list
+            for var CardIndex := 0 to High(Cards) do
+            begin
+              if IsCardValid(Cards[CardIndex]) then
+              begin
+                CardDataList.Add(Cards[CardIndex]); // Store valid card details
+                AddCardToListView(Cards[CardIndex]); // Add to ListView
 
-        // Add cards to the ListView
-        for var CardIndex := 0 to High(Cards) do
-        begin
-          CardDataList.Add(Cards[CardIndex]); // Store card details in memory
-          AddCardToListView(Cards[CardIndex]); // Add to ListView
-          ProgressBar1.Value := CardIndex + 1;
-        end;
+                // Update the progress bar
+                ProgressBar1.Value := CardIndex + 1;
 
-        // Automatically select and display the first item
-        if ListViewCards.Items.Count > 0 then
-        begin
-          ListViewCards.Selected := ListViewCards.Items[0];
-          ShowCardDetails(ListViewCards.Items[0]);
-        end;
-      finally
-        ScryfallAPI.Free; // Free the API object
-      end;
+                // Force the UI to refresh
+                Application.ProcessMessages;
+              end
+              else
+              begin
+                FScryfallAPI.LogError(Format('Skipping invalid card at index %d: %s',
+                  [CardIndex, Cards[CardIndex].CardName]));
+              end;
+            end;
+
+            // Automatically select and display the first item
+            if ListViewCards.Items.Count > 0 then
+            begin
+              ListViewCards.Selected := ListViewCards.Items[0];
+              ShowCardDetails(ListViewCards.Items[0]);
+            end;
+          finally
+            CountLabel.Text := 'Cards Found: ' + ListViewCards.ItemCount.ToString;
+          end;
+        end);
+
+      // Enable the button
+      Button1.Enabled := True;
     end);
+
+  // Ensure the button is enabled in case the async task fails
+  Button1.Enabled := True;
 end;
 
 procedure TForm1.AddCardToListView(const Card: TCardDetails);
@@ -414,7 +363,7 @@ begin
   // Skip invalid cards
   if Card.CardName.IsEmpty or Card.SFID.IsEmpty then
   begin
-    //LogError('Skipping card: missing "name" or "id".');
+    FScryfallAPI.LogError('Skipping card: missing "name" or "id".');
     Exit;
   end;
 
@@ -423,46 +372,9 @@ begin
 
   // Set item properties
   ListViewItem.Text := Card.CardName;
-  ListViewItem.Detail := Card.TypeLine; // Optional: additional info
-  ListViewItem.TagObject := TCardDetailsObject.Create(Card); // Store the card object
-end;
-
-procedure TForm1.LoadImageToListViewItemAsync(const URL: string;
-ListViewItem: TListViewItem);
-begin
-  TTask.Run(
-    procedure
-    var
-      Bitmap: TBitmap;
-    begin
-      Bitmap := TBitmap.Create;
-      try
-        // Download or load the image from cache
-        LoadCachedOrDownloadImage(URL, Bitmap);
-
-        // Update the ListView item's Bitmap on the main thread
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            ListViewItem.Bitmap := Bitmap;
-            // Assign the image as the background
-          end);
-      finally
-        Bitmap.Free;
-      end;
-    end);
-end;
-
-function TForm1.FetchRulingsAsync(const cardId: string): TArray<TRuling>;
-var
-  ScryfallAPI: TScryfallAPI;
-begin
-  ScryfallAPI := TScryfallAPI.Create;
-  try
-    //Result := ScryfallAPI.GetRulingsByScryfallID(cardId);
-  finally
-    ScryfallAPI.Free;
-  end;
+  ListViewItem.Detail := Card.TypeLine;
+  ListViewItem.TagObject := TCardDetailsObject.Create(Card);
+  // Store the card object
 end;
 
 procedure TForm1.ShowCardDetails(Sender: TObject);
@@ -477,8 +389,7 @@ begin
     SelectedItem := TListViewItem(Sender);
 
     // Check if the TagObject contains card details
-    if Assigned(SelectedItem.TagObject) and
-      (SelectedItem.TagObject is TCardDetailsObject) then
+    if Assigned(SelectedItem.TagObject) and (SelectedItem.TagObject is TCardDetailsObject) then
     begin
       CardDetailsObject := TCardDetailsObject(SelectedItem.TagObject);
       SelectedCard := CardDetailsObject.CardDetails;
@@ -489,31 +400,36 @@ begin
       ShowHighResButton.TagString := SelectedCard.ImageUris.Normal;
       CardTitle := SelectedCard.CardName;
 
-      // Fetch rulings asynchronously
-      TTask.Run(
-        procedure
-        var
-          Rulings: TArray<TRuling>;
-        begin
-          try
-            Rulings := []; //FetchRulingsAsync(SelectedCard.SFID);
-            // Fetch rulings using card's Scryfall ID
-          except
-            on E: Exception do
-              TThread.Queue(nil,
+      // Display card details immediately without set details
+      DisplayCardInBrowser(SelectedCard, []);
+
+      // Fetch set details asynchronously
+      if not SelectedCard.SetCode.IsEmpty and SelectedCard.SetIconURI.IsEmpty then
+      begin
+        TTask.Run(
+          procedure
+          var
+            SetDetails: TSetDetails;
+          begin
+            try
+              // Fetch the set details from the API
+              SetDetails := FScryfallAPI.GetSetByCode(SelectedCard.SetCode);
+              TThread.Synchronize(nil,
                 procedure
                 begin
-                  ShowMessage('Error fetching rulings: ' + E.Message);
-                end);
-          end;
+                  // Update the card with fetched set details
+                  SelectedCard.SetName := SetDetails.Name;
+                  SelectedCard.SetIconURI := SetDetails.IconSVGURI;
 
-          // Display card details and rulings
-          TThread.Queue(nil,
-            procedure
-            begin
-              DisplayCardInBrowser(SelectedCard, Rulings);
-            end);
-        end);
+                  // Refresh the browser with updated set details
+                  DisplayCardInBrowser(SelectedCard, []);
+                end);
+            except
+              on E: Exception do
+                //LogError('Failed to fetch set details: ' + E.Message);
+            end;
+          end);
+      end;
     end
     else
       ShowMessage('Error: No card details available for this item.');
@@ -521,8 +437,6 @@ begin
   else
     ShowMessage('Error: Sender is not a TListViewItem.');
 end;
-
-
 
 function ReplacePlaceholder(const Template, Placeholder, Value: string): string;
 begin
@@ -536,165 +450,142 @@ var
   Template: string;
   Replacements: TDictionary<string, string>;
   CardImagesHtml: string;
-  RarityClass, Layout: string;
-  I: Integer;
-
-begin
-  // Determine the rarity class for highlighting
-  if CardDetails.Rarity.ToLower = 'common' then
-    RarityClass := 'common'
-  else if CardDetails.Rarity.ToLower = 'uncommon' then
-    RarityClass := 'uncommon'
-  else if CardDetails.Rarity.ToLower = 'rare' then
-    RarityClass := 'rare'
-  else if CardDetails.Rarity.ToLower = 'mythic' then
-    RarityClass := 'mythic'
-  else
-    RarityClass := ''; // Default class if no match
-
-  // Get the card layout (e.g., transform, adventure, split, etc.)
-  Layout := CardDetails.Layout.ToLower;
-
-  // Load the HTML template
-  Template := LoadTemplate('card_template.html');
-
-  // Build the card images HTML based on the layout
-  if (Layout = 'transform') or (Layout = 'modal_dfc') then
-  begin
-    // Double-faced card
-    if Length(CardDetails.CardFaces) > 1 then
-    begin
-      CardImagesHtml := Format('<div class="flip-card" onclick="flipCard()">' +
-        '<div class="card-face front"><img src="%s" alt="Front Face"></div>' +
-        '<div class="card-face back"><img src="%s" alt="Back Face"></div>' +
-        '</div>',
-        [TNetEncoding.HTML.Encode(CardDetails.CardFaces[0].ImageUris.Normal),
-         TNetEncoding.HTML.Encode(CardDetails.CardFaces[1].ImageUris.Normal)]);
-    end;
-  end
-  else if Layout = 'split' then
-  begin
-    // Split card
-    CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Split Card"></div>',
-      [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)]);
-  end
-  else if Layout = 'adventure' then
-  begin
-    // Adventure card
-    if Length(CardDetails.CardFaces) > 0 then
-    begin
-      CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Adventure Card"></div>',
-        [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)]);
-    end;
-  end
-  else if Layout = 'saga' then
-  begin
-    // Saga card
-    CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Saga"></div>',
-      [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)]);
-  end
-  else if Layout = 'token' then
-  begin
-    // Token or emblem
-    CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Token"></div>',
-      [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)]);
-  end
-  else
-  begin
-    // Default single-faced card
-    CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Card Image"></div>',
-      [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)]);
-  end;
-
-  // Build legalities HTML
-// Build legalities rows
-var
   LegalitiesRows: string;
+  PowerToughnessHtml: string;
+  RarityClass, Layout: string;
+  LegalityName, LegalityStatus, StatusClass: string;
+  I: Integer;
 begin
-  LegalitiesRows := '';
-  for I := Low(LegalitiesArray) to High(LegalitiesArray) do
-  begin
-    var LegalityName := LegalitiesArray[I];
-    var LegalityStatus := GetLegalStatus(CardDetails.Legalities, LegalityName);
-    if LegalityStatus <> '' then
-    begin
-      var StatusClass := '';
-      if LegalityStatus.ToLower = 'legal' then
-        StatusClass := 'legal'
-      else if LegalityStatus.ToLower = 'not_legal' then
-        StatusClass := 'not-legal'
-      else if LegalityStatus.ToLower = 'banned' then
-        StatusClass := 'banned'
-      else if LegalityStatus.ToLower = 'restricted' then
-        StatusClass := 'restricted';
-
-      // Generate a single row
-      LegalitiesRows := LegalitiesRows +
-        Format('<tr>' +
-                 '<td class="format-name">%s</td>' +
-                 '<td class="status"><span class="%s">%s</span></td>' +
-               '</tr>',
-               [TNetEncoding.HTML.Encode(LegalityName), StatusClass, TNetEncoding.HTML.Encode(StatusClass)]);
-    end;
-  end;
-end;
-
-
-  // Power/Toughness or Loyalty
-  var PowerToughnessHtml := '';
-  if (CardDetails.Power <> '') and (CardDetails.Toughness <> '') then
-  begin
-    PowerToughnessHtml := Format('<p><strong>Power/Toughness:</strong> %s/%s</p>',
-      [TNetEncoding.HTML.Encode(CardDetails.Power),
-       TNetEncoding.HTML.Encode(CardDetails.Toughness)]);
-  end
-  else if CardDetails.Loyalty <> '' then
-  begin
-    PowerToughnessHtml := Format('<p><strong>Loyalty:</strong> %s</p>',
-      [TNetEncoding.HTML.Encode(CardDetails.Loyalty)]);
-  end;
-
-  // Prepare replacements for placeholders
-  Replacements := TDictionary<string, string>.Create;
   try
-    Replacements.Add('{{CardName}}', TNetEncoding.HTML.Encode(CardDetails.CardName));
-     if CardDetails.FlavorText <> '' then
-     Replacements.Add('{{FlavorText}}', TNetEncoding.HTML.Encode(CardDetails.FlavorText))
-     else
-     Replacements.Add('{{FlavorText}}', '');
+    // Determine the rarity class for highlighting
+    if CardDetails.Rarity.ToLower = 'common' then
+      RarityClass := 'common'
+    else if CardDetails.Rarity.ToLower = 'uncommon' then
+      RarityClass := 'uncommon'
+    else if CardDetails.Rarity.ToLower = 'rare' then
+      RarityClass := 'rare'
+    else if CardDetails.Rarity.ToLower = 'mythic' then
+      RarityClass := 'mythic'
+    else
+      RarityClass := ''; // Default class if no match
 
-     //{{SetName}}
-    Replacements.Add('{{SetIcon}}', CardDetails.SetIconURI); // Add set icon URI
-    Replacements.Add('{{SetName}}', TNetEncoding.HTML.Encode(CardDetails.SetName)); // Set name
-    Replacements.Add('{{CardImages}}', CardImagesHtml);
-    Replacements.Add('{{TypeLine}}', TNetEncoding.HTML.Encode(CardDetails.TypeLine));
-    Replacements.Add('{{ManaCost}}', ReplaceManaSymbolsWithImages(CardDetails.ManaCost));
-    Replacements.Add('{{OracleText}}', ReplaceManaSymbolsWithImages(CardDetails.OracleText));
-    Replacements.Add('{{PowerToughness}}', PowerToughnessHtml);
-      // Replace the placeholder in the template
-    Replacements.Add('{{Legalities}}', LegalitiesRows);
-    Replacements.Add('{{Rarity}}', TNetEncoding.HTML.Encode(CardDetails.Rarity));
-    Replacements.Add('{{RarityClass}}', RarityClass);
-    Replacements.Add('{{USD}}', CardDetails.Prices.USD);
-    Replacements.Add('{{USD_Foil}}', CardDetails.Prices.USD_Foil);
-    Replacements.Add('{{EUR}}', CardDetails.Prices.EUR);
-    Replacements.Add('{{Tix}}', CardDetails.Prices.Tix);
+    // Get the card layout (e.g., transform, adventure, split, etc.)
+    Layout := CardDetails.Layout.ToLower;
 
-    // Replace placeholders in the template
-    for var Key in Replacements.Keys do
-      Template := Template.Replace(Key, Replacements[Key]);
+    // Load the HTML template
+    Template := LoadTemplate('card_template.html');
 
-    // Load the final HTML into the WebBrowser
-    TThread.Queue(nil,
-      procedure
+    // Build the card images HTML based on the layout
+    if (Layout = 'transform') or (Layout = 'modal_dfc') then
+    begin
+      // Double-faced card
+      if Length(CardDetails.CardFaces) > 1 then
+        CardImagesHtml := Format('<div class="flip-card" onclick="flipCard()">' +
+          '<div class="card-face front"><img src="%s" alt="Front Face"></div>' +
+          '<div class="card-face back"><img src="%s" alt="Back Face"></div>' +
+          '</div>', [
+          TNetEncoding.HTML.Encode(CardDetails.CardFaces[0].ImageUris.Normal),
+          TNetEncoding.HTML.Encode(CardDetails.CardFaces[1].ImageUris.Normal)]);
+    end
+    else if Layout = 'split' then
+      // Split card
+      CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Split Card"></div>',
+        [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)])
+    else if Layout = 'adventure' then
+      // Adventure card
+      CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Adventure Card"></div>',
+        [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)])
+    else if Layout = 'saga' then
+      // Saga card
+      CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Saga"></div>',
+        [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)])
+    else if Layout = 'token' then
+      // Token or emblem
+      CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Token"></div>',
+        [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)])
+    else
+      // Default single-faced card
+      CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Card Image"></div>',
+        [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)]);
+
+    // Build legalities rows
+    LegalitiesRows := '';
+    for I := Low(LegalitiesArray) to High(LegalitiesArray) do
+    begin
+      LegalityName := LegalitiesArray[I];
+      LegalityStatus := GetLegalStatus(CardDetails.Legalities, LegalityName);
+
+      if LegalityStatus <> '' then
       begin
-        WebBrowser1.LoadFromStrings(Template, '');
-      end);
-  finally
-    Replacements.Free;
+        if LegalityStatus.ToLower = 'legal' then
+          StatusClass := 'legal'
+        else if LegalityStatus.ToLower = 'not_legal' then
+          StatusClass := 'not-legal'
+        else if LegalityStatus.ToLower = 'banned' then
+          StatusClass := 'banned'
+        else if LegalityStatus.ToLower = 'restricted' then
+          StatusClass := 'restricted'
+        else
+          StatusClass := 'unknown';
+
+        // Generate a single row
+        LegalitiesRows := LegalitiesRows +
+          Format('<tr><td class="format-name">%s</td>' +
+          '<td class="status"><span class="%s">%s</span></td></tr>',
+          [TNetEncoding.HTML.Encode(LegalityName), StatusClass,
+          TNetEncoding.HTML.Encode(LegalityStatus)]);
+      end;
+    end;
+
+    // Power/Toughness or Loyalty
+    PowerToughnessHtml := '';
+    if (CardDetails.Power <> '') and (CardDetails.Toughness <> '') then
+      PowerToughnessHtml := Format('<p><strong>Power/Toughness:</strong> %s/%s</p>',
+        [TNetEncoding.HTML.Encode(CardDetails.Power),
+        TNetEncoding.HTML.Encode(CardDetails.Toughness)])
+    else if CardDetails.Loyalty <> '' then
+      PowerToughnessHtml := Format('<p><strong>Loyalty:</strong> %s</p>',
+        [TNetEncoding.HTML.Encode(CardDetails.Loyalty)]);
+
+    // Prepare replacements for placeholders
+    Replacements := TDictionary<string, string>.Create;
+    try
+      Replacements.Add('{{CardName}}', TNetEncoding.HTML.Encode(CardDetails.CardName));
+      Replacements.Add('{{FlavorText}}', TNetEncoding.HTML.Encode(CardDetails.FlavorText));
+      Replacements.Add('{{SetIcon}}', CardDetails.SetIconURI); // Add set icon URI
+      Replacements.Add('{{SetName}}', TNetEncoding.HTML.Encode(CardDetails.SetName));
+      Replacements.Add('{{CardImages}}', CardImagesHtml);
+      Replacements.Add('{{TypeLine}}', TNetEncoding.HTML.Encode(CardDetails.TypeLine));
+      Replacements.Add('{{ManaCost}}', ReplaceManaSymbolsWithImages(CardDetails.ManaCost));
+      Replacements.Add('{{OracleText}}', ReplaceManaSymbolsWithImages(CardDetails.OracleText));
+      Replacements.Add('{{PowerToughness}}', PowerToughnessHtml);
+      Replacements.Add('{{Legalities}}', LegalitiesRows);
+      Replacements.Add('{{Rarity}}', TNetEncoding.HTML.Encode(CardDetails.Rarity));
+      Replacements.Add('{{RarityClass}}', RarityClass);
+      Replacements.Add('{{USD}}', CardDetails.Prices.USD);
+      Replacements.Add('{{USD_Foil}}', CardDetails.Prices.USD_Foil);
+      Replacements.Add('{{EUR}}', CardDetails.Prices.EUR);
+      Replacements.Add('{{Tix}}', CardDetails.Prices.Tix);
+
+      // Replace placeholders in the template
+      for var Key in Replacements.Keys do
+        Template := Template.Replace(Key, Replacements[Key]);
+
+      // Load the final HTML into the WebBrowser
+      TThread.Queue(nil,
+        procedure
+        begin
+          WebBrowser1.LoadFromStrings(Template, '');
+        end);
+    finally
+      Replacements.Free;
+    end;
+
+  except
+    on E: Exception do
+      ShowMessage('Error displaying card: ' + E.Message);
   end;
 end;
-
 
 procedure TForm1.ShowHighResButtonClick(Sender: TObject);
 var
@@ -712,37 +603,6 @@ begin
   HighResImageForm.ShowImage(ImageURL, CardName);
 end;
 
-procedure TForm1.GetSelectedCardRulings(const cardId: string);
-var
-  ScryfallAPI: TScryfallAPI;
-  Rulings: TArray<TRuling>;
-  I: Integer;
-begin
-  if not Assigned(FCardDetailsObject) then
-  begin
-    ShowMessage('No card is selected.');
-    Exit;
-  end;
-
-  ScryfallAPI := TScryfallAPI.Create;
-  try
-    // Use the Scryfall ID of the card
-  //  Rulings := ScryfallAPI.GetRulingsByScryfallID(cardId);
-    if Length(Rulings) = 0 then
-    begin
-      ShowMessage('No rulings available for this card.');
-      Exit;
-    end;
-    for I := 0 to High(Rulings) do
-    begin
-      ShowMessage('Ruling: ' + Rulings[I].Comment + Rulings[I].Comment);
-
-    end;
-  finally
-    ScryfallAPI.Free;
-  end;
-end;
-
 procedure TForm1.Button1Click(Sender: TObject);
 begin
 
@@ -750,12 +610,8 @@ begin
   begin
 
     DisplayCardArtworks(Trim(Edit1.Text.Trim));
+    Button1.Enabled := false;
   end;
-end;
-
-procedure TForm1.Button3Click(Sender: TObject);
-begin
-  // FilterDisplayedCards(''); // Passing an empty string displays all cards
 end;
 
 procedure TForm1.Button4Click(Sender: TObject);
@@ -789,17 +645,6 @@ procedure TForm1.Button5Click(Sender: TObject);
 begin
   ShowCardCollection;
   // form2.Show;
-end;
-
-procedure TForm1.Button6Click(Sender: TObject);
-begin
-  if not Assigned(FCardDetailsObject) then
-  begin
-    ShowMessage('No card is selected.');
-    Exit;
-  end;
-
-  GetSelectedCardRulings(FCardDetailsObject.CardDetails.SFID);
 end;
 
 procedure TForm1.SaveSelectedCardToDatabase;

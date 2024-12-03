@@ -18,7 +18,7 @@ inherited Form1_LgXhdpiTb: TForm1_LgXhdpiTb
         Size.Height = 628.000000000000000000
       end
       inherited WebBrowser1: TWebBrowser
-        Size.Width = 66.000000000000000000
+        Size.Width = 137.000000000000000000
         Size.Height = 628.000000000000000000
       end
     end
