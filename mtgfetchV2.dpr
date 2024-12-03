@@ -4,14 +4,15 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   FMX.Skia,
-  MainForm in 'MainForm.pas' {Form1} ,
+  MainForm in 'MainForm.pas' {Form1},
   ScryfallAPIWrapperV2 in 'ScryfallAPIWrapperV2.pas',
   SGlobalsZ in 'SGlobalsZ.pas',
-  DataModuleUnit in 'DataModuleUnit.pas' {DataModule1: TDataModule} ,
-  HighResForm in 'HighResForm.pas' {HighResImageForm} ,
-  CollectionForm in 'CollectionForm.pas' {Form2} ,
+  DataModuleUnit in 'DataModuleUnit.pas' {DataModule1: TDataModule},
+  HighResForm in 'HighResForm.pas' {HighResImageForm},
+  CollectionForm in 'CollectionForm.pas' {Form2},
   MLogic in 'MLogic.pas',
-  JsonDataObjects in 'JsonDataObjects.pas';
+  JsonDataObjects in 'JsonDataObjects.pas',
+  CardDisplayHelpers in 'CardDisplayHelpers.pas';
 
 {$R *.res}
 

@@ -217,19 +217,19 @@ begin
     end;
   end;
 end;
-//procedure TScryfallAPI.FillCardDetailsFromJson(const JsonObj: TJsonObject; out CardDetails: TCardDetails);
+
 procedure TScryfallAPI.FillCardDetailsFromJson(const JsonObj: TJsonObject; out CardDetails: TCardDetails);
 begin
   CardDetails.Clear;
 
   try
-    // Safely decode fields with platform-specific adjustments
+    // Existing fields with platform-safe string assignment
     if JsonObj.Contains('type_line') and (JsonObj.Types['type_line'] = jdtString) then
     begin
       {$IF DEFINED(MSWINDOWS)}
       CardDetails.TypeLine := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(JsonObj.S['type_line']));
       {$ELSE}
-      CardDetails.TypeLine := JsonObj.S['type_line']; // Use direct assignment on Android
+      CardDetails.TypeLine := JsonObj.S['type_line'];
       {$ENDIF}
     end;
 
@@ -241,7 +241,7 @@ begin
       {$IF DEFINED(MSWINDOWS)}
       CardDetails.CardName := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(JsonObj.S['name']));
       {$ELSE}
-      CardDetails.CardName := JsonObj.S['name']; // Use direct assignment on Android
+      CardDetails.CardName := JsonObj.S['name'];
       {$ENDIF}
     end;
 
@@ -253,9 +253,22 @@ begin
       {$IF DEFINED(MSWINDOWS)}
       CardDetails.OracleText := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(JsonObj.S['oracle_text']));
       {$ELSE}
-      CardDetails.OracleText := JsonObj.S['oracle_text']; // Use direct assignment on Android
+      CardDetails.OracleText := JsonObj.S['oracle_text'];
       {$ENDIF}
     end;
+
+
+    if JsonObj.Contains('keywords') and (JsonObj.Types['keywords'] = jdtArray) then
+     begin
+      var KeywordsArray := JsonObj.A['keywords'];
+      SetLength(CardDetails.Keywords, KeywordsArray.Count);
+       for var I := 0 to KeywordsArray.Count - 1 do
+          if KeywordsArray.Types[I] = jdtString then
+           CardDetails.Keywords[I] := KeywordsArray.S[I];
+      end
+   else
+     SetLength(CardDetails.Keywords, 0); // Ensure the array is empty if no keywords
+
 
     if JsonObj.Contains('set') and (JsonObj.Types['set'] = jdtString) then
       CardDetails.SetCode := JsonObj.S['set'];
@@ -286,18 +299,77 @@ begin
       {$IF DEFINED(MSWINDOWS)}
       CardDetails.FlavorText := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(JsonObj.S['flavor_text']));
       {$ELSE}
-      CardDetails.FlavorText := JsonObj.S['flavor_text']; // Use direct assignment on Android
+      CardDetails.FlavorText := JsonObj.S['flavor_text'];
       {$ENDIF}
     end;
 
     if JsonObj.Contains('layout') and (JsonObj.Types['layout'] = jdtString) then
       CardDetails.Layout := JsonObj.S['layout'].ToLower;
 
+    // New fields
+    if JsonObj.Contains('lang') and (JsonObj.Types['lang'] = jdtString) then
+      CardDetails.Lang := JsonObj.S['lang'];
+
+    if JsonObj.Contains('released_at') and (JsonObj.Types['released_at'] = jdtString) then
+      CardDetails.ReleasedAt := JsonObj.S['released_at'];
+
+   if JsonObj.Contains('cmc') and (JsonObj.Types['cmc'] = jdtFloat) then
+     CardDetails.CMC := JsonObj.F['cmc'];
+
+    if JsonObj.Contains('reserved') and (JsonObj.Types['reserved'] = jdtBool) then
+      CardDetails.Reserved := JsonObj.B['reserved'];
+
+    if JsonObj.Contains('foil') and (JsonObj.Types['foil'] = jdtBool) then
+      CardDetails.Foil := JsonObj.B['foil'];
+
+    if JsonObj.Contains('nonfoil') and (JsonObj.Types['nonfoil'] = jdtBool) then
+      CardDetails.NonFoil := JsonObj.B['nonfoil'];
+
+    if JsonObj.Contains('oversized') and (JsonObj.Types['oversized'] = jdtBool) then
+      CardDetails.Oversized := JsonObj.B['oversized'];
+
+    if JsonObj.Contains('promo') and (JsonObj.Types['promo'] = jdtBool) then
+      CardDetails.Promo := JsonObj.B['promo'];
+
+    if JsonObj.Contains('reprint') and (JsonObj.Types['reprint'] = jdtBool) then
+      CardDetails.Reprint := JsonObj.B['reprint'];
+
+    if JsonObj.Contains('digital') and (JsonObj.Types['digital'] = jdtBool) then
+      CardDetails.Digital := JsonObj.B['digital'];
+
+    if JsonObj.Contains('rarity') and (JsonObj.Types['rarity'] = jdtString) then
+      CardDetails.Rarity := JsonObj.S['rarity'];
+
+    if JsonObj.Contains('artist') and (JsonObj.Types['artist'] = jdtString) then
+      CardDetails.Artist := JsonObj.S['artist'];
+
+    if JsonObj.Contains('collector_number') and (JsonObj.Types['collector_number'] = jdtString) then
+      CardDetails.CollectorNumber := JsonObj.S['collector_number'];
+
+    if JsonObj.Contains('border_color') and (JsonObj.Types['border_color'] = jdtString) then
+      CardDetails.BorderColor := JsonObj.S['border_color'];
+
+    if JsonObj.Contains('frame') and (JsonObj.Types['frame'] = jdtString) then
+      CardDetails.Frame := JsonObj.S['frame'];
+
+    if JsonObj.Contains('security_stamp') and (JsonObj.Types['security_stamp'] = jdtString) then
+      CardDetails.SecurityStamp := JsonObj.S['security_stamp'];
+
+    if JsonObj.Contains('full_art') and (JsonObj.Types['full_art'] = jdtBool) then
+      CardDetails.FullArt := JsonObj.B['full_art'];
+
+    if JsonObj.Contains('textless') and (JsonObj.Types['textless'] = jdtBool) then
+      CardDetails.Textless := JsonObj.B['textless'];
+
+    if JsonObj.Contains('story_spotlight') and (JsonObj.Types['story_spotlight'] = jdtBool) then
+      CardDetails.StorySpotlight := JsonObj.B['story_spotlight'];
+
     // Parse nested objects
     ParseImageUris(JsonObj, CardDetails.ImageUris);
     ParseLegalities(JsonObj, CardDetails.Legalities);
     ParsePrices(JsonObj, CardDetails.Prices);
     ParseCardFaces(JsonObj, CardDetails.CardFaces);
+
   except
     on E: Exception do
     begin
@@ -306,6 +378,9 @@ begin
     end;
   end;
 end;
+
+
+
 
 procedure TScryfallAPI.ParseImageUris(const JsonObj: TJsonObject; out ImageUris: TImageUris);
 var
@@ -331,36 +406,46 @@ begin
     ImageUris := Default(TImageUris); // Default values if not found or invalid
 end;
 
-procedure TScryfallAPI.ParseLegalities(const JsonObj: TJsonObject;
-  out Legalities: TCardLegalities);
+procedure TScryfallAPI.ParseLegalities(const JsonObj: TJsonObject; out Legalities: TCardLegalities);
 var
   LegalitiesObj: TJsonObject;
+
+  function GetSafeStringField(const Obj: TJsonObject; const FieldName: string): string;
+  begin
+    if Obj.Contains(FieldName) and (Obj.Types[FieldName] = jdtString) then
+      Result := Obj.S[FieldName]
+    else
+      Result := ''; // Return an empty string if the field is missing or invalid
+  end;
+
 begin
   if JsonObj.Contains('legalities') and (JsonObj.Types['legalities'] = jdtObject) then
   begin
     LegalitiesObj := JsonObj.O['legalities'];
 
-    if LegalitiesObj.Contains('standard') and (LegalitiesObj.Types['standard'] = jdtString) then
-      Legalities.Standard := LegalitiesObj.S['standard'];
-    if LegalitiesObj.Contains('pioneer') and (LegalitiesObj.Types['pioneer'] = jdtString) then
-      Legalities.Pioneer := LegalitiesObj.S['pioneer'];
-    if LegalitiesObj.Contains('modern') and (LegalitiesObj.Types['modern'] = jdtString) then
-      Legalities.Modern := LegalitiesObj.S['modern'];
-    if LegalitiesObj.Contains('legacy') and (LegalitiesObj.Types['legacy'] = jdtString) then
-      Legalities.Legacy := LegalitiesObj.S['legacy'];
-    if LegalitiesObj.Contains('commander') and (LegalitiesObj.Types['commander'] = jdtString) then
-      Legalities.Commander := LegalitiesObj.S['commander'];
-    if LegalitiesObj.Contains('vintage') and (LegalitiesObj.Types['vintage'] = jdtString) then
-      Legalities.Vintage := LegalitiesObj.S['vintage'];
-    if LegalitiesObj.Contains('pauper') and (LegalitiesObj.Types['pauper'] = jdtString) then
-      Legalities.Pauper := LegalitiesObj.S['pauper'];
-    if LegalitiesObj.Contains('historic') and (LegalitiesObj.Types['historic'] = jdtString) then
-      Legalities.Historic := LegalitiesObj.S['historic'];
-    if LegalitiesObj.Contains('explorer') and (LegalitiesObj.Types['explorer'] = jdtString) then
-      Legalities.Explorer := LegalitiesObj.S['explorer'];
+    // Safely extract all legalities
+    Legalities.Standard := GetSafeStringField(LegalitiesObj, 'standard');
+    Legalities.Pioneer := GetSafeStringField(LegalitiesObj, 'pioneer');
+    Legalities.Modern := GetSafeStringField(LegalitiesObj, 'modern');
+    Legalities.Legacy := GetSafeStringField(LegalitiesObj, 'legacy');
+    Legalities.Commander := GetSafeStringField(LegalitiesObj, 'commander');
+    Legalities.Vintage := GetSafeStringField(LegalitiesObj, 'vintage');
+    Legalities.Pauper := GetSafeStringField(LegalitiesObj, 'pauper');
+    Legalities.Historic := GetSafeStringField(LegalitiesObj, 'historic');
+    Legalities.Explorer := GetSafeStringField(LegalitiesObj, 'explorer');
+    Legalities.Alchemy := GetSafeStringField(LegalitiesObj, 'alchemy');
+    Legalities.Brawl := GetSafeStringField(LegalitiesObj, 'brawl');
+    Legalities.Future := GetSafeStringField(LegalitiesObj, 'future');
+    Legalities.Oldschool := GetSafeStringField(LegalitiesObj, 'oldschool');
+    Legalities.Premodern := GetSafeStringField(LegalitiesObj, 'premodern');
+    Legalities.Duel := GetSafeStringField(LegalitiesObj, 'duel');
+    Legalities.Penny := GetSafeStringField(LegalitiesObj, 'penny');
   end
   else
+  begin
+    // Default to empty legalities if the legalities object is missing or invalid
     Legalities := Default(TCardLegalities);
+  end;
 end;
 
 procedure TScryfallAPI.ParsePrices(const JsonObj: TJsonObject;

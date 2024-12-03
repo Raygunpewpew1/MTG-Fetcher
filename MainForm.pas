@@ -455,6 +455,8 @@ var
   RarityClass, Layout: string;
   LegalityName, LegalityStatus, StatusClass: string;
   I: Integer;
+  FlipIndicatorHtml: string; // Flip indicator
+  KeywordsList: string;
 begin
   try
     // Determine the rarity class for highlighting
@@ -476,35 +478,34 @@ begin
     Template := LoadTemplate('card_template.html');
 
     // Build the card images HTML based on the layout
+    FlipIndicatorHtml := ''; // Initialize as empty
     if (Layout = 'transform') or (Layout = 'modal_dfc') then
     begin
       // Double-faced card
       if Length(CardDetails.CardFaces) > 1 then
+      begin
+        FlipIndicatorHtml := '<div class="flip-indicator">Double-Faced Card: Click to Flip</div>';
         CardImagesHtml := Format('<div class="flip-card" onclick="flipCard()">' +
           '<div class="card-face front"><img src="%s" alt="Front Face"></div>' +
           '<div class="card-face back"><img src="%s" alt="Back Face"></div>' +
           '</div>', [
           TNetEncoding.HTML.Encode(CardDetails.CardFaces[0].ImageUris.Normal),
           TNetEncoding.HTML.Encode(CardDetails.CardFaces[1].ImageUris.Normal)]);
+      end;
     end
     else if Layout = 'split' then
-      // Split card
       CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Split Card"></div>',
         [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)])
     else if Layout = 'adventure' then
-      // Adventure card
       CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Adventure Card"></div>',
         [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)])
     else if Layout = 'saga' then
-      // Saga card
       CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Saga"></div>',
         [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)])
     else if Layout = 'token' then
-      // Token or emblem
       CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Token"></div>',
         [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)])
     else
-      // Default single-faced card
       CardImagesHtml := Format('<div class="single-card"><img src="%s" alt="Card Image"></div>',
         [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)]);
 
@@ -528,6 +529,16 @@ begin
         else
           StatusClass := 'unknown';
 
+        // Transform the LegalityStatus text to make it more readable
+        if LegalityStatus.ToLower = 'not_legal' then
+          LegalityStatus := 'Not Legal'
+        else if LegalityStatus.ToLower = 'banned' then
+          LegalityStatus := 'Banned'
+        else if LegalityStatus.ToLower = 'restricted' then
+          LegalityStatus := 'Restricted'
+        else if LegalityStatus.ToLower = 'legal' then
+          LegalityStatus := 'Legal';
+
         // Generate a single row
         LegalitiesRows := LegalitiesRows +
           Format('<tr><td class="format-name">%s</td>' +
@@ -547,18 +558,49 @@ begin
       PowerToughnessHtml := Format('<p><strong>Loyalty:</strong> %s</p>',
         [TNetEncoding.HTML.Encode(CardDetails.Loyalty)]);
 
+    // Build keywords
+    KeywordsList := String.Join(', ', CardDetails.Keywords);
+
     // Prepare replacements for placeholders
     Replacements := TDictionary<string, string>.Create;
     try
+      // Add conditional badges
+if CardDetails.FullArt then
+  Replacements.Add('{{FullArt}}', '<span class="badge full-art">Full Art</span>')
+else
+  Replacements.Add('{{FullArt}}', '');
+
+if CardDetails.Promo then
+  Replacements.Add('{{Promo}}', '<span class="badge promo">Promo</span>')
+else
+  Replacements.Add('{{Promo}}', '');
+
+if CardDetails.Reserved then
+  Replacements.Add('{{Reserved}}', '<span class="badge reserved">Reserved</span>')
+else
+  Replacements.Add('{{Reserved}}', '');
+
+
+if CardDetails.StorySpotlight then
+  Replacements.Add('{{StorySpotlight}}', '<p><strong>DailyMTG Story Spotlight :</strong> Yes</p>')
+else
+  Replacements.Add('{{StorySpotlight}}', '<p><strong>DailyMTG Story Spotlight :</strong> No</p>');
+
+
+
+
+      // Add other fields
       Replacements.Add('{{CardName}}', TNetEncoding.HTML.Encode(CardDetails.CardName));
       Replacements.Add('{{FlavorText}}', TNetEncoding.HTML.Encode(CardDetails.FlavorText));
-      Replacements.Add('{{SetIcon}}', CardDetails.SetIconURI); // Add set icon URI
+      Replacements.Add('{{SetIcon}}', CardDetails.SetIconURI);
       Replacements.Add('{{SetName}}', TNetEncoding.HTML.Encode(CardDetails.SetName));
       Replacements.Add('{{CardImages}}', CardImagesHtml);
+      Replacements.Add('{{FlipIndicator}}', FlipIndicatorHtml);
       Replacements.Add('{{TypeLine}}', TNetEncoding.HTML.Encode(CardDetails.TypeLine));
       Replacements.Add('{{ManaCost}}', ReplaceManaSymbolsWithImages(CardDetails.ManaCost));
       Replacements.Add('{{OracleText}}', ReplaceManaSymbolsWithImages(CardDetails.OracleText));
       Replacements.Add('{{PowerToughness}}', PowerToughnessHtml);
+      Replacements.Add('{{Keywords}}', TNetEncoding.HTML.Encode(KeywordsList));
       Replacements.Add('{{Legalities}}', LegalitiesRows);
       Replacements.Add('{{Rarity}}', TNetEncoding.HTML.Encode(CardDetails.Rarity));
       Replacements.Add('{{RarityClass}}', RarityClass);
@@ -566,6 +608,11 @@ begin
       Replacements.Add('{{USD_Foil}}', CardDetails.Prices.USD_Foil);
       Replacements.Add('{{EUR}}', CardDetails.Prices.EUR);
       Replacements.Add('{{Tix}}', CardDetails.Prices.Tix);
+      Replacements.Add('{{Artist}}', TNetEncoding.HTML.Encode(CardDetails.Artist));
+      Replacements.Add('{{CollectorNumber}}', TNetEncoding.HTML.Encode(CardDetails.CollectorNumber));
+      Replacements.Add('{{Frame}}', TNetEncoding.HTML.Encode(CardDetails.Frame));
+      Replacements.Add('{{BorderColor}}', TNetEncoding.HTML.Encode(CardDetails.BorderColor));
+      Replacements.Add('{{ReleasedAt}}', TNetEncoding.HTML.Encode(CardDetails.ReleasedAt));
 
       // Replace placeholders in the template
       for var Key in Replacements.Keys do
