@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +30,8 @@
     }
 
     /* Flip Card Design */
-    .flip-card, .single-card {
+    .flip-card,
+    .single-card {
       position: relative;
       width: 240px;
       height: 360px;
@@ -37,6 +39,17 @@
       border-radius: 10px;
       background: #222;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .flip-indicator {
+      color: #fff;
+      background-color: #333;
+      text-align: center;
+      padding: 5px;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      border-radius: 5px;
     }
 
     .flip-card {
@@ -114,16 +127,16 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 5px 0; /* Add vertical spacing */
-      padding: 0 10px; /* Add horizontal padding */
+      margin: 5px 0;
+      padding: 0 10px;
     }
 
     /* Type line styling */
     .type-line {
       font-size: 14px;
       font-style: italic;
-      flex-grow: 1; /* Ensures it stretches */
-      margin-right: 10px; /* Space between type line and set details */
+      flex-grow: 1;
+      margin-right: 10px;
     }
 
     /* Set details align icon and name */
@@ -137,8 +150,8 @@
     .set-icon {
       width: 24px;
       height: 24px;
-      margin-right: 5px; /* Space between icon and set name */
-      filter: invert(100%) brightness(150%); /* Adjust for dark background */
+      margin-right: 5px;
+      filter: invert(100%) brightness(150%);
     }
 
     /* Oracle Text */
@@ -173,29 +186,124 @@
       border-radius: 5px;
       font-weight: bold;
       margin-top: 10px;
+      text-align: center;
     }
 
     .rarity.common {
       background-color: #B0BEC5;
+      /* Light Gray */
       color: black;
     }
 
     .rarity.uncommon {
       background-color: #4CAF50;
+      /* Green */
       color: white;
     }
 
     .rarity.rare {
       background-color: #FFD700;
+      /* Gold */
       color: black;
     }
 
     .rarity.mythic {
       background-color: #FF4500;
+      /* Orange */
       color: white;
     }
 
-    /* Prices */
+    /* Card Badges Container */
+    .card-badges {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    /* Hide empty badge container (if no badges exist) */
+    .card-badges:empty {
+      display: none;
+    }
+
+    /* Individual Badge Styling */
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      margin-right: 5px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: bold;
+      color: white;
+    }
+
+    /* Full Art Badge Styling */
+    .badge.full-art {
+      background-color: #FF5722;
+      /* Orange */
+    }
+
+    /* Promo Badge Styling */
+    .badge.promo {
+      background-color: #4CAF50;
+      /* Green */
+    }
+
+    /* Reserved Badge Styling */
+    .badge.reserved {
+      background-color: #9C27B0;
+      /* Purple */
+    }
+
+    /* Keywords Section */
+    .keywords {
+      margin-top: 10px;
+      font-size: 13px;
+      font-style: italic;
+      color: #FFD700;
+    }
+
+    /* Legalities Section */
+    .legalities-grid {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .legalities-grid td {
+      padding: 5px;
+      border: 1px solid #444;
+    }
+
+    .legalities-grid td.format-name {
+      text-align: left;
+      font-weight: bold;
+      color: #FFD700;
+    }
+
+    .legalities-grid td.status {
+      text-align: right;
+    }
+
+    .legalities-grid span.legal {
+      color: #4CAF50;
+      /* Green */
+    }
+
+    .legalities-grid span.not-legal {
+      color: gray;
+      /* Gray */
+    }
+
+    .legalities-grid span.banned {
+      color: red;
+      /* Red */
+    }
+
+    .legalities-grid span.restricted {
+      color: orange;
+      /* Orange */
+    }
+
+    /* Prices Section */
     .prices-grid {
       width: 100%;
       border-collapse: collapse;
@@ -214,63 +322,26 @@
 
     .prices-grid td:last-child {
       text-align: right;
-      color: #FFD700; /* Gold */
+      color: #FFD700;
+      /* Gold */
     }
 
-    .legalities-grid {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
+    /* Additional Details Section */
+    .additional-details {
+      margin-top: 15px;
+      font-size: 13px;
+      line-height: 1.6;
+      border-top: 1px solid #333;
+      padding-top: 10px;
     }
 
-    .legalities-grid td {
-      padding: 5px;
-      border: 1px solid #444;
-    }
-
-    .legalities-grid td.format-name {
-      text-align: left;
-      font-weight: bold;
-      color: #FFD700; /* Gold for format names */
-    }
-
-    .legalities-grid td.status {
-      text-align: right;
-    }
-
-    .legalities-grid span.legal {
-      color: #4CAF50; /* Green */
-    }
-
-    .legalities-grid span.not-legal {
-      color: gray; /* Gray */
-    }
-
-    .legalities-grid span.banned {
-      color: red; /* Red */
-    }
-
-    .legalities-grid span.restricted {
-      color: orange; /* Orange */
-    }
-
-    /* Button */
-    button {
-      margin: 10px;
-      padding: 10px;
-      background: gold;
-      color: black;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background: darkgoldenrod;
+    .additional-details p {
+      margin: 0;
+      padding: 5px 0;
     }
   </style>
   <script>
-    document.addEventListener("contextmenu", function(e) {
+    document.addEventListener("contextmenu", function (e) {
       e.preventDefault();
     });
 
@@ -282,10 +353,13 @@
     }
   </script>
 </head>
+
 <body>
   <div class="card-container">
     <h1 class="card-name">{{CardName}}</h1>
+    {{FlipIndicator}}
     {{CardImages}}
+
     <div class="mana-cost">{{ManaCost}}</div>
     <div class="card-details">
       <div class="type-set-row">
@@ -298,6 +372,15 @@
       <div class="oracle-text">{{OracleText}}</div>
       <div class="flavor-text">{{FlavorText}}</div>
       {{PowerToughness}}
+      <!-- Card Badges Section -->
+      <div class="card-badges">
+        {{FullArt}}
+        {{Promo}}
+        {{Reserved}}
+      </div>
+      <div class="keywords">
+        <strong>Keywords:</strong> {{Keywords}}
+      </div>
       <div class="rarity {{RarityClass}}">{{Rarity}}</div>
       <div class="legalities">
         <h2>Legalities</h2>
@@ -308,13 +391,34 @@
       <div class="prices">
         <h2>Prices</h2>
         <table class="prices-grid">
-          <tr><td>USD:</td><td>${{USD}}</td></tr>
-          <tr><td>USD (Foil):</td><td>${{USD_Foil}}</td></tr>
-          <tr><td>EUR:</td><td>€{{EUR}}</td></tr>
-          <tr><td>TIX:</td><td>{{Tix}}</td></tr>
+          <tr>
+            <td>USD:</td>
+            <td>${{USD}}</td>
+          </tr>
+          <tr>
+            <td>USD (Foil):</td>
+            <td>${{USD_Foil}}</td>
+          </tr>
+          <tr>
+            <td>EUR:</td>
+            <td>€{{EUR}}</td>
+          </tr>
+          <tr>
+            <td>TIX:</td>
+            <td>{{Tix}}</td>
+          </tr>
         </table>
+      </div>
+      <div class="additional-details">
+        <p><strong>Artist:</strong> {{Artist}}</p>
+        <p><strong>Collector Number:</strong> {{CollectorNumber}}</p>
+        <p><strong>Release Date:</strong> {{ReleasedAt}}</p>
+        <p><strong>Frame:</strong> {{Frame}}</p>
+        <p><strong>Border Color:</strong> {{BorderColor}}</p>
+        <p><strong>Story Spotlight:</strong> {{StorySpotlight}}</p>
       </div>
     </div>
   </div>
 </body>
+
 </html>

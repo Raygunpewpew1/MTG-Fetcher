@@ -19,7 +19,7 @@ function FormatLegalityStatus(const LegalityStatus: string): string;
 implementation
 
 uses
-  System.NetEncoding,MLogic; // Include units you need
+  System.NetEncoding, MLogic; // Include units you need
 
 // Implement all the helper methods here, exactly as they were refactored earlier
 
@@ -147,11 +147,11 @@ begin
   else
     Replacements.Add('{{Reserved}}', '');
 
-  if CardDetails.StorySpotlight then
-    Replacements.Add('{{StorySpotlight}}', '<p><strong>Story Spotlight:</strong> Yes</p>')
-  else
-    Replacements.Add('{{StorySpotlight}}', '<p><strong>Story Spotlight:</strong> No</p>');
-end;
+   if CardDetails.StorySpotlight then
+    Replacements.Add('{{StorySpotlight}}', 'Yes')
+   else
+    Replacements.Add('{{StorySpotlight}}', 'No');
+    end;
 
 procedure AddKeywordsReplacement(Replacements: TDictionary<string, string>; const CardDetails: TCardDetails);
 var
