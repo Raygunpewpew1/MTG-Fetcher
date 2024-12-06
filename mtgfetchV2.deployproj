@@ -5,7 +5,7 @@
     </ProjectExtensions>
     <PropertyGroup>
         <DeviceId Condition="'$(Platform)'=='Android'"/>
-        <DeviceId Condition="'$(Platform)'=='Android64'"/>
+        <DeviceId Condition="'$(Platform)'=='Android64'">R3CR40B2VXD</DeviceId>
     </PropertyGroup>
     <ItemGroup Condition="'$(Platform)'=='Win32'">
         <DeployFile Include="$(SKIADIR)\Binary\Shared\Win32\sk4d.dll" Condition="'$(Config)'=='Debug' And '$(SKIADIR)'!=''">
@@ -224,6 +224,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="$(BDS)\lib\android\debug\mips\libnative-activity.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\library\lib\mips\</RemoteDir>
+            <RemoteName>libmtgfetchV2.so</RemoteName>
+            <DeployClass>AndroidLibnativeMipsFile</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="$(BDS)\lib\android\debug\mips\libnative-activity.so" Condition="'$(Config)'=='Release'">
             <RemoteDir>mtgfetchV2\library\lib\mips\</RemoteDir>
             <RemoteName>libmtgfetchV2.so</RemoteName>
@@ -296,6 +305,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="$(BDS)\lib\android\debug\armeabi-v7a\libnative-activity.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\library\lib\armeabi-v7a\</RemoteDir>
+            <RemoteName>libmtgfetchV2.so</RemoteName>
+            <DeployClass>AndroidLibnativeArmeabiv7aFile</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="$(BDS)\lib\android\debug\armeabi-v7a\libnative-activity.so" Condition="'$(Config)'=='Release'">
             <RemoteDir>mtgfetchV2\library\lib\armeabi-v7a\</RemoteDir>
             <RemoteName>libmtgfetchV2.so</RemoteName>
@@ -346,6 +364,15 @@
             <RemoteName>ic_launcher.xml</RemoteName>
             <DeployClass>Android_AdaptiveIcon</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Win\Calypso_Win.style" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
+            <RemoteName>Calypso_Win.style</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -507,6 +534,24 @@
             <RemoteDir>mtgfetchV2\res\drawable-xhdpi\</RemoteDir>
             <RemoteName>ic_notification.png</RemoteName>
             <DeployClass>Android_NotificationIcon48</DeployClass>
+            <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Android\Calypso_Android.style" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
+            <RemoteName>Calypso_Android.style</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="$(BDS)\lib\android\debug\armeabi\libnative-activity.so" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\library\lib\armeabi\</RemoteDir>
+            <RemoteName>libmtgfetchV2.so</RemoteName>
+            <DeployClass>AndroidLibnativeArmeabiFile</DeployClass>
             <Operation>1</Operation>
             <LocalCommand/>
             <RemoteCommand/>
@@ -1130,6 +1175,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Android\CalypsoSE_Android.style" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
+            <RemoteName>CalypsoSE_Android.style</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="Win64\Debug\MTGIconsPNG\{U_R_P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets\internal\MTGIconsPNG\</RemoteDir>
             <RemoteName>{U_R_P}.png</RemoteName>
@@ -1405,6 +1459,15 @@
         <DeployFile Include="Win64\Debug\MTGIconsPNG\{U_P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets\internal\MTGIconsPNG\</RemoteDir>
             <RemoteName>{U_P}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Win\CalypsoSE_Win.style" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
+            <RemoteName>CalypsoSE_Win.style</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -2036,24 +2099,6 @@
         <DeployFile Include="C:\Users\raygu\Documents\card_template.html" Condition="'$(Config)'=='Release'">
             <RemoteDir>mtgfetchV2\</RemoteDir>
             <RemoteName>card_template.html</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="Transparent.Style" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\</RemoteDir>
-            <RemoteName>Transparent.Style</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="MetropolisUIDark.Style" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\</RemoteDir>
-            <RemoteName>MetropolisUIDark.Style</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>

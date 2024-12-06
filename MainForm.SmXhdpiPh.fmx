@@ -7,24 +7,45 @@ inherited Form1_SmXhdpiPh: TForm1_SmXhdpiPh
     Size.Height = 376.000000000000000000
     inherited LayoutControls: TLayout
       Size.Width = 228.000000000000000000
+      inherited LabelSearch: TLabel
+        Position.Y = 8.000000000000000000
+      end
+      inherited ComboBoxSetCode: TComboBox
+        Position.X = -10.000000000000000000
+        Size.Width = 228.000000000000000000
+      end
+      inherited ComboBoxRarity: TComboBox
+        Size.Width = 48.000000000000000000
+      end
+      inherited ButtonNextPage: TButton
+        Size.Width = 228.000000000000000000
+      end
     end
     inherited LayoutContent: TLayout
       Size.Width = 248.000000000000000000
-      Size.Height = 176.000000000000000000
+      Size.Height = 106.000000000000000000
       inherited ListViewCards: TListView
-        Size.Height = 176.000000000000000000
+        Size.Height = 106.000000000000000000
       end
       inherited SplitterMain: TSplitter
-        Size.Height = 176.000000000000000000
+        Size.Height = 106.000000000000000000
       end
       inherited WebBrowser1: TWebBrowser
-        Size.Width = 0.000000000000000000
-        Size.Height = 176.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 106.000000000000000000
       end
     end
     inherited LayoutButtons: TLayout
-      Position.Y = 326.000000000000000000
+      Position.Y = 316.000000000000000000
       Size.Width = 228.000000000000000000
+      inherited CountLabel: TLabel
+        Position.X = 108.000000000000000000
+      end
     end
+  end
+  inherited StyleBook1: TStyleBook
+    Styles = <
+      item
+      end>
   end
 end

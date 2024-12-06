@@ -8,34 +8,58 @@ inherited Form1_NmXhdpiPh: TForm1_NmXhdpiPh
     inherited LayoutControls: TLayout
       Size.Width = 380.000000000000000000
       inherited LabelSearch: TLabel
-        Size.Width = 72.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 380.000000000000000000
       end
       inherited Edit1: TEdit
-        Size.Width = 196.000000000000000000
+        Size.Width = 380.000000000000000000
       end
       inherited Button1: TButton
-        Position.X = 292.000000000000000000
+        Size.Width = 380.000000000000000000
+      end
+      inherited ComboBoxSetCode: TComboBox
+        Position.X = -10.000000000000000000
+        Size.Width = 380.000000000000000000
+      end
+      inherited ComboBoxRarity: TComboBox
+        Size.Width = 200.000000000000000000
+      end
+      inherited ButtonNextPage: TButton
+        Size.Width = 380.000000000000000000
       end
     end
     inherited LayoutContent: TLayout
       Size.Width = 400.000000000000000000
-      Size.Height = 416.000000000000000000
+      Size.Height = 346.000000000000000000
       inherited ListViewCards: TListView
-        Size.Width = 204.000000000000000000
-        Size.Height = 416.000000000000000000
+        Size.Height = 346.000000000000000000
       end
       inherited SplitterMain: TSplitter
-        Position.X = 204.000000000000000000
-        Size.Height = 416.000000000000000000
+        Size.Height = 346.000000000000000000
       end
       inherited WebBrowser1: TWebBrowser
-        Size.Width = 182.000000000000000000
-        Size.Height = 416.000000000000000000
+        Size.Width = 232.000000000000000000
+        Size.Height = 346.000000000000000000
       end
     end
     inherited LayoutButtons: TLayout
-      Position.Y = 566.000000000000000000
+      Position.Y = 556.000000000000000000
       Size.Width = 380.000000000000000000
+      inherited CountLabel: TLabel
+        Position.X = 260.000000000000000000
+      end
     end
+  end
+  inherited StyleBook1: TStyleBook
+    Styles = <
+      item
+      end>
+  end
+  object ScaledLayoutMain: TScaledLayout
+    OriginalWidth = 50.000000000000000000
+    OriginalHeight = 460.000000000000000000
+    Size.Width = 400.000000000000000000
+    Size.Height = 616.000000000000000000
+    Size.PlatformDefault = False
   end
 end

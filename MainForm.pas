@@ -6,17 +6,18 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
   System.Generics.Collections, System.IOUtils, FMX.Types, FMX.Controls,
   FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts, FMX.Objects,
-  FMX.ExtCtrls, FMX.Ani, FMX.Edit, FMX.ScrollBox, FMX.Memo, FMX.StdCtrls,
+  FMX.ExtCtrls, FMX.Ani, FMX.Edit, FMX.StdCtrls,
   FMX.WebBrowser, FireDAC.Stan.Intf, FireDAC.Phys.Intf,
   FireDAC.Comp.Client,
   FireDAC.Comp.DataSet, FireDAC.Stan.Param, FireDAC.Phys.SQLite,
   FireDAC.Phys.SQLiteDef, Data.DB, FMX.Skia, System.Net.HttpClient,
-  System.Hash, ScryfallAPIWrapperV2, SGlobalsZ, DataModuleUnit, HighResForm,
+  System.Hash, ScryfallAPIWrapperV2, SGlobalsZ, WrapperHelper,
 
-  CardCollectionForm, MLogic, System.JSON, REST.JSON, System.StrUtils,
+  MLogic, System.StrUtils,
   System.TypInfo, System.NetEncoding, Math, System.Threading,
   FMX.Controls.Presentation, FMX.ListView.Types, FMX.ListView.Appearances,
-  FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox,CardDisplayHelpers;
+  FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, CardDisplayHelpers,
+  FMX.TabControl;
 
 type
   TCardDetailsObject = class(TObject)
@@ -40,24 +41,34 @@ type
     WebBrowser1: TWebBrowser;
     DelayTimer: TTimer;
     ListViewCards: TListView;
-    StyleBook1: TStyleBook;
     ComboBoxSetCode: TComboBox;
     ComboBoxColors: TComboBox;
     ComboBoxRarity: TComboBox;
     CountLabel: TLabel;
+    ButtonNextPage: TButton;
+    StyleBook1: TStyleBook;
+    LayoutMain: TLayout; // Main layout container
+    LayoutControls: TLayout; // Layout for controls like ComboBox, Edit, Button
+    LayoutContent: TLayout; // Layout for ListView and WebBrowser
+    LayoutButtons: TLayout; // Layout for buttons like Save, Collection, etc.
+    SplitterMain: TSplitter;
+    CheckBox1: TCheckBox; // Splitter between ListView and WebBrowser
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure ShowHighResButtonClick(Sender: TObject);
     procedure Button4Click(Sender: TObject);
-    procedure Button5Click(Sender: TObject);
+
     procedure DelayTimerTimer(Sender: TObject);
     procedure ListViewCardsItemClick(const Sender: TObject;
       const AItem: TListViewItem);
     procedure ListViewCardsButtonClick(const Sender: TObject;
       const AItem: TListItem; const AObject: TListItemSimpleControl);
+    procedure WebBrowser1DidFinishLoad(ASender: TObject);
+    procedure ButtonNextPageClick(Sender: TObject);
 
   private
+    CurrentPage: Integer;
+    HasMorePages: Boolean;
     HttpClient: THTTPClient;
     FCardDetailsObject: TCardDetailsObject; // Private field
     CardTitle: string; // Private field
@@ -67,21 +78,20 @@ type
     AppClose: Boolean; // Encapsulated within the form
     FScryfallAPI: TScryfallAPI; // Instance of TScryfallAPI
 
-
-
     BrIsLoaded: Boolean;
     procedure DisplayCardArtworks(const CardName: string);
 
     procedure ShowCardDetails(Sender: TObject);
 
-    procedure SaveSelectedCardToDatabase;
-    procedure ShowCardCollection;
+    // procedure SaveSelectedCardToDatabase;
 
     procedure DisplayCardInBrowser(const CardDetails: TCardDetails;
       const Rulings: TArray<TRuling>);
 
     procedure AddCardToListView(const Card: TCardDetails);
-    function IsCardValid(const Card: TCardDetails): Boolean;
+    procedure LoadNextPage(const CardName, SetCode, ColorCode,
+      RarityCode: string);
+    // procedure AdjustLayout;
 
   public
     // Public declarations
@@ -94,11 +104,7 @@ implementation
 
 {$R *.fmx}
 {$R *.Windows.fmx MSWINDOWS}
-{$R *.NmXhdpiPh.fmx ANDROID}
-{$R *.LgXhdpiPh.fmx ANDROID}
-{$R *.SmXhdpiPh.fmx ANDROID}
-{$R *.LgXhdpiTb.fmx ANDROID}
-{$R *.XLgXhdpiTb.fmx ANDROID}
+
 { TCardLayout }
 
 destructor TCardLayout.Destroy;
@@ -122,32 +128,32 @@ var
   SetDetailsArray: TArray<TSetDetails>;
   SetDetails: TSetDetails;
 begin
+  WebBrowser1.URL := 'about:blank';
+
   FScryfallAPI := TScryfallAPI.Create;
   HttpClient := THTTPClient.Create;
   CardDataList := TList<TCardDetails>.Create;
   // DataModule1.CreateCardDetailsTable;
   CardCount := 0;
   AppClose := False;
-  DataModule1.SetupDatabaseConnection(GetDatabasePath);
+  // DataModule1.SetupDatabaseConnection(GetDatabasePath);
   CopyDatabaseToInternalStorage;
   CopyTemplateToInternalStorage;
   // InitializeManaSymbolMap;
   FBase64ImageCache := TDictionary<string, string>.Create;
   BrIsLoaded := False;
 
-  // WebBrowser1.URL := 'about:blank';
-
   ListViewCards.OnItemClick := ListViewCardsItemClick;
 
   ComboBoxSetCode.Items.Add('All Sets');
 
   try
-    //FScryfallAPI.PreloadAllSets;
-   // SetDetailsArray := FScryfallAPI.GetAllSets;
+    // FScryfallAPI.PreloadAllSets;
+    SetDetailsArray := FScryfallAPI.GetAllSets;
     // Fetch all sets from Scryfall
     for SetDetails in SetDetailsArray do
     begin
-      //ComboBoxSetCode.Items.Add(SetDetails.Code + ' - ' + SetDetails.Name);
+      ComboBoxSetCode.Items.Add(SetDetails.Code + ' - ' + SetDetails.Name);
       // Example: "KHM - Kaldheim"
     end;
   finally
@@ -156,8 +162,11 @@ begin
     ComboBoxColors.ItemIndex := 0;
     ComboBoxRarity.ItemIndex := 0;
   end;
-DelayTimer.Enabled := True;
+  DelayTimer.Enabled := True;
   // Form1.StyleBook := HighResForm.HighResImageForm.StyleBook1;
+
+  // AdjustLayout;
+
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
@@ -175,19 +184,19 @@ end;
 procedure TForm1.ListViewCardsButtonClick(const Sender: TObject;
   const AItem: TListItem; const AObject: TListItemSimpleControl);
 
-var
-  ImageURL: string;
-  CardName: string;
+// var
+// ImageURL: string;
+// CardName: string;
 begin
-  ImageURL := ShowHighResButton.TagString;
-  CardName := 'Sample Card';
-
-  // Create and display the high-res form
-  if not Assigned(HighResImageForm) then
-    HighResImageForm := THighResImageForm.Create(nil);
-
-  Self.Hide; // Hide the current form (optional)
-  HighResImageForm.ShowImage(ImageURL, CardName);
+  // ImageURL := ShowHighResButton.TagString;
+  // CardName := 'Sample Card';
+  //
+  // // Create and display the high-res form
+  // if not Assigned(HighResImageForm) then
+  // HighResImageForm := THighResImageForm.Create(nil);
+  //
+  // Self.Hide; // Hide the current form (optional)
+  // HighResImageForm.ShowImage(ImageURL, CardName);
 
 end;
 
@@ -239,19 +248,17 @@ begin
     end);
 end;
 
-
-function TForm1.IsCardValid(const Card: TCardDetails): Boolean;
-begin
-  Result := not Card.CardName.IsEmpty and not Card.SFID.IsEmpty;
-end;
-
 procedure TForm1.DisplayCardArtworks(const CardName: string);
 var
   SelectedSetCode: string;
   SelectedColorCode: string;
   SelectedRareCode: string;
-
 begin
+  LayoutControls.Enabled := False;
+  // Reset pagination variables
+  CurrentPage := 1; // A form-level integer variable
+  HasMorePages := False; // A form-level Boolean variable
+
   // Show the progress bar
   ProgressBar1.Visible := True;
   ProgressBar1.Value := 0;
@@ -274,10 +281,33 @@ begin
   else
     SelectedColorCode := ComboBoxColors.Text;
 
-  // Call the asynchronous method
-  FScryfallAPI.SearchAllCardsAsync(CardName, SelectedSetCode, SelectedRareCode,
-    SelectedColorCode, False, False,
-    procedure(Success: Boolean; Cards: TArray<TCardDetails>; ErrorMsg: string)
+  // Clear ListView and internal card list for a new search
+  ListViewCards.Items.Clear;
+  CardDataList.Clear;
+
+  // Start loading the first page
+  LoadNextPage(CardName, SelectedSetCode, SelectedColorCode, SelectedRareCode);
+
+  // Set up "Next Page" button click event
+  ButtonNextPage.OnClick := ButtonNextPageClick;
+  ButtonNextPage.Enabled := False;
+  // Initially disabled until `HasMorePages` is updated
+end;
+
+
+
+procedure TForm1.LoadNextPage(const CardName, SetCode, ColorCode,
+  RarityCode: string);
+  Var
+  IsChecked: Boolean;
+begin
+IsChecked := Checkbox1.IsChecked;
+
+
+  FScryfallAPI.SearchAllCardsAsync(CardName, SetCode, RarityCode, ColorCode,
+    False, IsChecked, CurrentPage,
+    procedure(Success: Boolean; Cards: TArray<TCardDetails>; HasMore: Boolean;
+      ErrorMsg: string)
     begin
       TThread.Synchronize(nil,
         procedure
@@ -294,29 +324,9 @@ begin
               Exit;
             end;
 
-            // Handle empty results
-            if Length(Cards) = 0 then
-            begin
-              ShowMessage('No results found for "' + CardName + '".');
-              Button1.Enabled := True;
-              Exit;
-            end;
+            // Update ListView and internal card list
+            ProgressBar1.Max := ProgressBar1.Max + Length(Cards);
 
-            // Handle excessive results
-            if Length(Cards) > 800 then
-            begin
-              ShowMessage('Too many results. Please refine your search.');
-              Button1.Enabled := True;
-              Exit;
-            end;
-
-            // Clear the ListView and internal card list
-            ListViewCards.Items.Clear;
-            CardDataList.Clear;
-
-            ProgressBar1.Max := Length(Cards);
-
-            // Add valid cards to the ListView and internal card list
             for var CardIndex := 0 to High(Cards) do
             begin
               if IsCardValid(Cards[CardIndex]) then
@@ -325,35 +335,34 @@ begin
                 AddCardToListView(Cards[CardIndex]); // Add to ListView
 
                 // Update the progress bar
-                ProgressBar1.Value := CardIndex + 1;
-
-                // Force the UI to refresh
-                Application.ProcessMessages;
+                ProgressBar1.Value := ProgressBar1.Value + 1;
               end
               else
               begin
-                FScryfallAPI.LogError(Format('Skipping invalid card at index %d: %s',
+                LogError(Format('Skipping invalid card at index %d: %s',
                   [CardIndex, Cards[CardIndex].CardName]));
               end;
             end;
 
-            // Automatically select and display the first item
-            if ListViewCards.Items.Count > 0 then
+            // Update "Next Page" button state
+            HasMorePages := HasMore;
+            ButtonNextPage.Enabled := HasMorePages;
+
+            // Automatically select and display the first item on the first page
+            if (CurrentPage = 1) and (ListViewCards.Items.Count > 0) then
             begin
               ListViewCards.Selected := ListViewCards.Items[0];
               ShowCardDetails(ListViewCards.Items[0]);
             end;
           finally
-            CountLabel.Text := 'Cards Found: ' + ListViewCards.ItemCount.ToString;
+            CountLabel.Text := 'Cards Found: ' +
+              ListViewCards.ItemCount.ToString;
           end;
         end);
 
       // Enable the button
-      Button1.Enabled := True;
+       LayoutControls.Enabled := True;
     end);
-
-  // Ensure the button is enabled in case the async task fails
-  Button1.Enabled := True;
 end;
 
 procedure TForm1.AddCardToListView(const Card: TCardDetails);
@@ -363,7 +372,7 @@ begin
   // Skip invalid cards
   if Card.CardName.IsEmpty or Card.SFID.IsEmpty then
   begin
-    FScryfallAPI.LogError('Skipping card: missing "name" or "id".');
+    LogError('Skipping card: missing "name" or "id".');
     Exit;
   end;
 
@@ -372,7 +381,7 @@ begin
 
   // Set item properties
   ListViewItem.Text := Card.CardName;
-  ListViewItem.Detail := Card.TypeLine;
+  ListViewItem.Detail := Card.SetCode.ToUpper;
   ListViewItem.TagObject := TCardDetailsObject.Create(Card);
   // Store the card object
 end;
@@ -389,7 +398,8 @@ begin
     SelectedItem := TListViewItem(Sender);
 
     // Check if the TagObject contains card details
-    if Assigned(SelectedItem.TagObject) and (SelectedItem.TagObject is TCardDetailsObject) then
+    if Assigned(SelectedItem.TagObject) and
+      (SelectedItem.TagObject is TCardDetailsObject) then
     begin
       CardDetailsObject := TCardDetailsObject(SelectedItem.TagObject);
       SelectedCard := CardDetailsObject.CardDetails;
@@ -401,10 +411,11 @@ begin
       CardTitle := SelectedCard.CardName;
 
       // Display card details immediately without set details
-    //  DisplayCardInBrowser(SelectedCard, []);
+      // DisplayCardInBrowser(SelectedCard, []);
 
       // Fetch set details asynchronously
-      if not SelectedCard.SetCode.IsEmpty and SelectedCard.SetIconURI.IsEmpty then
+      if not SelectedCard.SetCode.IsEmpty and SelectedCard.SetIconURI.IsEmpty
+      then
       begin
         TTask.Run(
           procedure
@@ -426,7 +437,7 @@ begin
                 end);
             except
               on E: Exception do
-                //LogError('Failed to fetch set details: ' + E.Message);
+                LogError('Failed to fetch set details: ' + E.Message);
             end;
           end);
       end;
@@ -435,40 +446,53 @@ begin
       ShowMessage('Error: No card details available for this item.');
   end
   else
+
     ShowMessage('Error: Sender is not a TListViewItem.');
 end;
 
-function ReplacePlaceholder(const Template, Placeholder, Value: string): string;
+procedure TForm1.WebBrowser1DidFinishLoad(ASender: TObject);
 begin
-  Result := StringReplace(Template, '{{' + Placeholder + '}}', Value,
-    [rfReplaceAll]);
+WebBrowser1.EvaluateJavaScript(
+  'document.addEventListener("contextmenu", function (e) { e.preventDefault(); });' +
+  'function flipCard() {' +
+  '  const card = document.querySelector(".flip-card");' +
+  '  if (card) {' +
+  '    card.classList.toggle("show-back");' +
+  '  }' +
+  '}'
+);
 end;
 
-procedure TForm1.DisplayCardInBrowser(const CardDetails: TCardDetails; const Rulings: TArray<TRuling>);
+
+
+procedure TForm1.DisplayCardInBrowser(const CardDetails: TCardDetails;
+const Rulings: TArray<TRuling>);
 var
   Template: string;
   Replacements: TDictionary<string, string>;
 begin
   try
-    //Load the HTML template
-    Template := LoadTemplate('card_template.html'); // Ensure this file exists and includes proper placeholders
+    // Load the HTML template
+    Template := LoadTemplate('card_template.html');
+    // Ensure this file exists and includes proper placeholders
 
-    //  Initialize the replacements dictionary
+    // Initialize the replacements dictionary
     Replacements := TDictionary<string, string>.Create;
     try
       // sections of replacements using helper functions
-      AddCoreReplacements(Replacements, CardDetails);           // Basic card details
-      AddImageReplacements(Replacements, CardDetails);          // Image and layout logic
-      AddLegalitiesReplacements(Replacements, CardDetails);     // Legalities table
-      AddPricesReplacements(Replacements, CardDetails);         // Prices section
-      AddBadgesReplacements(Replacements, CardDetails);         // FullArt, Promo, Reserved badges
-      AddKeywordsReplacement(Replacements, CardDetails);        // Keywords section
+      AddCoreReplacements(Replacements, CardDetails); // Basic card details
+      AddImageReplacements(Replacements, CardDetails); // Image and layout logic
+      AddLegalitiesReplacements(Replacements, CardDetails); // Legalities table
+      AddPricesReplacements(Replacements, CardDetails); // Prices section
+      AddBadgesReplacements(Replacements, CardDetails);
+      // FullArt, Promo, Reserved badges
+      AddKeywordsReplacement(Replacements, CardDetails); // Keywords section
 
-      //  Perform the replacements in the template
+      // Perform the replacements in the template
       for var Key in Replacements.Keys do
         Template := Template.Replace(Key, Replacements[Key]);
 
-      //  Display the final HTML in the web browser
+      // Display the final HTML in the web browser
       TThread.Queue(nil,
         procedure
         begin
@@ -483,22 +507,6 @@ begin
   end;
 end;
 
-procedure TForm1.ShowHighResButtonClick(Sender: TObject);
-var
-  ImageURL: string;
-  CardName: string;
-begin
-  ImageURL := ShowHighResButton.TagString;
-  CardName := 'Sample Card';
-
-  // Create and display the high-res form
-  if not Assigned(HighResImageForm) then
-    HighResImageForm := THighResImageForm.Create(nil);
-
-  Self.Hide; // Hide the current form (optional)
-  HighResImageForm.ShowImage(ImageURL, CardName);
-end;
-
 procedure TForm1.Button1Click(Sender: TObject);
 begin
 
@@ -506,85 +514,40 @@ begin
   begin
 
     DisplayCardArtworks(Trim(Edit1.Text.Trim));
-    Button1.Enabled := false;
+    LayoutControls.Enabled := False;
   end;
 end;
 
 procedure TForm1.Button4Click(Sender: TObject);
 begin
-  if Assigned(FCardDetailsObject) then
+  // if Assigned(FCardDetailsObject) then
+  // begin
+  // if DataModule1.CheckCardExists(Trim(FCardDetailsObject.CardDetails.SFID))
+  // then
+  // ShowMessage('Card already exists in the database.')
+  // else
+  // SaveSelectedCardToDatabase;
+  // end
+  // else
+  // ShowMessage('No card is selected.');
+end;
+
+
+
+
+
+procedure TForm1.ButtonNextPageClick(Sender: TObject);
+begin
+  if HasMorePages then
   begin
-    if DataModule1.CheckCardExists(Trim(FCardDetailsObject.CardDetails.SFID))
-    then
-      ShowMessage('Card already exists in the database.')
-    else
-      SaveSelectedCardToDatabase;
+    Inc(CurrentPage); // Increment the page number
+    LoadNextPage(Edit1.Text, '', '', ''); // Load the next page using filters
   end
   else
-    ShowMessage('No card is selected.');
+    ShowMessage('No more pages to load.');
 end;
 
-procedure TForm1.ShowCardCollection;
-var
-  CollectionForm: TCollectionsForm;
-begin
 
-  CollectionForm := TCollectionsForm.Create(Self);
-  try
-    CollectionForm.Show;
-  finally
-    CollectionForm.Free;
-  end;
-end;
-
-procedure TForm1.Button5Click(Sender: TObject);
-begin
-  ShowCardCollection;
-  // form2.Show;
-end;
-
-procedure TForm1.SaveSelectedCardToDatabase;
-var
-  ImageStream: TMemoryStream;
-  ImageBitmap: TBitmap;
-begin
-  if not Assigned(FCardDetailsObject) then
-  begin
-    ShowMessage('No card is selected.');
-    Exit;
-  end;
-
-  ImageStream := TMemoryStream.Create;
-  ImageBitmap := TBitmap.Create;
-  try
-    // Load the selected card's image from the cache
-    if FileExists(GetCachedImagePath(FCardDetailsObject.CardDetails.ImageUris.
-      art_crop)) then
-    begin
-      ImageBitmap.LoadFromFile
-        (GetCachedImagePath(FCardDetailsObject.CardDetails.ImageUris.art_crop));
-
-      // Convert Bitmap to stream
-      if ImageBitmap.Width > 0 then
-      begin
-        ImageBitmap.SaveToStream(ImageStream);
-        ImageStream.Position := 0;
-
-        // Call the data module to save card details and image
-        DataModule1.SaveCardToDatabase(FCardDetailsObject.CardDetails,
-          ImageStream, 1);
-
-      end
-      else
-        ShowMessage('Selected card image is invalid.');
-    end
-    else
-      ShowMessage('Image not found in cache.');
-  finally
-    ImageStream.Free;
-    ImageBitmap.Free;
-  end;
-end;
 
 initialization
 

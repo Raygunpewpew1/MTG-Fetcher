@@ -7,37 +7,45 @@ inherited Form1_LgXhdpiPh: TForm1_LgXhdpiPh
     Size.Height = 696.000000000000000000
     inherited LayoutControls: TLayout
       Size.Width = 428.000000000000000000
-      inherited ComboBoxSetCode: TComboBox
-        Position.X = 75.000000000000000000
-        Position.Y = 40.000000000000000000
+      inherited LabelSearch: TLabel
+        Position.Y = 8.000000000000000000
       end
-      inherited ComboBoxColors: TComboBox
-        Position.X = 8.000000000000000000
+      inherited ComboBoxSetCode: TComboBox
+        Position.X = -10.000000000000000000
+        Size.Width = 428.000000000000000000
       end
       inherited ComboBoxRarity: TComboBox
-        Position.X = 208.000000000000000000
+        Size.Width = 248.000000000000000000
+      end
+      inherited ButtonNextPage: TButton
+        Size.Width = 428.000000000000000000
       end
     end
     inherited LayoutContent: TLayout
       Size.Width = 448.000000000000000000
-      Size.Height = 496.000000000000000000
+      Size.Height = 426.000000000000000000
       inherited ListViewCards: TListView
-        Size.Width = 241.000000000000000000
-        Size.Height = 496.000000000000000000
+        Size.Height = 426.000000000000000000
       end
       inherited SplitterMain: TSplitter
-        Position.X = 241.000000000000000000
-        Size.Width = 8.000000000000000000
-        Size.Height = 496.000000000000000000
+        Size.Height = 426.000000000000000000
       end
       inherited WebBrowser1: TWebBrowser
-        Size.Width = 189.000000000000000000
-        Size.Height = 496.000000000000000000
+        Size.Width = 280.000000000000000000
+        Size.Height = 426.000000000000000000
       end
     end
     inherited LayoutButtons: TLayout
-      Position.Y = 646.000000000000000000
+      Position.Y = 636.000000000000000000
       Size.Width = 428.000000000000000000
+      inherited CountLabel: TLabel
+        Position.X = 308.000000000000000000
+      end
     end
+  end
+  inherited StyleBook1: TStyleBook
+    Styles = <
+      item
+      end>
   end
 end

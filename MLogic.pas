@@ -5,7 +5,8 @@ interface
 uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
   System.RegularExpressions, System.Hash, System.Classes, System.NetEncoding,
-  FMX.Dialogs, SGlobalsZ, FMX.Graphics,System.Net.HttpClient,FMX.StdCtrls,System.Threading;
+  FMX.Dialogs, SGlobalsZ, FMX.Graphics, System.Net.HttpClient, FMX.StdCtrls,
+  System.Threading;
 
 procedure CopyDatabaseToInternalStorage;
 procedure InitializeManaSymbolMap;
@@ -25,6 +26,8 @@ function GetTemplatePath: string;
 procedure CopyTemplateToInternalStorage;
 function LoadTemplate(const FileName: string;
   const DefaultTemplate: string = ''): string;
+function ReplacePlaceholder(const Template, Placeholder, Value: string): string;
+function IsCardValid(const Card: TCardDetails): Boolean;
 
 var
   FManaSymbolMap: TDictionary<string, string>;
@@ -136,6 +139,9 @@ begin
   FManaSymbolMap.Add('{C}', '{C}.png');
   FManaSymbolMap.Add('{X}', '{X}.png');
   FManaSymbolMap.Add('{A}', '{A}.png');
+  FManaSymbolMap.Add('{H}', '{H}.png');
+  FManaSymbolMap.Add('{Y}', '{Y}.png');
+  FManaSymbolMap.Add('{Z}', '{Z}.png');
 
   for var i := 0 to 20 do
     FManaSymbolMap.Add('{' + i.ToString + '}', '{' + i.ToString + '}.png');
@@ -159,8 +165,21 @@ begin
   FManaSymbolMap.Add('{B/P}', '{B_P}.png');
   FManaSymbolMap.Add('{R/P}', '{R_P}.png');
   FManaSymbolMap.Add('{G/P}', '{G_P}.png');
+  FManaSymbolMap.Add('{B/G/P}', '{B_G_P}.png');
+  FManaSymbolMap.Add('{G/W/P}', '{G_W_P}.png');
+  FManaSymbolMap.Add('{U/B/P}', '{U_B_P}.png');
+  FManaSymbolMap.Add('{W/B/P}', '{W_B_P}.png');
+  FManaSymbolMap.Add('{W/U/P}', '{W_U_P}.png');
+  FManaSymbolMap.Add('{B/R/P}', '{B_R_P}.png');
+
   FManaSymbolMap.Add('{Q}', '{Q}.png');
   FManaSymbolMap.Add('{S}', '{S}.png');
+  FManaSymbolMap.Add('{E}', '{E}.png');
+  FManaSymbolMap.Add('{P}', '{P}.png');
+  FManaSymbolMap.Add('{PW}', '{PW}.png');
+  FManaSymbolMap.Add('{HW}', '{HW}.png');
+  FManaSymbolMap.Add('{HR}', '{HR}.png');
+
 end;
 
 function GetAppPath: string;
@@ -390,15 +409,12 @@ begin
     Result := '';
 end;
 
-
 procedure LoadCachedOrDownloadImage(const URL: string; Bitmap: TBitmap);
 var
   FilePath: string;
   MemoryStream: TMemoryStream;
 begin
   FilePath := GetCachedImagePath(URL);
-
-
 
   if TFile.Exists(FilePath) then
   begin
@@ -458,8 +474,16 @@ begin
     end);
 end;
 
+function ReplacePlaceholder(const Template, Placeholder, Value: string): string;
+begin
+  Result := StringReplace(Template, '{{' + Placeholder + '}}', Value,
+    [rfReplaceAll]);
+end;
 
-
+function IsCardValid(const Card: TCardDetails): Boolean;
+begin
+  Result := not Card.CardName.IsEmpty and not Card.SFID.IsEmpty;
+end;
 
 initialization
 

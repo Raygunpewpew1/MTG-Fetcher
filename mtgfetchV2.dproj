@@ -5,10 +5,11 @@
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Android64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>32787</TargetedPlatforms>
         <AppType>Application</AppType>
         <MainSource>mtgfetchV2.dpr</MainSource>
+        <ProjectName Condition="'$(ProjectName)'==''">mtgfetchV2</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -247,17 +248,10 @@
             <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="HighResForm.pas">
-            <Form>HighResImageForm</Form>
-            <FormType>fmx</FormType>
-        </DCCReference>
-        <DCCReference Include="CollectionForm.pas">
-            <Form>Form2</Form>
-            <FormType>fmx</FormType>
-        </DCCReference>
         <DCCReference Include="MLogic.pas"/>
         <DCCReference Include="JsonDataObjects.pas"/>
         <DCCReference Include="CardDisplayHelpers.pas"/>
+        <DCCReference Include="WrapperHelper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -279,6 +273,12 @@
                     <Source Name="MainSource">mtgfetchV2.dpr</Source>
                 </Source>
                 <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\ibmonitor290.bpl">File c:\program files (x86)\embarcadero\studio\23.0\bin\ibmonitor290.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\dclIconFontsImageList290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\dclIconFontsImageList290.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\dclIconFontsImageListFMX290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\dclIconFontsImageListFMX290.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\CardDisplay.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\CardDisplay.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\EssentialsDD290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\EssentialsDD290.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\SynEditDD290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\SynEditDD290.bpl not found</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp290.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
@@ -867,7 +867,6 @@
                 </DeployFile>
                 <DeployFile LocalName="$(BDS)\lib\android\debug\armeabi-v7a\libnative-activity.so" Configuration="Debug" Class="AndroidLibnativeArmeabiv7aFile">
                     <Platform Name="Android64">
-                        <Enabled>false</Enabled>
                         <RemoteName>libmtgfetchV2.so</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
@@ -886,7 +885,6 @@
                 </DeployFile>
                 <DeployFile LocalName="$(BDS)\lib\android\debug\armeabi\libnative-activity.so" Configuration="Debug" Class="AndroidLibnativeArmeabiFile">
                     <Platform Name="Android64">
-                        <Enabled>false</Enabled>
                         <RemoteName>libmtgfetchV2.so</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
@@ -905,7 +903,6 @@
                 </DeployFile>
                 <DeployFile LocalName="$(BDS)\lib\android\debug\mips\libnative-activity.so" Configuration="Debug" Class="AndroidLibnativeMipsFile">
                     <Platform Name="Android64">
-                        <Enabled>false</Enabled>
                         <RemoteName>libmtgfetchV2.so</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
@@ -1218,6 +1215,34 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Android\CalypsoSE_Android.style" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
+                        <RemoteName>CalypsoSE_Android.style</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Android\Calypso_Android.style" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
+                        <RemoteName>Calypso_Android.style</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Win\CalypsoSE_Win.style" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
+                        <RemoteName>CalypsoSE_Win.style</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Win\Calypso_Win.style" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
+                        <RemoteName>Calypso_Win.style</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="C:\Users\raygu\Documents\Collection.db" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
                         <RemoteDir>.\assets\internal\</RemoteDir>
@@ -1265,12 +1290,14 @@
                 </DeployFile>
                 <DeployFile LocalName="MetropolisUIDark.Style" Configuration="Debug" Class="File">
                     <Platform Name="Win64">
+                        <Enabled>false</Enabled>
                         <RemoteName>MetropolisUIDark.Style</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="Transparent.Style" Configuration="Debug" Class="File">
                     <Platform Name="Win64">
+                        <Enabled>false</Enabled>
                         <RemoteName>Transparent.Style</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
