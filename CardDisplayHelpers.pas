@@ -71,28 +71,33 @@ end;
 
 procedure AddLegalitiesReplacements(Replacements: TDictionary<string, string>; const CardDetails: TCardDetails);
 var
-  LegalitiesRows, LegalityName, LegalityStatus, StatusClass: string;
+  LegalitiesHtml, LegalityName, LegalityStatus, StatusClass: string;
   I: Integer;
 begin
-  LegalitiesRows := '';
+  LegalitiesHtml := '<div class="legalities-grid">'; // Start the grid container
+
   for I := Low(LegalitiesArray) to High(LegalitiesArray) do
   begin
     LegalityName := LegalitiesArray[I];
     LegalityStatus := GetLegalStatus(CardDetails.Legalities, LegalityName);
 
-    if LegalityStatus <> '' then
+    if not LegalityStatus.IsEmpty then
     begin
       StatusClass := GetStatusClass(LegalityStatus);
       LegalityStatus := FormatLegalityStatus(LegalityStatus);
-      LegalitiesRows := LegalitiesRows +
-        Format('<tr><td class="format-name">%s</td>' +
-        '<td class="status"><span class="%s">%s</span></td></tr>',
-        [TNetEncoding.HTML.Encode(LegalityName), StatusClass,
-        TNetEncoding.HTML.Encode(LegalityStatus)]);
+
+      // Add a grid item for the format with the status badge
+      LegalitiesHtml := LegalitiesHtml +
+        Format('<div class="format-name">%s</div>' +
+               '<div class="status"><span class="%s">%s</span></div>',
+               [TNetEncoding.HTML.Encode(LegalityName),
+                StatusClass,
+                TNetEncoding.HTML.Encode(LegalityStatus)]);
     end;
   end;
 
-  Replacements.Add('{{Legalities}}', LegalitiesRows);
+  LegalitiesHtml := LegalitiesHtml + '</div>'; // Close the grid container
+  Replacements.Add('{{Legalities}}', LegalitiesHtml);
 end;
 
 function GetStatusClass(const LegalityStatus: string): string;

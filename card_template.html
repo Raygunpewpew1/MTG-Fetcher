@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* General Body Styling */
+    body {
+      text-rendering: optimizeLegibility;
+      /* Ensures text is sharp and readable */
+      -webkit-font-smoothing: antialiased;
+      /* Improves font rendering on webkit-based browsers */
+      font-family: Arial, sans-serif;
+      background-color: rgb(38, 67, 97);
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      color: gold;
+      font-size: 28px;
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    /* Card Container */
+    .card-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    /* Flip Card Design */
+    .flip-card,
+    .single-card {
+      position: relative;
+      width: 240px;
+      height: 360px;
+      margin: 10px auto;
+      border-radius: 10px;
+      background: #222;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .single-card:hover,
+    .flip-card:hover {
+      transform: scale(1.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 8px 16px rgba(255, 255, 255, 0.5);
+    }
+
+    .flip-indicator {
+      color: #fff;
+      background-color: #333;
+      text-align: center;
+      padding: 5px;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+    .flip-card {
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      transition: transform 0.8s;
+      transform-origin: center;
+    }
+
+    .flip-card.show-back {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .card-face img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-face.back {
+      transform: rotateY(180deg);
+    }
+
+    .single-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    /* Card Details Styling */
+    .card-details {
+      padding: 10px;
+      text-align: left;
+      width: 90%;
+      max-width: 400px;
+      margin: auto;
+      background: rgb(38, 67, 97);
+      border-radius: 10px;
+      border: 2px solid #444;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Card Name */
+    .card-name {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      text-shadow: 0 2px 2px black;
+    }
+
+    /* Mana Cost */
+    .mana-cost {
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      padding: 5px 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* Align type line and set details */
+    .type-set-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 5px 0;
+      padding: 0 10px;
+    }
+
+    /* Type line styling */
+    .type-line {
+      font-size: 14px;
+      font-style: italic;
+      flex-grow: 1;
+      margin-right: 10px;
+    }
+
+    /* Set details align icon and name */
+    .set-details {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    /* Set icon styling */
+    .set-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 5px;
+      filter: invert(100%) brightness(150%);
+    }
+
+    /* Oracle Text */
+    .oracle-text {
+      margin-top: 10px;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    /* Flavor Text */
+    .flavor-text {
+      font-style: italic;
+      color: #888;
+      margin-top: 10px;
+      padding-left: 10px;
+      border-left: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Power/Toughness or Loyalty */
+    .power-toughness {
+      font-weight: bold;
+      text-align: right;
+      margin-top: 10px;
+      border-top: 1px solid #333;
+      padding-top: 5px;
+    }
+
+    /* Legalities grid container */
+    .legalities-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      /* Two columns: Format and Status */
+      gap: 5px;
+      padding: 10px;
+      border: 1px solid #444;
+      border-radius: 8px;
+      background-color: rgb(38, 67, 97);
+    }
+
+    /* Format name styling */
+    .format-name {
+      font-weight: bold;
+      color: white;
+      text-align: left;
+    }
+
+    /* Legalities grid container */
+    .legalities-grid {
+  display: grid;
+  grid-template-columns: auto 1fr; /* Left column for format, right for status */
+  gap: 5px; /* Spacing between rows and columns */
+  padding: 7px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background-color: rgb(38, 67, 97);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+    /* Format name styling */
+    .format-name {
+  font-weight: bold;
+  color: white;
+  text-align: left; /* Ensure format name stays left-aligned */
+}
+    /* Status badge styling */
+    .status {
+  text-align: right; /* Align the badges to the right side of the grid */
+}
+
+.status span {
+  display: inline-block;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-radius: 4px;
+  min-width: 70px; /* Prevent squishing */
+  text-align: center;
+  color: white;
+}
+
+    /* Badge colors for different statuses */
+    .status .legal {
+      background-color: #4CAF50;
+      /* Green */
+      color: white !important;
+      /* Ensure high-contrast white text */
+    }
+
+    .status .not-legal {
+      background-color: #B0BEC5;
+      /* Gray */
+      color: black;
+      /* High contrast */
+    }
+
+    .status .banned {
+      background-color: #FF4500;
+      /* Red */
+      color: white;
+      /* High contrast */
+    }
+
+    .status .restricted {
+      background-color: #FFD700;
+      /* Yellow */
+      color: black;
+      /* High contrast */
+    }
+
+    /* Card Badges Container */
+    .card-badges {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    /* Hide empty badge container (if no badges exist) */
+    .card-badges:empty {
+      display: none;
+    }
+
+    /* Individual Badge Styling */
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      margin-right: 5px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: bold;
+      color: white;
+    }
+
+    /* Full Art Badge Styling */
+    .badge.full-art {
+      background-color: #FF5722;
+      /* Orange */
+    }
+
+    /* Promo Badge Styling */
+    .badge.promo {
+      background-color: #4CAF50;
+      /* Green */
+    }
+
+    /* Reserved Badge Styling */
+    .badge.reserved {
+      background-color: #9C27B0;
+      /* Purple */
+    }
+
+    /* Keywords Section */
+    .keywords {
+      margin-top: 10px;
+      font-size: 13px;
+      font-style: italic;
+      color: #FFD700;
+    }
+
+    /* Legalities Section */
+    .legalities-grid {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .legalities-grid td {
+      padding: 5px;
+      border: 1px solid #444;
+    }
+
+    .legalities-grid td.format-name {
+      text-align: left;
+      font-weight: bold;
+      color: #FFD700;
+    }
+
+    .legalities-grid td.status {
+      text-align: right;
+    }
+
+    .legalities-grid span.legal {
+      color: #4CAF50;
+      /* Green */
+    }
+
+    .legalities-grid span.not-legal {
+      color: gray;
+      /* Gray */
+    }
+
+    .legalities-grid span.banned {
+      color: red;
+      /* Red */
+    }
+
+    .legalities-grid span.restricted {
+      color: orange;
+      /* Orange */
+    }
+
+    /* Prices Section */
+    .prices-grid {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .prices-grid td {
+      padding: 5px;
+      border: 1px solid #444;
+    }
+
+    .prices-grid td:first-child {
+      text-align: left;
+      font-weight: bold;
+    }
+
+    .prices-grid td:last-child {
+      text-align: right;
+      color: #FFD700;
+      /* Gold */
+    }
+
+    /* Additional Details Section */
+    .additional-details {
+      margin-top: 15px;
+      font-size: 13px;
+      line-height: 1.6;
+      border-top: 1px solid #333;
+      padding-top: 10px;
+    }
+
+    .additional-details p {
+      margin: 0;
+      padding: 5px 0;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        font-size: 90%;
+        /* Scale down font sizes */
+      }
+
+      h1 {
+        font-size: 22px;
+        /* Smaller header on mobile */
+      }
+
+      .card-details {
+        width: 95%;
+        /* Use more of the screen width */
+      }
+
+      .type-set-row {
+        flex-direction: column;
+        /* Stack type line and set details */
+        align-items: flex-start;
+        /* Align elements to the left */
+      }
+
+      .set-details {
+        margin-top: 10px;
+      }
+
+      .flip-card,
+      .single-card {
+        width: 90%;
+        /* Scale based on viewport width */
+        max-width: 240px;
+        /* Maintain a maximum size */
+        aspect-ratio: 2/3;
+        /* Preserve aspect ratio */
+        margin: 0 auto;
+        /* Center card */
+        border-radius: 10px;
+        background: #222;
+        /* Black border color */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        /* Shadow adjusts dynamically */
+      }
+
+      .card-face,
+      .single-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+        /* Ensure corners match */
+      }
+    }
+  </style>
+
+
+</head>
+
+<body>
+  <div class="card-container">
+    <h1 class="card-name">{{CardName}}</h1>
+
+    {{FlipIndicator}}
+    {{CardImages}}
+
+    <div class="mana-cost">{{ManaCost}}</div>
+    <div class="card-details">
+      <div class="type-set-row">
+        <div class="type-line">{{TypeLine}}</div>
+        <div class="set-details">
+          <img src="{{SetIcon}}" class="set-icon" alt="Set Icon">
+          <span>{{SetName}}</span>
+        </div>
+      </div>
+      <div class="oracle-text">{{OracleText}}</div>
+      <div class="flavor-text">{{FlavorText}}</div>
+      {{PowerToughness}}
+      <!-- Card Badges Section -->
+      <div class="card-badges">
+        {{FullArt}}
+        {{Promo}}
+        {{Reserved}}
+      </div>
+      <div class="keywords">
+        <strong>Keywords:</strong> {{Keywords}}
+      </div>
+      <div class="rarity {{RarityClass}}">{{Rarity}}</div>
+      <div class="legalities">
+        <h2>Legalities</h2>
+        <table class="legalities-grid">
+          {{Legalities}}
+        </table>
+      </div>
+      <div class="prices">
+        <h2>Prices</h2>
+        <table class="prices-grid">
+          <tr>
+            <td>USD:</td>
+            <td>${{USD}}</td>
+          </tr>
+          <tr>
+            <td>USD (Foil):</td>
+            <td>${{USD_Foil}}</td>
+          </tr>
+          <tr>
+            <td>EUR:</td>
+            <td>€{{EUR}}</td>
+          </tr>
+          <tr>
+            <td>TIX:</td>
+            <td>{{Tix}}</td>
+          </tr>
+        </table>
+      </div>
+      <div class="additional-details">
+        <p><strong>Artist:</strong> {{Artist}}</p>
+        <p><strong>Collector Number:</strong> {{CollectorNumber}}</p>
+        <p><strong>Release Date:</strong> {{ReleasedAt}}</p>
+        <p><strong>Frame:</strong> {{Frame}}</p>
+        <p><strong>Border Color:</strong> {{BorderColor}}</p>
+        <p><strong>Story Spotlight:</strong> {{StorySpotlight}}</p>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

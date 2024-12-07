@@ -541,7 +541,7 @@ begin
   if HasMorePages then
   begin
     Inc(CurrentPage); // Increment the page number
-    LoadNextPage(Edit1.Text, '', '', ''); // Load the next page using filters
+    LoadNextPage(Edit1.Text.Trim, '', '', ''); // Load the next page using filters
   end
   else
     ShowMessage('No more pages to load.');

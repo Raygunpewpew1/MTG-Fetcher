@@ -179,6 +179,7 @@ begin
   FManaSymbolMap.Add('{PW}', '{PW}.png');
   FManaSymbolMap.Add('{HW}', '{HW}.png');
   FManaSymbolMap.Add('{HR}', '{HR}.png');
+  FManaSymbolMap.Add('{TK}', '{TK}.png');
 
 end;
 

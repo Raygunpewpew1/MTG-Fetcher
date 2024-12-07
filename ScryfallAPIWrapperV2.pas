@@ -53,6 +53,7 @@ type
       Fuzzy, Unique: Boolean): TArray<TCardDetails>;
     procedure SearchAllCardsAsync(const Query, SetCode, Rarity, Colors: string;
       Fuzzy, Unique: Boolean; Page: Integer; Callback: TOnSearchComplete);
+    function GetRandomCard: TCardDetails;
   end;
 
 implementation
@@ -84,6 +85,9 @@ begin
   try
     Client.CustomHeaders['User-Agent'] := UserAgent;
     Client.CustomHeaders['Accept'] := AcceptHeader;
+
+    if Client.Get(BaseUrl + Endpoint, ResponseStream).StatusCode = 404 then
+     raise EScryfallAPIError.Create('Card not found. Please check your search criteria.');
 
     if Client.Get(BaseUrl + Endpoint, ResponseStream).StatusCode <> 200 then
       raise EScryfallAPIError.CreateFmt('Request failed: %s',
@@ -491,6 +495,28 @@ begin
     SetLength(CardFaces, 0); // No card faces
 end;
 
+function TScryfallAPI.GetRandomCard: TCardDetails;
+var
+  JsonResponse: TJsonObject;
+begin
+  try
+    // Make a request to the "random" endpoint
+    JsonResponse := ExecuteRequest('/cards/random');
+    try
+      // Parse the response into a TCardDetails object
+      FillCardDetailsFromJson(JsonResponse, Result);
+    finally
+      JsonResponse.Free;
+    end;
+  except
+    on E: Exception do
+    begin
+      LogError('Error fetching random card: ' + E.Message);
+      raise; // Re-raise the exception so the calling code can handle it
+    end;
+  end;
+end;
+
 procedure TScryfallAPI.SearchAllCardsAsync(const Query, SetCode, Rarity,
   Colors: string; Fuzzy, Unique: Boolean; Page: Integer;
   Callback: TOnSearchComplete);
@@ -677,7 +703,8 @@ var
   CachedResponse: TJsonObject;
   JsonResponse: TJsonObject;
 begin
-  CacheKey := Format('%s:%s:%s:%s:%d:%d', [Query, SetCode, Rarity, Colors, Page, Ord(Unique)]);
+  CacheKey := Format('%s:%s:%s:%s:%d:%d', [Query, SetCode, Rarity, Colors, Page,
+    Ord(Unique)]);
 
   if FCache.TryGetValue(CacheKey, CachedResponse) then
   begin
