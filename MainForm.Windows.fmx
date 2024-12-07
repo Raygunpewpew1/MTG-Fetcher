@@ -41,7 +41,6 @@ inherited Form1_Windows: TForm1_Windows
         Position.Y = 141.000000000000000000
         Size.Width = 125.000000000000000000
         Size.PlatformDefault = False
-        Text = 'Fetch Unique Prints'
       end
     end
     inherited LayoutContent: TLayout

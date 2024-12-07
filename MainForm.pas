@@ -203,6 +203,7 @@ type
   private
     CurrentPage: Integer;
     HasMorePages: Boolean;
+    SearchTerm: string;
     HttpClient: THTTPClient;
     FCardDetailsObject: TCardDetailsObject; // Private field
     CardTitle: string; // Private field
@@ -644,9 +645,10 @@ end;
 procedure TForm1.Button1Click(Sender: TObject);
 begin
 
-  if Trim(Edit1.Text).IsEmpty <> True then
+  if Edit1.Text.Trim.IsEmpty <> True then
   begin
-
+    SearchTerm := '';
+    SearchTerm := Edit1.Text.Trim;
     DisplayCardArtworks(Trim(Edit1.Text.Trim));
     LayoutControls.Enabled := False;
   end;
@@ -675,7 +677,7 @@ begin
   if HasMorePages then
   begin
     Inc(CurrentPage); // Increment the page number
-    LoadNextPage(Edit1.Text.Trim, '', '', ''); // Load the next page using filters
+    LoadNextPage(SearchTerm, '', '', ''); // Load the next page using filters
   end
   else
     ShowMessage('No more pages to load.');
