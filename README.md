@@ -27,6 +27,8 @@ The **JsonDataObjects** library is licensed under the MIT License.
 ---
 
 ## Installation
+You will need to possibibly copy 'card_template.html' to you public documents folder.
+
 
 ### Requirements
 1. Delphi Community Edition (or any other edition) is required to build this application.
