@@ -1232,6 +1232,7 @@
                 <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Win\CalypsoSE_Win.style" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
                         <RemoteDir>.\assets\internal\</RemoteDir>
+                        <Enabled>false</Enabled>
                         <RemoteName>CalypsoSE_Win.style</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
@@ -1239,6 +1240,7 @@
                 <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Win\Calypso_Win.style" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
                         <RemoteDir>.\assets\internal\</RemoteDir>
+                        <Enabled>false</Enabled>
                         <RemoteName>Calypso_Win.style</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
