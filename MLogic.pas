@@ -83,7 +83,7 @@ var
 begin
   DestinationPath := GetTemplatePath;
 
-  // Only copy if the database does not already exist
+  // Only copy if the template does not already exist
   if not TFile.Exists(DestinationPath) then
   begin
 {$IFDEF ANDROID}

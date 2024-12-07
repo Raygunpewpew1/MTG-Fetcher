@@ -1,4 +1,138 @@
-﻿unit MainForm;
+﻿{ TODO 1 :
+Filters to Add
+
+1. Supertype/Subtype:
+
+Examples:
+
+supertype:legendary (Find all legendary cards)
+
+subtype:goblin (Find all goblins)
+
+type:artifact (Find artifacts)
+
+
+2. Mana Cost and Color Identity:
+
+Examples:
+
+mana:(1)(W) (Find cards that cost 1 colorless and 1 white mana)
+
+ci:wur (Color identity includes white, blue, and red)
+
+
+3. Power/Toughness:
+
+Examples:
+
+power>=5 toughness<=5 (Find cards with 5+ power and 5 or less toughness)
+
+toughness:0 (Find cards with zero toughness)
+
+
+4. Format Legality:
+
+Examples:
+
+legal:modern (Cards legal in Modern)
+
+banned:commander (Cards banned in Commander)
+
+restricted:vintage (Restricted cards in Vintage)
+
+
+5. Text Search (Oracle Text):
+
+Examples:
+
+o:trample (Cards with "trample" in their text)
+
+o:"enters the battlefield" (Cards with "enters the battlefield" in their rules)
+
+
+6. Artist or Flavor Text:
+
+Examples:
+
+artist:"John Avon" (Cards illustrated by John Avon)
+
+ft:"Phyrexia" (Cards with "Phyrexia" in their flavor text)
+
+
+7. Price:
+
+Examples:
+
+usd<=10 (Cards costing $10 or less)
+
+usd>100 (Cards worth more than $100)
+
+
+8. Keywords:
+
+Examples:
+
+keyword:lifelink (Cards with lifelink)
+
+keyword:deathtouch (Cards with deathtouch)
+
+
+9. Release and Rarity:
+
+Examples:
+
+released:>=2019-01-01 (Cards released after 2019)
+
+rarity:mythic (Find all mythic rare cards)
+
+
+10. Unique Searches:
+
+Examples:
+
+is:commander (Cards that can be a commander)
+
+is:reserved (Cards on the reserved list)
+
+is:promo (Promotional cards)
+
+frame:1997 (Cards with the 1997 frame)
+
+
+---
+
+
+1. Dynamic Filters UI:
+
+Add dropdowns, checkboxes, or advanced search fields to support these attributes.
+
+Example: A dropdown for "Format" and "Supertype," checkboxes for "Colors."
+
+
+2. Search Syntax Builder:
+
+Dynamically construct the query string based on the user’s input.
+
+For instance:
+
+Query := 'type:elf color:green legal:commander';
+
+
+3. Auto-Suggestions:
+
+Use Scryfall's catalog endpoints (like /catalog/creature-types) to preload searchable terms (e.g., creature types, supertypes).
+
+See https://scryfall.com/docs/api/catalogs
+
+Display these suggestions in your dropdowns or input fields.
+
+
+4. Saved Searches:
+
+Let users save their favorite search queries for quick access later. }
+
+
+unit MainForm;
 
 interface
 
