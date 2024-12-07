@@ -5,11 +5,10 @@
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Android64</Platform>
         <TargetedPlatforms>32787</TargetedPlatforms>
         <AppType>Application</AppType>
         <MainSource>mtgfetchV2.dpr</MainSource>
-        <ProjectName Condition="'$(ProjectName)'==''">mtgfetchV2</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -1218,6 +1217,7 @@
                 <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Android\CalypsoSE_Android.style" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
                         <RemoteDir>.\assets\internal\</RemoteDir>
+                        <Enabled>false</Enabled>
                         <RemoteName>CalypsoSE_Android.style</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
@@ -1225,6 +1225,7 @@
                 <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Android\Calypso_Android.style" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
                         <RemoteDir>.\assets\internal\</RemoteDir>
+                        <Enabled>false</Enabled>
                         <RemoteName>Calypso_Android.style</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
@@ -1281,6 +1282,20 @@
                 <DeployFile LocalName="C:\Users\raygu\Documents\card_template.html" Configuration="Release" Class="File">
                     <Platform Name="Win64">
                         <RemoteName>card_template.html</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="CalypsoSE_Android.style" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
+                        <RemoteName>CalypsoSE_Android.style</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="CalypsoSE_Win.style" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
+                        <RemoteName>CalypsoSE_Win.style</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
