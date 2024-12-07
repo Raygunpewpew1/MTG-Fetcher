@@ -27,7 +27,7 @@ The **JsonDataObjects** library is licensed under the MIT License.
 ---
 
 ## Installation
-You will need to possibibly copy 'card_template.html' to you public documents folder.
+You will need to possibibly copy 'card_template.html' and 'Collection.db' to you public documents folder.
 
 
 ### Requirements
