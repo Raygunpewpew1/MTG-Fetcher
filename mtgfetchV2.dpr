@@ -10,7 +10,8 @@ uses
   MLogic in 'MLogic.pas',
   JsonDataObjects in 'JsonDataObjects.pas',
   CardDisplayHelpers in 'CardDisplayHelpers.pas',
-  WrapperHelper in 'WrapperHelper.pas';
+  WrapperHelper in 'WrapperHelper.pas',
+  APIConstants in 'APIConstants.pas';
 
 {$R *.res}
 

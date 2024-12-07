@@ -251,6 +251,7 @@
         <DCCReference Include="JsonDataObjects.pas"/>
         <DCCReference Include="CardDisplayHelpers.pas"/>
         <DCCReference Include="WrapperHelper.pas"/>
+        <DCCReference Include="APIConstants.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -1756,6 +1757,12 @@
                 <DeployFile LocalName="Win64\Debug\mtgfetchV2.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>mtgfetchV2.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win64\Debug\mtgfetchV2.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>mtgfetchV2.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

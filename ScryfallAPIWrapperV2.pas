@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.NetEncoding, System.Threading, JsonDataObjects, SGlobalsZ,
   System.Net.HttpClient,
-  WrapperHelper;
+  WrapperHelper, APIConstants;
 
 type
   // Custom exception class for Scryfall API errors
@@ -27,13 +27,7 @@ type
     // Parsing methods
     procedure FillCardDetailsFromJson(const JsonObj: TJsonObject;
       out CardDetails: TCardDetails);
-    procedure ParseImageUris(const JsonObj: TJsonObject;
-      out ImageUris: TImageUris);
-    procedure ParseLegalities(const JsonObj: TJsonObject;
-      out Legalities: TCardLegalities);
-    procedure ParsePrices(const JsonObj: TJsonObject; out Prices: TCardPrices);
-    procedure ParseCardFaces(const JsonObj: TJsonObject;
-      out CardFaces: TArray<TCardFace>);
+
     procedure FillSetDetailsFromJson(const JsonObj: TJsonObject;
       out SetDetails: TSetDetails);
     function InternalSearchCards(const Query, SetCode, Rarity, Colors: string;
@@ -87,10 +81,11 @@ begin
     Client.CustomHeaders['Accept'] := AcceptHeader;
 
     if Client.Get(BaseUrl + Endpoint, ResponseStream).StatusCode = 404 then
-     raise EScryfallAPIError.Create('Card not found. Please check your search criteria.');
+      raise EScryfallAPIError.Create
+        (ErrorCardNotFound);
 
     if Client.Get(BaseUrl + Endpoint, ResponseStream).StatusCode <> 200 then
-      raise EScryfallAPIError.CreateFmt('Request failed: %s',
+      raise EScryfallAPIError.CreateFmt(ErrorRequestFailed,
         [BaseUrl + Endpoint]);
 
     Response := ResponseStream.DataString;
@@ -110,9 +105,9 @@ var
   CardObj: TJsonObject;
 begin
   try
-    if JsonResponse.Contains('data') then
+    if JsonResponse.Contains(FieldData) then
     begin
-      CardsArray := JsonResponse.A['data']; // Access the 'data' array
+      CardsArray := JsonResponse.A[FieldData]; // Access the FieldData array
       LogError('Data Array Count: ' + CardsArray.Count.ToString);
       SetLength(Result.Cards, CardsArray.Count);
 
@@ -142,14 +137,14 @@ begin
     end
     else
     begin
-      LogError('ParseSearchResult: "data" key not found in JSON response.');
+      LogError(ErrorMissingDataKey);
       SetLength(Result.Cards, 0); // No data
     end;
 
     // Parse metadata
-    Result.HasMore := JsonResponse.B['has_more'];
-    Result.NextPageURL := JsonResponse.S['next_page'];
-    Result.TotalCards := JsonResponse.I['total_cards'];
+    Result.HasMore := JsonResponse.B[FieldHasMore];
+    Result.NextPageURL := JsonResponse.S[FieldNextPage];
+    Result.TotalCards := JsonResponse.I[FieldTotalCards];
   except
     on E: Exception do
     begin
@@ -166,50 +161,45 @@ begin
 
   try
     // Existing fields with platform-safe string assignment
-    if JsonObj.Contains('type_line') and (JsonObj.Types['type_line'] = jdtString)
-    then
+    if JsonObj.Contains(FieldTypeLine) and (JsonObj.Types[FieldTypeLine] = jdtString) then
     begin
 {$IF DEFINED(MSWINDOWS)}
-      CardDetails.TypeLine := TEncoding.UTF8.GetString
-        (TEncoding.ANSI.GetBytes(JsonObj.S['type_line']));
+      CardDetails.TypeLine := TEncoding.UTF8.GetString(
+        TEncoding.ANSI.GetBytes(JsonObj.S[FieldTypeLine]));
 {$ELSE}
-      CardDetails.TypeLine := JsonObj.S['type_line'];
+      CardDetails.TypeLine := JsonObj.S[FieldTypeLine];
 {$ENDIF}
     end;
 
-    if JsonObj.Contains('id') and (JsonObj.Types['id'] = jdtString) then
-      CardDetails.SFID := JsonObj.S['id'];
+    if JsonObj.Contains(FieldID) and (JsonObj.Types[FieldID] = jdtString) then
+      CardDetails.SFID := JsonObj.S[FieldID];
 
-    if JsonObj.Contains('name') and (JsonObj.Types['name'] = jdtString) then
+    if JsonObj.Contains(FieldName) and (JsonObj.Types[FieldName] = jdtString) then
     begin
 {$IF DEFINED(MSWINDOWS)}
-      CardDetails.CardName := TEncoding.UTF8.GetString
-        (TEncoding.ANSI.GetBytes(JsonObj.S['name']));
+      CardDetails.CardName := TEncoding.UTF8.GetString(
+        TEncoding.ANSI.GetBytes(JsonObj.S[FieldName]));
 {$ELSE}
-      CardDetails.CardName := JsonObj.S['name'];
+      CardDetails.CardName := JsonObj.S[FieldName];
 {$ENDIF}
     end;
 
-    if JsonObj.Contains('mana_cost') and (JsonObj.Types['mana_cost'] = jdtString)
-    then
-      CardDetails.ManaCost := JsonObj.S['mana_cost'];
+    if JsonObj.Contains(FieldManaCost) and (JsonObj.Types[FieldManaCost] = jdtString) then
+      CardDetails.ManaCost := JsonObj.S[FieldManaCost];
 
-    if JsonObj.Contains('oracle_text') and
-      (JsonObj.Types['oracle_text'] = jdtString) then
+    if JsonObj.Contains(FieldOracleText) and (JsonObj.Types[FieldOracleText] = jdtString) then
     begin
 {$IF DEFINED(MSWINDOWS)}
-      CardDetails.OracleText := TEncoding.UTF8.GetString
-        (TEncoding.ANSI.GetBytes(JsonObj.S['oracle_text']));
+      CardDetails.OracleText := TEncoding.UTF8.GetString(
+        TEncoding.ANSI.GetBytes(JsonObj.S[FieldOracleText]));
 {$ELSE}
-      CardDetails.OracleText := JsonObj.S['oracle_text'];
+      CardDetails.OracleText := JsonObj.S[FieldOracleText];
 {$ENDIF}
     end;
 
-    if JsonObj.Contains('keywords') and (JsonObj.Types['keywords'] = jdtArray)
-    then
+    if JsonObj.Contains(FieldKeywords) and (JsonObj.Types[FieldKeywords] = jdtArray) then
     begin
-      var
-      KeywordsArray := JsonObj.A['keywords'];
+      var KeywordsArray := JsonObj.A[FieldKeywords];
       SetLength(CardDetails.Keywords, KeywordsArray.Count);
       for var I := 0 to KeywordsArray.Count - 1 do
         if KeywordsArray.Types[I] = jdtString then
@@ -217,117 +207,97 @@ begin
     end
     else
       SetLength(CardDetails.Keywords, 0);
-    // Ensure the array is empty if no keywords
 
-    if JsonObj.Contains('set') and (JsonObj.Types['set'] = jdtString) then
-      CardDetails.SetCode := JsonObj.S['set'];
+    if JsonObj.Contains(FieldSet) and (JsonObj.Types[FieldSet] = jdtString) then
+      CardDetails.SetCode := JsonObj.S[FieldSet];
 
-    if JsonObj.Contains('set_name') and (JsonObj.Types['set_name'] = jdtString)
-    then
-      CardDetails.SetName := JsonObj.S['set_name'];
+    if JsonObj.Contains(FieldSetName) and (JsonObj.Types[FieldSetName] = jdtString) then
+      CardDetails.SetName := JsonObj.S[FieldSetName];
 
-    if JsonObj.Contains('rarity') and (JsonObj.Types['rarity'] = jdtString) then
-      CardDetails.Rarity := JsonObj.S['rarity'];
+    if JsonObj.Contains(FieldRarity) and (JsonObj.Types[FieldRarity] = jdtString) then
+      CardDetails.Rarity := JsonObj.S[FieldRarity];
 
-    if JsonObj.Contains('power') and (JsonObj.Types['power'] = jdtString) then
-      CardDetails.Power := JsonObj.S['power'];
+    if JsonObj.Contains(FieldPower) and (JsonObj.Types[FieldPower] = jdtString) then
+      CardDetails.Power := JsonObj.S[FieldPower];
 
-    if JsonObj.Contains('toughness') and (JsonObj.Types['toughness'] = jdtString)
-    then
-      CardDetails.Toughness := JsonObj.S['toughness'];
+    if JsonObj.Contains(FieldToughness) and (JsonObj.Types[FieldToughness] = jdtString) then
+      CardDetails.Toughness := JsonObj.S[FieldToughness];
 
-    if JsonObj.Contains('loyalty') and (JsonObj.Types['loyalty'] = jdtString)
-    then
-      CardDetails.Loyalty := JsonObj.S['loyalty'];
+    if JsonObj.Contains(FieldLoyalty) and (JsonObj.Types[FieldLoyalty] = jdtString) then
+      CardDetails.Loyalty := JsonObj.S[FieldLoyalty];
 
-    if JsonObj.Contains('prints_search_uri') and
-      (JsonObj.Types['prints_search_uri'] = jdtString) then
-      CardDetails.PrintsSearchUri := JsonObj.S['prints_search_uri'];
+    if JsonObj.Contains(FieldPrintsSearchUri) and (JsonObj.Types[FieldPrintsSearchUri] = jdtString) then
+      CardDetails.PrintsSearchUri := JsonObj.S[FieldPrintsSearchUri];
 
-    if JsonObj.Contains('oracle_id') and (JsonObj.Types['oracle_id'] = jdtString)
-    then
-      CardDetails.OracleID := JsonObj.S['oracle_id'];
+    if JsonObj.Contains(FieldOracleID) and (JsonObj.Types[FieldOracleID] = jdtString) then
+      CardDetails.OracleID := JsonObj.S[FieldOracleID];
 
-    if JsonObj.Contains('flavor_text') and
-      (JsonObj.Types['flavor_text'] = jdtString) then
+    if JsonObj.Contains(FieldFlavorText) and (JsonObj.Types[FieldFlavorText] = jdtString) then
     begin
 {$IF DEFINED(MSWINDOWS)}
-      CardDetails.FlavorText := TEncoding.UTF8.GetString
-        (TEncoding.ANSI.GetBytes(JsonObj.S['flavor_text']));
+      CardDetails.FlavorText := TEncoding.UTF8.GetString(
+        TEncoding.ANSI.GetBytes(JsonObj.S[FieldFlavorText]));
 {$ELSE}
-      CardDetails.FlavorText := JsonObj.S['flavor_text'];
+      CardDetails.FlavorText := JsonObj.S[FieldFlavorText];
 {$ENDIF}
     end;
 
-    if JsonObj.Contains('layout') and (JsonObj.Types['layout'] = jdtString) then
-      CardDetails.Layout := JsonObj.S['layout'].ToLower;
+    if JsonObj.Contains(FieldLayout) and (JsonObj.Types[FieldLayout] = jdtString) then
+      CardDetails.Layout := JsonObj.S[FieldLayout].ToLower;
 
-    // New fields
-    if JsonObj.Contains('lang') and (JsonObj.Types['lang'] = jdtString) then
-      CardDetails.Lang := JsonObj.S['lang'];
+    if JsonObj.Contains(FieldLang) and (JsonObj.Types[FieldLang] = jdtString) then
+      CardDetails.Lang := JsonObj.S[FieldLang];
 
-    if JsonObj.Contains('released_at') and
-      (JsonObj.Types['released_at'] = jdtString) then
-      CardDetails.ReleasedAt := JsonObj.S['released_at'];
+    if JsonObj.Contains(FieldReleasedAt) and (JsonObj.Types[FieldReleasedAt] = jdtString) then
+      CardDetails.ReleasedAt := JsonObj.S[FieldReleasedAt];
 
-    if JsonObj.Contains('cmc') and (JsonObj.Types['cmc'] = jdtFloat) then
-      CardDetails.CMC := JsonObj.F['cmc'];
+    if JsonObj.Contains(FieldCMC) and (JsonObj.Types[FieldCMC] = jdtFloat) then
+      CardDetails.CMC := JsonObj.F[FieldCMC];
 
-    if JsonObj.Contains('reserved') and (JsonObj.Types['reserved'] = jdtBool)
-    then
-      CardDetails.Reserved := JsonObj.B['reserved'];
+    if JsonObj.Contains(FieldReserved) and (JsonObj.Types[FieldReserved] = jdtBool) then
+      CardDetails.Reserved := JsonObj.B[FieldReserved];
 
-    if JsonObj.Contains('foil') and (JsonObj.Types['foil'] = jdtBool) then
-      CardDetails.Foil := JsonObj.B['foil'];
+    if JsonObj.Contains(FieldFoil) and (JsonObj.Types[FieldFoil] = jdtBool) then
+      CardDetails.Foil := JsonObj.B[FieldFoil];
 
-    if JsonObj.Contains('nonfoil') and (JsonObj.Types['nonfoil'] = jdtBool) then
-      CardDetails.NonFoil := JsonObj.B['nonfoil'];
+    if JsonObj.Contains(FieldNonFoil) and (JsonObj.Types[FieldNonFoil] = jdtBool) then
+      CardDetails.NonFoil := JsonObj.B[FieldNonFoil];
 
-    if JsonObj.Contains('oversized') and (JsonObj.Types['oversized'] = jdtBool)
-    then
-      CardDetails.Oversized := JsonObj.B['oversized'];
+    if JsonObj.Contains(FieldOversized) and (JsonObj.Types[FieldOversized] = jdtBool) then
+      CardDetails.Oversized := JsonObj.B[FieldOversized];
 
-    if JsonObj.Contains('promo') and (JsonObj.Types['promo'] = jdtBool) then
-      CardDetails.Promo := JsonObj.B['promo'];
+    if JsonObj.Contains(FieldPromo) and (JsonObj.Types[FieldPromo] = jdtBool) then
+      CardDetails.Promo := JsonObj.B[FieldPromo];
 
-    if JsonObj.Contains('reprint') and (JsonObj.Types['reprint'] = jdtBool) then
-      CardDetails.Reprint := JsonObj.B['reprint'];
+    if JsonObj.Contains(FieldReprint) and (JsonObj.Types[FieldReprint] = jdtBool) then
+      CardDetails.Reprint := JsonObj.B[FieldReprint];
 
-    if JsonObj.Contains('digital') and (JsonObj.Types['digital'] = jdtBool) then
-      CardDetails.Digital := JsonObj.B['digital'];
+    if JsonObj.Contains(FieldDigital) and (JsonObj.Types[FieldDigital] = jdtBool) then
+      CardDetails.Digital := JsonObj.B[FieldDigital];
 
-    if JsonObj.Contains('rarity') and (JsonObj.Types['rarity'] = jdtString) then
-      CardDetails.Rarity := JsonObj.S['rarity'];
+    if JsonObj.Contains(FieldArtist) and (JsonObj.Types[FieldArtist] = jdtString) then
+      CardDetails.Artist := JsonObj.S[FieldArtist];
 
-    if JsonObj.Contains('artist') and (JsonObj.Types['artist'] = jdtString) then
-      CardDetails.Artist := JsonObj.S['artist'];
+    if JsonObj.Contains(FieldCollectorNumber) and (JsonObj.Types[FieldCollectorNumber] = jdtString) then
+      CardDetails.CollectorNumber := JsonObj.S[FieldCollectorNumber];
 
-    if JsonObj.Contains('collector_number') and
-      (JsonObj.Types['collector_number'] = jdtString) then
-      CardDetails.CollectorNumber := JsonObj.S['collector_number'];
+    if JsonObj.Contains(FieldBorderColor) and (JsonObj.Types[FieldBorderColor] = jdtString) then
+      CardDetails.BorderColor := JsonObj.S[FieldBorderColor];
 
-    if JsonObj.Contains('border_color') and
-      (JsonObj.Types['border_color'] = jdtString) then
-      CardDetails.BorderColor := JsonObj.S['border_color'];
+    if JsonObj.Contains(FieldFrame) and (JsonObj.Types[FieldFrame] = jdtString) then
+      CardDetails.Frame := JsonObj.S[FieldFrame];
 
-    if JsonObj.Contains('frame') and (JsonObj.Types['frame'] = jdtString) then
-      CardDetails.Frame := JsonObj.S['frame'];
+    if JsonObj.Contains(FieldSecurityStamp) and (JsonObj.Types[FieldSecurityStamp] = jdtString) then
+      CardDetails.SecurityStamp := JsonObj.S[FieldSecurityStamp];
 
-    if JsonObj.Contains('security_stamp') and
-      (JsonObj.Types['security_stamp'] = jdtString) then
-      CardDetails.SecurityStamp := JsonObj.S['security_stamp'];
+    if JsonObj.Contains(FieldFullArt) and (JsonObj.Types[FieldFullArt] = jdtBool) then
+      CardDetails.FullArt := JsonObj.B[FieldFullArt];
 
-    if JsonObj.Contains('full_art') and (JsonObj.Types['full_art'] = jdtBool)
-    then
-      CardDetails.FullArt := JsonObj.B['full_art'];
+    if JsonObj.Contains(FieldTextless) and (JsonObj.Types[FieldTextless] = jdtBool) then
+      CardDetails.Textless := JsonObj.B[FieldTextless];
 
-    if JsonObj.Contains('textless') and (JsonObj.Types['textless'] = jdtBool)
-    then
-      CardDetails.Textless := JsonObj.B['textless'];
-
-    if JsonObj.Contains('story_spotlight') and
-      (JsonObj.Types['story_spotlight'] = jdtBool) then
-      CardDetails.StorySpotlight := JsonObj.B['story_spotlight'];
+    if JsonObj.Contains(FieldStorySpotlight) and (JsonObj.Types[FieldStorySpotlight] = jdtBool) then
+      CardDetails.StorySpotlight := JsonObj.B[FieldStorySpotlight];
 
     // Parse nested objects
     ParseImageUris(JsonObj, CardDetails.ImageUris);
@@ -338,161 +308,10 @@ begin
   except
     on E: Exception do
     begin
-      LogError('Error filling card details: ' + E.Message);
-      CardDetails.Clear; // Clear data on error
+      LogError(Format(ErrorFillingCardDetails, [E.Message]));
+      CardDetails.Clear;
     end;
   end;
-end;
-
-procedure TScryfallAPI.ParseImageUris(const JsonObj: TJsonObject;
-  out ImageUris: TImageUris);
-var
-  ImageUrisObj: TJsonObject;
-begin
-  if JsonObj.Contains('image_uris') and (JsonObj.Types['image_uris'] = jdtObject)
-  then
-  begin
-    ImageUrisObj := JsonObj.O['image_uris'];
-    if ImageUrisObj.Contains('small') and
-      (ImageUrisObj.Types['small'] = jdtString) then
-      ImageUris.Small := ImageUrisObj.S['small'];
-    if ImageUrisObj.Contains('normal') and
-      (ImageUrisObj.Types['normal'] = jdtString) then
-      ImageUris.Normal := ImageUrisObj.S['normal'];
-    if ImageUrisObj.Contains('large') and
-      (ImageUrisObj.Types['large'] = jdtString) then
-      ImageUris.Large := ImageUrisObj.S['large'];
-    if ImageUrisObj.Contains('png') and (ImageUrisObj.Types['png'] = jdtString)
-    then
-      ImageUris.PNG := ImageUrisObj.S['png'];
-    if ImageUrisObj.Contains('border_crop') and
-      (ImageUrisObj.Types['border_crop'] = jdtString) then
-      ImageUris.border_crop := ImageUrisObj.S['border_crop'];
-    if ImageUrisObj.Contains('art_crop') and
-      (ImageUrisObj.Types['art_crop'] = jdtString) then
-      ImageUris.art_crop := ImageUrisObj.S['art_crop'];
-  end
-  else
-    ImageUris := Default (TImageUris); // Default values if not found or invalid
-end;
-
-procedure TScryfallAPI.ParseLegalities(const JsonObj: TJsonObject;
-  out Legalities: TCardLegalities);
-var
-  LegalitiesObj: TJsonObject;
-
-  function GetSafeStringField(const Obj: TJsonObject;
-    const FieldName: string): string;
-  begin
-    if Obj.Contains(FieldName) and (Obj.Types[FieldName] = jdtString) then
-      Result := Obj.S[FieldName]
-    else
-      Result := ''; // Return an empty string if the field is missing or invalid
-  end;
-
-begin
-  if JsonObj.Contains('legalities') and (JsonObj.Types['legalities'] = jdtObject)
-  then
-  begin
-    LegalitiesObj := JsonObj.O['legalities'];
-
-    // Safely extract all legalities
-    Legalities.Standard := GetSafeStringField(LegalitiesObj, 'standard');
-    Legalities.Pioneer := GetSafeStringField(LegalitiesObj, 'pioneer');
-    Legalities.Modern := GetSafeStringField(LegalitiesObj, 'modern');
-    Legalities.Legacy := GetSafeStringField(LegalitiesObj, 'legacy');
-    Legalities.Commander := GetSafeStringField(LegalitiesObj, 'commander');
-    Legalities.Vintage := GetSafeStringField(LegalitiesObj, 'vintage');
-    Legalities.Pauper := GetSafeStringField(LegalitiesObj, 'pauper');
-    Legalities.Historic := GetSafeStringField(LegalitiesObj, 'historic');
-    Legalities.Explorer := GetSafeStringField(LegalitiesObj, 'explorer');
-    Legalities.Alchemy := GetSafeStringField(LegalitiesObj, 'alchemy');
-    Legalities.Brawl := GetSafeStringField(LegalitiesObj, 'brawl');
-    Legalities.Future := GetSafeStringField(LegalitiesObj, 'future');
-    Legalities.Oldschool := GetSafeStringField(LegalitiesObj, 'oldschool');
-    Legalities.Premodern := GetSafeStringField(LegalitiesObj, 'premodern');
-    Legalities.Duel := GetSafeStringField(LegalitiesObj, 'duel');
-    Legalities.Penny := GetSafeStringField(LegalitiesObj, 'penny');
-  end
-  else
-  begin
-    // Default to empty legalities if the legalities object is missing or invalid
-    Legalities := Default (TCardLegalities);
-  end;
-end;
-
-procedure TScryfallAPI.ParsePrices(const JsonObj: TJsonObject;
-  out Prices: TCardPrices);
-var
-  PricesObj: TJsonObject;
-begin
-  if JsonObj.Contains('prices') and (JsonObj.Types['prices'] = jdtObject) then
-  begin
-    PricesObj := JsonObj.O['prices'];
-
-    if PricesObj.Contains('usd') and (PricesObj.Types['usd'] = jdtString) then
-      Prices.USD := PricesObj.S['usd'];
-    if PricesObj.Contains('usd_foil') and
-      (PricesObj.Types['usd_foil'] = jdtString) then
-      Prices.USD_Foil := PricesObj.S['usd_foil'];
-    if PricesObj.Contains('eur') and (PricesObj.Types['eur'] = jdtString) then
-      Prices.EUR := PricesObj.S['eur'];
-    if PricesObj.Contains('tix') and (PricesObj.Types['tix'] = jdtString) then
-      Prices.Tix := PricesObj.S['tix'];
-  end
-  else
-    Prices := Default (TCardPrices);
-end;
-
-procedure TScryfallAPI.ParseCardFaces(const JsonObj: TJsonObject;
-  out CardFaces: TArray<TCardFace>);
-var
-  FacesArray: TJsonArray;
-  I: Integer;
-begin
-  if JsonObj.Contains('card_faces') and (JsonObj.Types['card_faces'] = jdtArray)
-  then
-  begin
-    FacesArray := JsonObj.A['card_faces'];
-    SetLength(CardFaces, FacesArray.Count);
-
-    for I := 0 to FacesArray.Count - 1 do
-    begin
-      if FacesArray.Types[I] = jdtObject then
-      begin
-        var
-        FaceObj := FacesArray.O[I];
-
-        if FaceObj.Contains('name') and (FaceObj.Types['name'] = jdtString) then
-          CardFaces[I].Name := FaceObj.S['name'];
-
-        if FaceObj.Contains('mana_cost') and
-          (FaceObj.Types['mana_cost'] = jdtString) then
-          CardFaces[I].ManaCost := FaceObj.S['mana_cost'];
-
-        if FaceObj.Contains('type_line') and
-          (FaceObj.Types['type_line'] = jdtString) then
-          CardFaces[I].TypeLine := FaceObj.S['type_line'];
-
-        if FaceObj.Contains('oracle_text') and
-          (FaceObj.Types['oracle_text'] = jdtString) then
-          CardFaces[I].OracleText := FaceObj.S['oracle_text'];
-
-        if FaceObj.Contains('power') and (FaceObj.Types['power'] = jdtString)
-        then
-          CardFaces[I].Power := FaceObj.S['power'];
-
-        if FaceObj.Contains('toughness') and
-          (FaceObj.Types['toughness'] = jdtString) then
-          CardFaces[I].Toughness := FaceObj.S['toughness'];
-
-        // Parse nested ImageUris
-        ParseImageUris(FaceObj, CardFaces[I].ImageUris);
-      end;
-    end;
-  end
-  else
-    SetLength(CardFaces, 0); // No card faces
 end;
 
 function TScryfallAPI.GetRandomCard: TCardDetails;
@@ -501,7 +320,7 @@ var
 begin
   try
     // Make a request to the "random" endpoint
-    JsonResponse := ExecuteRequest('/cards/random');
+    JsonResponse := ExecuteRequest(EndpointRandomCard);
     try
       // Parse the response into a TCardDetails object
       FillCardDetailsFromJson(JsonResponse, Result);
@@ -594,9 +413,9 @@ var
 begin
   JsonResponse := ExecuteRequest(EndpointSets);
   try
-    if JsonResponse.Contains('data') then
+    if JsonResponse.Contains(FieldData) then
     begin
-      SetsArray := JsonResponse.A['data'];
+      SetsArray := JsonResponse.A[FieldData];
       SetLength(Result, SetsArray.Count);
 
       for I := 0 to SetsArray.Count - 1 do
@@ -617,7 +436,7 @@ begin
   // Check the cache outside the lock
   if FSetDetailsCache.TryGetValue(SetCode, Result) then
   begin
-    LogError(Format('Cache hit for SetCode: %s', [SetCode]));
+    LogError(Format(LogCacheHit, [SetCode]));
     Exit;
   end;
 
@@ -626,14 +445,14 @@ begin
   try
     if FSetDetailsCache.TryGetValue(SetCode, Result) then
     begin
-      LogError(Format('Cache hit (double-check) for SetCode: %s', [SetCode]));
+      LogError(Format(LogCacheHitDoubleCheck, [SetCode]));
       Exit;
     end;
 
     // Construct the API endpoint
     Endpoint := Format('%s%s',
       [EndpointSets, TNetEncoding.URL.Encode(SetCode)]);
-    LogError(Format('Fetching SetCode from API: %s', [SetCode]));
+    LogError(Format(LogFetchingSetCode, [SetCode]));
 
     // Fetch data from the API
     JsonResponse := nil;
@@ -646,10 +465,10 @@ begin
 
         // Add to cache
         FSetDetailsCache.Add(SetCode, Result);
-        LogError(Format('SetCode added to cache: %s', [SetCode]));
+        LogError(Format(LogSetCodeAddedToCache, [SetCode]));
       end
       else
-        raise EScryfallAPIError.CreateFmt('No data returned for SetCode: %s',
+        raise EScryfallAPIError.CreateFmt(ErrorNoDataForSetCode,
           [SetCode]);
     finally
       JsonResponse.Free;
@@ -678,22 +497,22 @@ procedure TScryfallAPI.FillSetDetailsFromJson(const JsonObj: TJsonObject;
 out SetDetails: TSetDetails);
 begin
   SetDetails.Clear;
-  SetDetails.SFID := JsonObj.S['id'];
-  SetDetails.Code := JsonObj.S['code'];
-  SetDetails.Name := JsonObj.S['name'];
-  SetDetails.ReleaseDate := JsonObj.S['released_at'];
-  SetDetails.SetType := JsonObj.S['set_type'];
-  SetDetails.Block := JsonObj.S['block'];
-  SetDetails.BlockCode := JsonObj.S['block_code'];
-  SetDetails.ParentSetCode := JsonObj.S['parent_set_code'];
-  SetDetails.CardCount := JsonObj.I['card_count'];
-  SetDetails.Digital := JsonObj.B['digital'];
-  SetDetails.FoilOnly := JsonObj.B['foil_only'];
+  SetDetails.SFID := JsonObj.S[FieldID];
+  SetDetails.Code := JsonObj.S[FieldCode];
+  SetDetails.Name := JsonObj.S[FieldName];
+  SetDetails.ReleaseDate := JsonObj.S[FieldReleasedAt];
+  SetDetails.SetType := JsonObj.S[FieldSetType];
+  SetDetails.Block := JsonObj.S[FieldBlock];
+  SetDetails.BlockCode := JsonObj.S[FieldBlockCode];
+  SetDetails.ParentSetCode := JsonObj.S[FieldParentSetCode];
+  SetDetails.CardCount := JsonObj.I[FieldCardCount];
+  SetDetails.Digital := JsonObj.B[FieldDigital];
+  SetDetails.FoilOnly := JsonObj.B[FieldFoilOnly];
   SetDetails.IconSVGURI := TEncoding.UTF8.GetString
-    (TEncoding.ANSI.GetBytes(JsonObj.S['icon_svg_uri']));
-  SetDetails.ScryfallURI := JsonObj.S['scryfall_uri'];
-  SetDetails.URI := JsonObj.S['uri'];
-  SetDetails.SearchURI := JsonObj.S['search_uri'];
+    (TEncoding.ANSI.GetBytes(JsonObj.S[FieldIconSvgUri]));
+  SetDetails.ScryfallURI := JsonObj.S[FieldScryfallUri];
+  SetDetails.URI := JsonObj.S[FieldUri];
+  SetDetails.SearchURI := JsonObj.S[FieldSearchUri];
 end;
 
 function TScryfallAPI.InternalSearchCards(const Query, SetCode, Rarity,

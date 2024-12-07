@@ -162,8 +162,17 @@ procedure AddKeywordsReplacement(Replacements: TDictionary<string, string>; cons
 var
   KeywordsList: string;
 begin
-  KeywordsList := String.Join(', ', CardDetails.Keywords);
-  Replacements.Add('{{Keywords}}', TNetEncoding.HTML.Encode(KeywordsList));
+  if Length(CardDetails.Keywords) > 0 then
+  begin
+    KeywordsList := String.Join(', ', CardDetails.Keywords);
+    Replacements.Add('{{Keywords}}', TNetEncoding.HTML.Encode(KeywordsList));
+    Replacements.Add('{{KeywordsDisplay}}', ''); // No style, section is visible
+  end
+  else
+  begin
+    Replacements.Add('{{Keywords}}', ''); // Empty content
+    Replacements.Add('{{KeywordsDisplay}}', 'display:none;'); // Hide section
+  end;
 end;
 
 function BuildPowerToughnessHtml(const CardDetails: TCardDetails): string;
