@@ -5,8 +5,9 @@ MTG Fetcher is a FireMonkey-based Delphi application designed to streamline Magi
 ---
 
 ## About
+It needs a lot of work!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-This project was developed using **Delphi Community Edition**, a free version of Embarcadero Delphi intended for individual developers, open-source projects, and small companies. It leverages Delphi’s powerful FireMonkey (FMX) framework to create a cross-platform application with support for Windows and Android. It needs A lot of work!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+This project was developed using **Delphi Community Edition**, a free version of Embarcadero Delphi intended for individual developers, open-source projects, and small companies. It leverages Delphi’s powerful FireMonkey (FMX) framework to create a cross-platform application with support for Windows and Android. 
 
 The application retrieves MTG card data directly from Scryfall, enabling advanced features such as:
 - Card image viewing (including support for double-faced cards).
