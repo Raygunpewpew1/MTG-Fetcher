@@ -68,12 +68,4 @@ __recovery/
 # Boss dependency manager vendor folder https://github.com/HashLoad/boss
 modules/
 /Android64
-/Android64/Debug/mtgfetchV2/assets
-/Android64/Debug/mtgfetchV2/assets/internal
-/Android64/Debug
-/Android64
-Android64/Debug/mtgfetchV2.lnk
-/Android64/Release
-Android64/Release/BuildClassesDex.stamp
-/Android64/Release
 /Win64
