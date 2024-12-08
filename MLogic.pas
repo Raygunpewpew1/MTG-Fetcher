@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
   System.RegularExpressions, System.Hash, System.Classes, System.NetEncoding,
   FMX.Dialogs, SGlobalsZ, FMX.Graphics, System.Net.HttpClient, FMX.StdCtrls,
-  System.Threading;
+  System.Threading, JsonDataObjects;
 
 procedure CopyDatabaseToInternalStorage;
 procedure InitializeManaSymbolMap;
@@ -28,6 +28,10 @@ function LoadTemplate(const FileName: string;
   const DefaultTemplate: string = ''): string;
 function ReplacePlaceholder(const Template, Placeholder, Value: string): string;
 function IsCardValid(const Card: TCardDetails): Boolean;
+procedure SaveCatalogsToFile(const FileName: string;
+const Catalogs: TDictionary<string, TScryfallCatalog>);
+procedure LoadCatalogsFromFile(const FileName: string;
+var Catalogs: TDictionary<string, TScryfallCatalog>);
 
 var
   FManaSymbolMap: TDictionary<string, string>;
@@ -484,6 +488,124 @@ end;
 function IsCardValid(const Card: TCardDetails): Boolean;
 begin
   Result := not Card.CardName.IsEmpty and not Card.SFID.IsEmpty;
+end;
+
+
+procedure SaveCatalogsToFile(const FileName: string; const Catalogs: TDictionary<string, TScryfallCatalog>);
+var
+  AppDirectory, FullFilePath: string;
+  JsonCatalogs: TJsonObject;
+  CatalogName: string;
+  CatalogData: TJsonArray;
+  Catalog: TScryfallCatalog;
+begin
+  // Determine the platform-specific file path and subdirectory
+  {$IF DEFINED(MSWINDOWS)}
+  AppDirectory := TPath.Combine(TPath.GetDocumentsPath, 'MTGCardFetch');
+  {$ELSEIF DEFINED(ANDROID)}
+  AppDirectory := TPath.Combine(TPath.GetSharedDocumentsPath, 'MTGCardFetch');
+  {$ELSE}
+  raise Exception.Create('Unsupported platform');
+  {$ENDIF}
+
+  // Ensure the subdirectory exists
+  if not ForceDirectories(AppDirectory) then
+    raise Exception.CreateFmt('Failed to create directory: %s', [AppDirectory]);
+
+  // Combine the app directory with the filename
+  FullFilePath := TPath.Combine(AppDirectory, FileName);
+
+  // Create a JSON object to hold the catalogs
+  JsonCatalogs := TJsonObject.Create;
+  try
+    for CatalogName in Catalogs.Keys do
+    begin
+      Catalog := Catalogs[CatalogName];
+
+      // Create a JSON array for the catalog data
+      CatalogData := TJsonArray.Create;
+      for var Item in Catalog.Data do
+        CatalogData.Add(Item);
+
+      // Add the catalog name, data, and metadata to the JSON object
+      JsonCatalogs.O[CatalogName] := TJsonObject.Create;
+      JsonCatalogs.O[CatalogName].S['name'] := Catalog.Name;
+      JsonCatalogs.O[CatalogName].A['data'] := CatalogData;
+      JsonCatalogs.O[CatalogName].I['total_items'] := Catalog.TotalItems;
+    end;
+
+    // Save the JSON object to the file
+    JsonCatalogs.SaveToFile(FullFilePath, False, TEncoding.UTF8, True);
+  finally
+   JsonCatalogs.Free;
+  end;
+end;
+
+procedure LoadCatalogsFromFile(const FileName: string; var Catalogs: TDictionary<string, TScryfallCatalog>);
+var
+  AppDirectory, FullFilePath: string;
+  JsonCatalogs: TJsonObject;
+  CatalogName: string;
+  CatalogObj: TJsonObject;
+  Catalog: TScryfallCatalog;
+  CatalogDataArray: TJsonArray;
+begin
+  // Determine the platform-specific file path and subdirectory
+  {$IF DEFINED(MSWINDOWS)}
+  AppDirectory := TPath.Combine(TPath.GetDocumentsPath, 'MTGCardFetch');
+  {$ELSEIF DEFINED(ANDROID)}
+  AppDirectory := TPath.Combine(TPath.GetSharedDocumentsPath, 'MTGCardFetch');
+  {$ELSE}
+  raise Exception.Create('Unsupported platform');
+  {$ENDIF}
+
+  // Combine the app directory with the filename
+  FullFilePath := TPath.Combine(AppDirectory, FileName);
+
+  // Ensure the file exists; if not, create an empty dictionary and exit
+  if not TFile.Exists(FullFilePath) then
+  begin
+    Catalogs.Clear; // Clear any existing data
+    Exit;
+  end;
+
+  // Load the JSON object from the file
+  JsonCatalogs := TJsonObject.Create;
+  try
+    try
+      JsonCatalogs.LoadFromFile(FullFilePath);
+    except
+      on E: Exception do
+      begin
+        // Handle invalid file format by clearing the dictionary and exiting
+        Catalogs.Clear;
+        raise Exception.CreateFmt('Failed to load catalogs: %s', [E.Message]);
+      end;
+    end;
+
+    // Clear the existing catalog dictionary to avoid conflicts
+    Catalogs.Clear;
+
+    // Iterate through the catalogs in the JSON file
+    for var I := 0 to JsonCatalogs.Count - 1 do
+    begin
+      CatalogName := JsonCatalogs.Names[I]; // Get the catalog name
+      CatalogObj := JsonCatalogs.O[CatalogName]; // Get the catalog object
+      Catalog.Name := CatalogObj.S['name'];
+      Catalog.TotalItems := CatalogObj.I['total_items'];
+
+      // Load the catalog's data array
+      CatalogDataArray := CatalogObj.A['data'];
+      SetLength(Catalog.Data, CatalogDataArray.Count);
+      for var J := 0 to CatalogDataArray.Count - 1 do
+        Catalog.Data[J] := CatalogDataArray.S[J];
+
+      // Add the catalog to the dictionary
+      Catalogs.Add(CatalogName, Catalog);
+    end;
+  finally
+    JsonCatalogs.Free;
+  end;
 end;
 
 initialization

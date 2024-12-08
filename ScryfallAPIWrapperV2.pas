@@ -33,6 +33,9 @@ type
     function InternalSearchCards(const Query, SetCode, Rarity, Colors: string;
       Fuzzy, Unique: Boolean; Page: Integer): TSearchResult;
 
+
+
+
   public
     constructor Create;
     destructor Destroy; override;
@@ -48,6 +51,9 @@ type
     procedure SearchAllCardsAsync(const Query, SetCode, Rarity, Colors: string;
       Fuzzy, Unique: Boolean; Page: Integer; Callback: TOnSearchComplete);
     function GetRandomCard: TCardDetails;
+    function GetCreatureTypes: TScryfallCatalog;
+    function GetCatalog(const CatalogName: string): TScryfallCatalog;
+    function FetchAllCatalogs: TDictionary<string, TScryfallCatalog>;
   end;
 
 implementation
@@ -562,5 +568,105 @@ begin
     JsonResponse.Free;
   end;
 end;
+
+function TScryfallAPI.GetCreatureTypes: TScryfallCatalog;
+var
+  JsonResponse: TJsonObject;
+  CatalogArray: TJsonArray;
+  I: Integer;
+begin
+  JsonResponse := ExecuteRequest(EndPointCreatureTypes); // Endpoint for creature types
+  try
+    // Initialize the catalog
+    Result.Clear;
+
+    if JsonResponse.Contains(FieldData) and (JsonResponse.Types[FieldData] = jdtArray) then
+    begin
+      CatalogArray := JsonResponse.A[FieldData];
+      SetLength(Result.Data, CatalogArray.Count);
+
+      for I := 0 to CatalogArray.Count - 1 do
+        if CatalogArray.Types[I] = jdtString then
+          Result.Data[I] := CatalogArray.S[I];
+
+      //Set metadata
+      Result.TotalItems := Length(Result.Data);
+    end
+    else
+      raise EScryfallAPIError.Create('Invalid response: "data" field not found.');
+  finally
+    JsonResponse.Free;
+  end;
+end;
+
+function TScryfallAPI.GetCatalog(const CatalogName: string): TScryfallCatalog;
+var
+  JsonResponse: TJsonObject;
+  DataArray: TJsonArray;
+  I: Integer;
+begin
+  JsonResponse := ExecuteRequest(Format('catalog/%s', [CatalogName]));
+  try
+    Result.Clear; // Reset the catalog record
+    Result.Name := CatalogName; // Set the catalog name
+
+    // Check if 'data' exists and is a valid array
+    if JsonResponse.Contains('data') and (JsonResponse.Types['data'] = jdtArray) then
+    begin
+      DataArray := JsonResponse.A['data'];
+      SetLength(Result.Data, DataArray.Count);
+
+      // Extract the array items
+      for I := 0 to DataArray.Count - 1 do
+        Result.Data[I] := DataArray.S[I]; // Use .S[index] for strings
+    end;
+
+    // Extract additional metadata
+    if JsonResponse.Contains('total_items') then
+      Result.TotalItems := JsonResponse.I['total_items'];
+    if JsonResponse.Contains('uri') then
+      Result.Uri := JsonResponse.S['uri'];
+    if JsonResponse.Contains('object') then
+      Result.ObjectType := JsonResponse.S['object'];
+  finally
+    JsonResponse.Free;
+  end;
+end;
+
+function TScryfallAPI.FetchAllCatalogs: TDictionary<string, TScryfallCatalog>;
+var
+  CatalogNames: TArray<string>;
+  CatalogDict: TDictionary<string, TScryfallCatalog>;
+  CatalogName: string;
+begin
+  // Catalog names to fetch
+  CatalogNames := TArray<string>.Create(
+    CatalogCreatureTypes,
+    CatalogPlaneswalkerTypes,
+    CatalogArtifactTypes,
+    CatalogEnchantmentTypes,
+    CatalogLandTypes,
+    CatalogSpellTypes,
+    CatalogPowers,
+    CatalogToughnesses,
+    CatalogLoyalties,
+    CatalogWatermarks,
+    CatalogKeywordAbilities,
+    CatalogKeywordActions,
+    CatalogAbilityWords
+  );
+
+  CatalogDict := TDictionary<string, TScryfallCatalog>.Create;
+  try
+    for CatalogName in CatalogNames do
+      CatalogDict.Add(CatalogName, GetCatalog(CatalogName));
+
+    Result := CatalogDict; // Return the filled dictionary
+  except
+    CatalogDict.Free;
+    raise;
+  end;
+end;
+
 
 end.

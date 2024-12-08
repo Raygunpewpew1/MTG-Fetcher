@@ -15,6 +15,7 @@ const
   EndpointSets = 'sets/';
   EndpointBulkData = 'bulk-data';
   EndpointRandomCard = '/cards/random';
+  EndPointCreatureTypes = 'catalog/creature-types';
 
   // Error Messages
   ErrorCardNotFound = 'Card not found. Please check your search criteria.';
@@ -37,6 +38,7 @@ const
   FieldNextPage = 'next_page';
   FieldTotalCards = 'total_cards';
   FieldTypeLine = 'type_line';
+
   FieldID = 'id';
   FieldName = 'name';
   FieldManaCost = 'mana_cost';
@@ -116,6 +118,20 @@ const
   FieldUri = 'uri';
   FieldSearchUri = 'search_uri';
 
+  // Cat Setup
+  CatalogCreatureTypes = 'creature-types';
+  CatalogPlaneswalkerTypes = 'planeswalker-types';
+  CatalogArtifactTypes = 'artifact-types';
+  CatalogEnchantmentTypes = 'enchantment-types';
+  CatalogLandTypes = 'land-types';
+  CatalogSpellTypes = 'spell-types';
+  CatalogPowers = 'powers';
+  CatalogToughnesses = 'toughnesses';
+  CatalogLoyalties = 'loyalties';
+  CatalogWatermarks = 'watermarks';
+  CatalogKeywordAbilities = 'keyword-abilities';
+  CatalogKeywordActions = 'keyword-actions';
+  CatalogAbilityWords = 'ability-words';
 
 
 implementation

@@ -238,13 +238,11 @@
         </DelphiCompile>
         <DCCReference Include="MainForm.pas">
             <Form>Form1</Form>
-            <FormType>fmx</FormType>
         </DCCReference>
         <DCCReference Include="ScryfallAPIWrapperV2.pas"/>
         <DCCReference Include="SGlobalsZ.pas"/>
         <DCCReference Include="DataModuleUnit.pas">
             <Form>DataModule1</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="MLogic.pas"/>
@@ -1103,12 +1101,6 @@
                 <DeployFile LocalName="C:\Users\raygu\Documents\card_template.html" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
                         <RemoteDir>.\assets\internal\</RemoteDir>
-                        <RemoteName>card_template.html</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="C:\Users\raygu\Documents\card_template.html" Configuration="Debug" Class="File">
-                    <Platform Name="Win64">
                         <RemoteName>card_template.html</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>

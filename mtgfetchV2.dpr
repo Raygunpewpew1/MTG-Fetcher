@@ -1,5 +1,8 @@
 program mtgfetchV2;
 
+
+
+
 uses
   System.StartUpCopy,
   FMX.Forms,

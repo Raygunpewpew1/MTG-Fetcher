@@ -178,6 +178,18 @@ type
     TotalCards: Integer;
   end;
 
+  type
+  TScryfallCatalog = record
+    Name: string;  // Name of the catalog
+    Data: TArray<string>; // Array of creature types
+    TotalItems: Integer;  // Track total items for additional metadata
+    Uri: string;           // Optional: API URI for debugging or reference
+    ObjectType: string;    // Optional: API object type (e.g., "catalog")
+    procedure Clear;
+  end;
+
+
+
 const
   LegalitiesArray: array [0 .. 15] of string = ('Standard', 'Pioneer', 'Modern',
     'Legacy', 'Commander', 'Vintage', 'Pauper', 'Historic', 'Explorer',
@@ -203,6 +215,15 @@ end;
 procedure TSetDetails.Clear;
 begin
   Self := Default (TSetDetails);
+end;
+
+procedure TScryfallCatalog.Clear;
+begin
+  Name := '';
+  Uri := '';
+  ObjectType := '';
+  SetLength(Data, 0);
+  TotalItems := 0;
 end;
 
 end.

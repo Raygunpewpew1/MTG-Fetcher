@@ -139,7 +139,7 @@ interface
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
   System.Generics.Collections, System.IOUtils, FMX.Types, FMX.Controls,
-  FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts, FMX.Objects,
+  FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts,
   FMX.ExtCtrls, FMX.Ani, FMX.Edit, FMX.StdCtrls,
   FMX.WebBrowser, FireDAC.Stan.Intf, FireDAC.Phys.Intf,
   FireDAC.Comp.Client,
@@ -147,11 +147,11 @@ uses
   FireDAC.Phys.SQLiteDef, Data.DB, FMX.Skia, System.Net.HttpClient,
   System.Hash, ScryfallAPIWrapperV2, SGlobalsZ, WrapperHelper,
 
-  MLogic, System.StrUtils,
+  MLogic,APIConstants ,System.StrUtils,
   System.TypInfo, System.NetEncoding, Math, System.Threading,
   FMX.Controls.Presentation, FMX.ListView.Types, FMX.ListView.Appearances,
   FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, CardDisplayHelpers,
-  FMX.TabControl;
+  FMX.TabControl, Neon.Core.Attributes;
 
 type
   TCardDetailsObject = class(TObject)
@@ -186,7 +186,9 @@ type
     LayoutContent: TLayout; // Layout for ListView and WebBrowser
     LayoutButtons: TLayout; // Layout for buttons like Save, Collection, etc.
     SplitterMain: TSplitter;
-    CheckBox1: TCheckBox; // Splitter between ListView and WebBrowser
+    Switch1: TSwitch;
+    DisplayUniq: TLabel;
+    ComboBox1: TComboBox; // Splitter between ListView and WebBrowser
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -213,6 +215,7 @@ type
     AppClose: Boolean; // Encapsulated within the form
     FScryfallAPI: TScryfallAPI; // Instance of TScryfallAPI
 
+
     BrIsLoaded: Boolean;
     procedure DisplayCardArtworks(const CardName: string);
 
@@ -226,6 +229,7 @@ type
     procedure AddCardToListView(const Card: TCardDetails);
     procedure LoadNextPage(const CardName, SetCode, ColorCode,
       RarityCode: string);
+    procedure LoadAllCatalogs;
     // procedure AdjustLayout;
 
   public
@@ -258,12 +262,53 @@ end;
 
 { TForm1 }
 
+
+
+
+procedure TForm1.LoadAllCatalogs;
+var
+  Catalogs: TDictionary<string, TScryfallCatalog>;
+  FileName: string;
+begin
+  FileName := 'catalogs.json';
+  Catalogs := TDictionary<string, TScryfallCatalog>.Create;
+
+  try
+    // Try to load the catalogs from the file
+    LoadCatalogsFromFile(FileName, Catalogs);
+
+    // If the dictionary is empty (file not found or invalid), fetch from the API
+    if Catalogs.Count = 0 then
+    begin
+      Catalogs := FScryfallAPI.FetchAllCatalogs;
+      SaveCatalogsToFile(FileName, Catalogs);
+    end;
+
+    // Use the catalogs
+    if Catalogs.ContainsKey(CatalogKeywordAbilities) then
+    begin
+    ComboBox1.Items.Clear;
+    ComboBox1.Items.AddStrings(Catalogs[CatalogKeywordAbilities].Data);
+    ComboBox1.ItemIndex := 0;
+    end;
+
+    //  ShowMessage('Keyword Abilities: ' + String.Join(', ', Catalogs[CatalogKeywordAbilities].Data));
+  finally
+    Catalogs.Free;
+  end;
+end;
+
+
 procedure TForm1.FormCreate(Sender: TObject);
 var
   SetDetailsArray: TArray<TSetDetails>;
   SetDetails: TSetDetails;
+//  CardTypes: TScryfallCatalog;
+ // CreaTypeStr: string;
 begin
   WebBrowser1.URL := 'about:blank';
+  LoadAllCatalogs;
+ // PopulateComboBoxFromCatalog(ComboBox1, CatalogLandTypes);
 
   FScryfallAPI := TScryfallAPI.Create;
   HttpClient := THTTPClient.Create;
@@ -297,6 +342,9 @@ begin
     ComboBoxColors.ItemIndex := 0;
     ComboBoxRarity.ItemIndex := 0;
   end;
+
+
+
   DelayTimer.Enabled := True;
   // Form1.StyleBook := HighResForm.HighResImageForm.StyleBook1;
 
@@ -391,8 +439,8 @@ var
 begin
   LayoutControls.Enabled := False;
   // Reset pagination variables
-  CurrentPage := 1; // A form-level integer variable
-  HasMorePages := False; // A form-level Boolean variable
+  CurrentPage := 1;
+  HasMorePages := False;
 
   // Show the progress bar
   ProgressBar1.Visible := True;
@@ -436,7 +484,7 @@ procedure TForm1.LoadNextPage(const CardName, SetCode, ColorCode,
   Var
   IsChecked: Boolean;
 begin
-IsChecked := Checkbox1.IsChecked;
+IsChecked := Switch1.IsChecked;
 
 
   FScryfallAPI.SearchAllCardsAsync(CardName, SetCode, RarityCode, ColorCode,
