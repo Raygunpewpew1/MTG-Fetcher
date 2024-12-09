@@ -1215,13 +1215,6 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="C:\Users\raygu\Documents\card_template.html" Configuration="Release" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\</RemoteDir>
-                        <RemoteName>card_template.html</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="C:\Users\raygu\Documents\card_template.html" Configuration="Release" Class="File">
                     <Platform Name="Win64">
                         <RemoteName>card_template.html</RemoteName>
                         <Overwrite>true</Overwrite>
@@ -1243,6 +1236,7 @@
                 </DeployFile>
                 <DeployFile LocalName="Collection.db" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
                         <RemoteName>Collection.db</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
@@ -1880,6 +1874,7 @@
                 </DeployFile>
                 <DeployFile LocalName="card_template.html" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
+                        <RemoteDir>.\assets\internal\</RemoteDir>
                         <RemoteName>card_template.html</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
