@@ -458,28 +458,17 @@
         /* Smaller header on mobile */
       }
 
-      .card-details {
-        width: 95%;
-        /* Use more of the screen width */
-      }
-
-      .type-set-row {
-        flex-direction: column;
-        /* Stack type line and set details */
-        align-items: flex-start;
-        /* Align elements to the left */
-      }
-
-      .set-details {
-        margin-top: 10px;
+      .card-container {
+        padding: 10px;
+        /* Add padding for better spacing */
       }
 
       .flip-card,
       .single-card {
-        width: 90%;
-        /* Scale based on viewport width */
-        max-width: 240px;
-        /* Maintain a maximum size */
+        width: 100%;
+        /* Use full width */
+        max-width: 300px;
+        /* Limit max size */
         aspect-ratio: 2/3;
         /* Preserve aspect ratio */
         margin: 0 auto;
@@ -498,6 +487,65 @@
         object-fit: cover;
         border-radius: 10px;
         /* Ensure corners match */
+      }
+
+      .card-details {
+        width: 95%;
+        /* Use more of the screen width */
+        padding: 10px;
+        /* Add padding for better readability */
+      }
+
+      .mana-cost {
+        font-size: 14px;
+        /* Scale down mana cost font */
+      }
+
+      .type-set-row {
+        flex-direction: column;
+        /* Stack type line and set details */
+        align-items: center;
+        /* Center items */
+        text-align: center;
+        /* Align text */
+      }
+
+      .set-details {
+        margin-top: 5px;
+        /* Add spacing between type line and set details */
+      }
+
+      .oracle-text {
+        font-size: 12px;
+        /* Scale down oracle text font */
+      }
+
+      .prices-grid td,
+      .additional-details p {
+        font-size: 12px;
+        /* Adjust font size for prices and details */
+      }
+
+      .legalities-grid {
+        display: block;
+        /* Switch to block layout */
+        padding: 10px;
+        /* Add padding */
+      }
+
+      .prices-grid {
+        display: block;
+        /* Stack prices for smaller screens */
+      }
+
+      .prices-grid td:first-child,
+      .prices-grid td:last-child {
+        display: block;
+        text-align: left;
+        font-size: 14px;
+        /* Adjust font size */
+        margin-bottom: 5px;
+        /* Add spacing */
       }
     }
   </style>

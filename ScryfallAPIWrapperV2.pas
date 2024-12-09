@@ -665,6 +665,7 @@ begin
   except
     CatalogDict.Free;
     raise;
+    CatalogDict.Free;
   end;
 end;
 

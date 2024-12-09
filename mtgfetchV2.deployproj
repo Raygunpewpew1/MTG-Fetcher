@@ -4,7 +4,7 @@
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>
     <PropertyGroup>
-        <DeviceId Condition="'$(Platform)'=='Android'">R3CR40B2VXD</DeviceId>
+        <DeviceId Condition="'$(Platform)'=='Android'"/>
         <DeviceId Condition="'$(Platform)'=='Android64'">R3CR40B2VXD</DeviceId>
     </PropertyGroup>
     <ItemGroup Condition="'$(Platform)'=='Win32'">
@@ -1477,6 +1477,15 @@
         <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
             <RemoteName>{2}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\default.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\</RemoteDir>
+            <RemoteName>default.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
