@@ -31,6 +31,7 @@ function GetLegalStatus(const Legalities: TCardLegalities; const FieldName: stri
 const
   MTGAppFolder = 'MTGCardFetch';
   TemplateFileName = 'card_template.html';
+  DatabaseFileName = 'Collection.db';
 
 
 var
@@ -55,6 +56,27 @@ begin
     TDirectory.CreateDirectory(Result);
 end;
 
+
+function GetTargetPath(const FileName: string): string;
+begin
+  Result := TPath.Combine(GetAppDirectory, FileName);
+end;
+
+
+
+function GetSourcePath(const FileName: string): string;
+begin
+  {$IF DEFINED(MSWINDOWS)}
+  // For development on Windows
+  Result := TPath.Combine(TPath.GetDirectoryName(ParamStr(0)), FileName);
+  {$ELSEIF DEFINED(ANDROID)}
+  // On Android, files must be included in the app's assets folder
+  Result := TPath.Combine(TPath.GetDocumentsPath, FileName);
+  {$ELSE}
+  raise Exception.Create('Unsupported platform');
+  {$ENDIF}
+end;
+
 { Centralized Template Path Logic }
 function GetTemplatePath: string;
 begin
@@ -71,21 +93,16 @@ procedure CopyDatabaseToInternalStorage;
 var
   SourcePath, DestinationPath: string;
 begin
-  DestinationPath := GetDatabasePath;
+  DestinationPath := GetTargetPath(DatabaseFileName); // Use centralized target logic
+  SourcePath := GetSourcePath(DatabaseFileName);     // Use centralized source logic
 
   if not TFile.Exists(DestinationPath) then
   begin
-    {$IFDEF ANDROID}
-    SourcePath := TPath.Combine(TPath.GetDocumentsPath, 'Collection.db');
-    {$ELSE}
-    SourcePath := TPath.Combine(TPath.GetHomePath, 'Collection.db');
-    {$ENDIF}
-
     try
       if TFile.Exists(SourcePath) then
         TFile.Copy(SourcePath, DestinationPath)
       else
-        raise Exception.Create('Database file not found: ' + SourcePath);
+        raise Exception.CreateFmt('Database file not found: %s', [SourcePath]);
     except
       on E: Exception do
         ShowMessage('Error copying database: ' + E.Message);
@@ -98,21 +115,16 @@ procedure CopyTemplateToInternalStorage;
 var
   SourcePath, DestinationPath: string;
 begin
-  DestinationPath := GetTemplatePath;
+  DestinationPath := GetTargetPath(TemplateFileName);
+  SourcePath := GetSourcePath(TemplateFileName);
 
   if not TFile.Exists(DestinationPath) then
   begin
-    {$IFDEF ANDROID}
-    SourcePath := TPath.Combine(TPath.GetDocumentsPath, TemplateFileName);
-    {$ELSE}
-    SourcePath := TPath.Combine(TPath.GetHomePath, TemplateFileName);
-    {$ENDIF}
-
     try
       if TFile.Exists(SourcePath) then
         TFile.Copy(SourcePath, DestinationPath)
       else
-        raise Exception.Create('Template file not found: ' + SourcePath);
+        raise Exception.CreateFmt('Template file not found: %s', [SourcePath]);
     except
       on E: Exception do
         ShowMessage('Error copying template: ' + E.Message);
@@ -120,20 +132,21 @@ begin
   end;
 end;
 
-{ Load Template }
 function LoadTemplate(const FileName: string; const DefaultTemplate: string = ''): string;
 var
   FullPath: string;
 begin
+  // Ensure the template exists in the target directory
   CopyTemplateToInternalStorage;
 
-  FullPath := TPath.Combine(GetAppDirectory, FileName);
+  // Use centralized target path logic
+  FullPath := GetTargetPath(FileName);
   if TFile.Exists(FullPath) then
     Result := TFile.ReadAllText(FullPath, TEncoding.UTF8)
-  else if DefaultTemplate <> '' then
+  else if not DefaultTemplate.IsEmpty then
     Result := DefaultTemplate
   else
-    raise Exception.Create('Template file not found: ' + FullPath);
+    raise Exception.CreateFmt('Template file not found: %s', [FullPath]);
 end;
 
 { Cache Directory Management }
@@ -156,7 +169,7 @@ end;
 { Mana Symbol Path }
 function GetIconPath(const FileName: string): string;
 begin
-  Result := TPath.Combine(GetAppDirectory, TPath.Combine('MTGIconsPNG', FileName));
+  Result := TPath.Combine(GetTargetPath('MTGIconsPNG'), FileName);
 end;
 
 { Placeholder Replacement }
