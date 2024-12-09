@@ -1214,12 +1214,6 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\raygu\Documents\Collection.db" Configuration="Debug" Class="File">
-                    <Platform Name="Win64">
-                        <RemoteName>Collection.db</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="C:\Users\raygu\Documents\card_template.html" Configuration="Release" Class="File">
                     <Platform Name="Android64">
                         <RemoteDir>.\assets\internal\</RemoteDir>
@@ -1249,6 +1243,12 @@
                 </DeployFile>
                 <DeployFile LocalName="Collection.db" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
+                        <RemoteName>Collection.db</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Collection.db" Configuration="Debug" Class="File">
+                    <Platform Name="Win64">
                         <RemoteName>Collection.db</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
@@ -1854,17 +1854,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="MetropolisUIDark.Style" Configuration="Debug" Class="File">
+                <DeployFile LocalName="WebView2Loader.dll" Configuration="Debug" Class="File">
                     <Platform Name="Win64">
-                        <Enabled>false</Enabled>
-                        <RemoteName>MetropolisUIDark.Style</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Transparent.Style" Configuration="Debug" Class="File">
-                    <Platform Name="Win64">
-                        <Enabled>false</Enabled>
-                        <RemoteName>Transparent.Style</RemoteName>
+                        <RemoteName>WebView2Loader.dll</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1880,9 +1872,21 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="Win64\Debug\mtgfetchV2.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>mtgfetchV2.rsm</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="card_template.html" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
                         <RemoteName>card_template.html</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="card_template.html" Configuration="Debug" Class="File">
+                    <Platform Name="Win64">
+                        <RemoteName>$(AppDir)\MTGCardFetch\card_template.html</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
