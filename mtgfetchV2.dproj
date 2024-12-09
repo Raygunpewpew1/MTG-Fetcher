@@ -5,11 +5,10 @@
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Android64</Platform>
         <TargetedPlatforms>32787</TargetedPlatforms>
         <AppType>Application</AppType>
         <MainSource>mtgfetchV2.dpr</MainSource>
-        <ProjectName Condition="'$(ProjectName)'==''">mtgfetchV2</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -95,6 +94,7 @@
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
         <SanitizedProjectName>mtgfetchV2</SanitizedProjectName>
         <FeatureFilesAdded>SQLite</FeatureFilesAdded>
+        <DCC_Define>SKIA;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <DCC_UsePackage>fmx;DbxCommonDriver;bindengine;IndyIPCommon;FireDACCommonDriver;IndyProtocols;IndyIPClient;dbxcds;FmxTeeUI;bindcompfmx;ibmonitor;FireDACSqliteDriver;DbxClientDriver;soapmidas;fmxFireDAC;dbexpress;inet;fmxase;dbrtl;CustomIPTransport;DBXInterBaseDriver;IndySystem;ibxbindings;bindcomp;FireDACCommon;IndyCore;RESTBackendComponents;bindcompdbx;rtl;RESTComponents;DBXSqliteDriver;IndyIPServer;dsnapxml;FireDAC;xmlrtl;tethering;ibxpress;dsnap;CloudService;FMXTee;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
@@ -366,6 +366,22 @@
                 <DeployFile LocalName="$(BDS)\Redist\osx64\libcgsqlite3_fde.dylib" Configuration="Release" Class="File">
                     <Platform Name="OSXARM64">
                         <RemoteDir>Contents\MacOS\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'==''" Required="true" LocalName="$(BDS)\bin64\sk4d.dll" Configuration="Debug" Class="Skia">
+                    <Platform Name="Win64">
+                        <RemoteDir>.\</RemoteDir>
+                        <Operation>0</Operation>
+                        <RemoteName>sk4d.dll</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'==''" Required="true" LocalName="$(BDS)\bin64\sk4d.dll" Configuration="Release" Class="Skia">
+                    <Platform Name="Win64">
+                        <RemoteDir>.\</RemoteDir>
+                        <Operation>0</Operation>
+                        <RemoteName>sk4d.dll</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -783,6 +799,70 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'==''" Required="true" LocalName="$(BDS)\bin\sk4d.dll" Configuration="Debug" Class="Skia">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Operation>0</Operation>
+                        <RemoteName>sk4d.dll</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'==''" Required="true" LocalName="$(BDS)\bin\sk4d.dll" Configuration="Release" Class="Skia">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Operation>0</Operation>
+                        <RemoteName>sk4d.dll</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'==''" Required="true" LocalName="$(BDS)\binandroid32\libsk4d.so" Configuration="Debug" Class="Skia">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\armeabi-v7a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'=='' and '$(AndroidAppBundle)'=='true'" Required="true" LocalName="$(BDS)\binandroid32\libsk4d.so" Configuration="Debug" Class="Skia">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi-v7a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'==''" Required="true" LocalName="$(BDS)\binandroid32\libsk4d.so" Configuration="Release" Class="Skia">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\armeabi-v7a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'=='' and '$(AndroidAppBundle)'=='true'" Required="true" LocalName="$(BDS)\binandroid32\libsk4d.so" Configuration="Release" Class="Skia">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi-v7a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'==''" Required="true" LocalName="$(BDS)\binandroid64\libsk4d.so" Configuration="Debug" Class="Skia">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\arm64-v8a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'==''" Required="true" LocalName="$(BDS)\binandroid64\libsk4d.so" Configuration="Release" Class="Skia">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\arm64-v8a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="$(BDS)\lib\android\debug\armeabi-v7a\libnative-activity.so" Configuration="Debug" Class="AndroidLibnativeArmeabiv7aFile">
                     <Platform Name="Android64">
                         <RemoteName>libmtgfetchV2.so</RemoteName>
@@ -828,6 +908,86 @@
                 <DeployFile LocalName="$(BDS)\lib\android\debug\mips\libnative-activity.so" Configuration="Release" Class="AndroidLibnativeMipsFile">
                     <Platform Name="Android64">
                         <RemoteName>libmtgfetchV2.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'!=''" Required="true" LocalName="$(SKIADIR)\Binary\Shared\Android64\libsk4d.so" Configuration="Debug" Class="Skia">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\arm64-v8a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'!=''" Required="true" LocalName="$(SKIADIR)\Binary\Shared\Android64\libsk4d.so" Configuration="Release" Class="Skia">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\arm64-v8a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'!=''" Required="true" LocalName="$(SKIADIR)\Binary\Shared\Android\libsk4d.so" Configuration="Debug" Class="Skia">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\armeabi-v7a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'!='' and '$(AndroidAppBundle)'=='true'" Required="true" LocalName="$(SKIADIR)\Binary\Shared\Android\libsk4d.so" Configuration="Debug" Class="Skia">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi-v7a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'!=''" Required="true" LocalName="$(SKIADIR)\Binary\Shared\Android\libsk4d.so" Configuration="Release" Class="Skia">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\armeabi-v7a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'!='' and '$(AndroidAppBundle)'=='true'" Required="true" LocalName="$(SKIADIR)\Binary\Shared\Android\libsk4d.so" Configuration="Release" Class="Skia">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi-v7a\</RemoteDir>
+                        <Operation>1</Operation>
+                        <RemoteName>libsk4d.so</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'!=''" Required="true" LocalName="$(SKIADIR)\Binary\Shared\Win32\sk4d.dll" Configuration="Debug" Class="Skia">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Operation>0</Operation>
+                        <RemoteName>sk4d.dll</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'!=''" Required="true" LocalName="$(SKIADIR)\Binary\Shared\Win32\sk4d.dll" Configuration="Release" Class="Skia">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Operation>0</Operation>
+                        <RemoteName>sk4d.dll</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'!=''" Required="true" LocalName="$(SKIADIR)\Binary\Shared\Win64\sk4d.dll" Configuration="Debug" Class="Skia">
+                    <Platform Name="Win64">
+                        <RemoteDir>.\</RemoteDir>
+                        <Operation>0</Operation>
+                        <RemoteName>sk4d.dll</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(SKIADIR)'!=''" Required="true" LocalName="$(SKIADIR)\Binary\Shared\Win64\sk4d.dll" Configuration="Release" Class="Skia">
+                    <Platform Name="Win64">
+                        <RemoteDir>.\</RemoteDir>
+                        <Operation>0</Operation>
+                        <RemoteName>sk4d.dll</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1053,38 +1213,6 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Android\CalypsoSE_Android.style" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\</RemoteDir>
-                        <Enabled>false</Enabled>
-                        <RemoteName>CalypsoSE_Android.style</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Android\Calypso_Android.style" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\</RemoteDir>
-                        <Enabled>false</Enabled>
-                        <RemoteName>Calypso_Android.style</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Win\CalypsoSE_Win.style" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\</RemoteDir>
-                        <Enabled>false</Enabled>
-                        <RemoteName>CalypsoSE_Win.style</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Styles\Win\Calypso_Win.style" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\</RemoteDir>
-                        <Enabled>false</Enabled>
-                        <RemoteName>Calypso_Win.style</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="C:\Users\raygu\Documents\Collection.db" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
                         <RemoteDir>.\assets\internal\</RemoteDir>
@@ -1095,6 +1223,599 @@
                 <DeployFile LocalName="C:\Users\raygu\Documents\Collection.db" Configuration="Debug" Class="File">
                     <Platform Name="Win64">
                         <RemoteName>Collection.db</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\default.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteName>default.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{0}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{0}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{1000000}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{1000000}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{100}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{100}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{10}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{10}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{11}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{11}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{12}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{12}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{13}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{13}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{14}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{14}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{15}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{15}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{16}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{16}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{17}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{17}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{18}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{18}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{19}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{19}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{1}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{1}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{20}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{20}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2_B}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{2_B}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2_G}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{2_G}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2_R}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{2_R}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2_U}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{2_U}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2_W}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{2_W}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{2}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{3}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{3}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{4}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{4}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{5}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{5}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{6}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{6}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{7}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{7}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{8}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{8}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{9}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{9}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{A}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{A}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B_G_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{B_G_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B_G}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{B_G}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{B_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B_R_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteName>{B_R_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B_R}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{B_R}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{B}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{CHAOS}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{CHAOS}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_B}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{C_B}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_G}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{C_G}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{C_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_R}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{C_R}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_U}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{C_U}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_W}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{C_W}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{C}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{D}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{D}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{E}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{E}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{G_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G_U_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{G_U_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G_U}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{G_U}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G_W_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{G_W_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G_W}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{G_W}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{G}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{HR}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{HR}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{HW}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{HW}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{H}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{H}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{L}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{L}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{PW}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{PW}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{Q}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{Q}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R_G_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{R_G_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R_G}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{R_G}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{R_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R_W_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{R_W_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R_W}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{R_W}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{R}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{S}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{S}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{TK}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{TK}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{T}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{T}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U_B_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{U_B_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U_B}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{U_B}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{U_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U_R_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{U_R_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U_R}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{U_R}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{U}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W_B_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{W_B_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W_B}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{W_B}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{W_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W_U_P}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{W_U_P}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W_U}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{W_U}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{W}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{X}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{X}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{Y}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{Y}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{Z}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{Z}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{½}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{½}.png</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{∞}.png" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>.\assets/internal/MTGCardFetch/MTGIconsPNG</RemoteDir>
+                        <RemoteName>{∞}.png</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1158,603 +1879,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{0}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{0}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{1000000}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{1000000}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{100}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{100}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{10}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{10}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{11}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{11}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{12}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{12}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{13}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{13}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{14}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{14}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{15}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{15}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{16}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{16}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{17}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{17}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{18}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{18}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{19}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{19}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{1}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{1}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{20}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{20}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{2_B}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{2_B}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{2_G}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{2_G}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{2_R}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{2_R}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{2_U}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{2_U}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{2_W}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{2_W}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{2}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{2}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{3}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{3}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{4}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{4}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{5}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{5}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{6}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{6}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{7}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{7}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{8}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{8}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{9}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{9}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{A}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{A}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{B_G_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{B_G_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{B_G}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{B_G}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{B_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{B_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{B_R_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{B_R_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{B_R}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{B_R}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{B}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{B}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{CHAOS}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{CHAOS}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{C_B}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{C_B}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{C_G}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{C_G}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{C_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{C_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{C_R}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{C_R}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{C_U}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{C_U}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{C_W}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{C_W}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{C}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{C}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{D}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{D}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{E}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{E}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{G_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{G_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{G_U_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{G_U_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{G_U}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{G_U}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{G_W_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{G_W_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{G_W}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{G_W}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{G}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{G}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{HR}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{HR}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{HW}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{HW}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{H}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{H}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{L}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{L}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{PW}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{PW}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{Q}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{Q}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{R_G_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{R_G_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{R_G}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{R_G}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{R_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{R_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{R_W_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{R_W_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{R_W}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{R_W}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{R}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{R}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{S}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{S}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{TK}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{TK}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{T}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{T}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{U_B_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{U_B_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{U_B}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{U_B}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{U_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{U_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{U_R_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{U_R_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{U_R}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{U_R}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{U}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{U}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{W_B_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{W_B_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{W_B}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{W_B}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{W_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{W_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{W_U_P}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{W_U_P}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{W_U}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{W_U}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{W}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{W}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{X}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{X}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{Y}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{Y}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{Z}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{Z}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{½}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{½}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\MTGIconsPNG\{∞}.png" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>.\assets\internal\MTGIconsPNG</RemoteDir>
-                        <RemoteName>{∞}.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="Win64\Debug\mtgfetchV2.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>mtgfetchV2.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\mtgfetchV2.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win64">
-                        <RemoteName>mtgfetchV2.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -2716,6 +2843,15 @@
                 <Platform value="Win64">True</Platform>
             </Platforms>
             <ModelSupport>False</ModelSupport>
+            <MMX>
+                <UsesClauseFormatter AutoFormat="0" UseDefault="0">
+                    <GroupNames>Winapi;System.Win;System;Data;REST;Xml;Vcl;FMX</GroupNames>
+                </UsesClauseFormatter>
+                <Parser>
+                    <Defines/>
+                    <IfExpressions/>
+                </Parser>
+            </MMX>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

@@ -6,6 +6,7 @@ program mtgfetchV2;
 uses
   System.StartUpCopy,
   FMX.Forms,
+  FMX.Skia,
   MainForm in 'MainForm.pas' {Form1},
   ScryfallAPIWrapperV2 in 'ScryfallAPIWrapperV2.pas',
   SGlobalsZ in 'SGlobalsZ.pas',
@@ -19,6 +20,7 @@ uses
 {$R *.res}
 
 begin
+  GlobalUseSkia := True;
   Application.Initialize;
   Application.CreateForm(TDataModule1, DataModule1);
   Application.CreateForm(TForm1, Form1);

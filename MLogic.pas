@@ -11,7 +11,10 @@ uses
 procedure CopyDatabaseToInternalStorage;
 procedure InitializeManaSymbolMap;
 function GetDatabasePath: string;
-function GetAppPath: string;
+function GetTemplatePath: string;
+procedure CopyTemplateToInternalStorage;
+function LoadTemplate(const FileName: string; const DefaultTemplate: string = ''): string;
+function GetAppDirectory: string;
 function GetIconPath(const FileName: string): string;
 function ParseTextWithSymbolsManual(const Input: string): TArray<string>;
 function GetCacheDirectory: string;
@@ -20,18 +23,15 @@ function GetStatusClass(const LegalityStatus: string): string;
 procedure SetupPopularCards(PopularCards: TStringList);
 function ReplaceManaSymbolsWithImages(const OracleText: string): string;
 function ImageToBase64(const ImagePath: string): string;
-function GetLegalStatus(const Legalities: TCardLegalities;
-  const FieldName: string): string;
-function GetTemplatePath: string;
-procedure CopyTemplateToInternalStorage;
-function LoadTemplate(const FileName: string;
-  const DefaultTemplate: string = ''): string;
 function ReplacePlaceholder(const Template, Placeholder, Value: string): string;
 function IsCardValid(const Card: TCardDetails): Boolean;
-procedure SaveCatalogsToFile(const FileName: string;
-const Catalogs: TDictionary<string, TScryfallCatalog>);
-procedure LoadCatalogsFromFile(const FileName: string;
-var Catalogs: TDictionary<string, TScryfallCatalog>);
+procedure SaveCatalogsToFile(const FileName: string; const Catalogs: TDictionary<string, TScryfallCatalog>);
+procedure LoadCatalogsFromFile(const FileName: string; var Catalogs: TDictionary<string, TScryfallCatalog>);
+function GetLegalStatus(const Legalities: TCardLegalities; const FieldName: string): string;
+const
+  MTGAppFolder = 'MTGCardFetch';
+  TemplateFileName = 'card_template.html';
+
 
 var
   FManaSymbolMap: TDictionary<string, string>;
@@ -40,10 +40,31 @@ var
 
 implementation
 
+{ Centralized App Directory Logic }
+function GetAppDirectory: string;
+begin
+  {$IF DEFINED(MSWINDOWS)}
+  Result := TPath.Combine(TPath.GetDocumentsPath, MTGAppFolder);
+  {$ELSEIF DEFINED(ANDROID)}
+  Result := TPath.Combine(TPath.GetHomePath, MTGAppFolder);
+  {$ELSE}
+  raise Exception.Create('Unsupported platform');
+  {$ENDIF}
+
+  if not TDirectory.Exists(Result) then
+    TDirectory.CreateDirectory(Result);
+end;
+
+{ Centralized Template Path Logic }
+function GetTemplatePath: string;
+begin
+  Result := TPath.Combine(GetAppDirectory, TemplateFileName);
+end;
+
+{ Copy Database to Internal Storage }
 function GetDatabasePath: string;
 begin
-  // Android sandbox-compatible path
-  Result := TPath.Combine(TPath.GetDocumentsPath, 'Collection.db');
+  Result := TPath.Combine(GetAppDirectory, 'Collection.db');
 end;
 
 procedure CopyDatabaseToInternalStorage;
@@ -52,16 +73,14 @@ var
 begin
   DestinationPath := GetDatabasePath;
 
-  // Only copy if the database does not already exist
   if not TFile.Exists(DestinationPath) then
   begin
-{$IFDEF ANDROID}
-    // Path to assets for Android
+    {$IFDEF ANDROID}
     SourcePath := TPath.Combine(TPath.GetDocumentsPath, 'Collection.db');
-{$ELSE}
-    // Path for Windows
+    {$ELSE}
     SourcePath := TPath.Combine(TPath.GetHomePath, 'Collection.db');
-{$ENDIF}
+    {$ENDIF}
+
     try
       if TFile.Exists(SourcePath) then
         TFile.Copy(SourcePath, DestinationPath)
@@ -74,29 +93,21 @@ begin
   end;
 end;
 
-{ template }
-function GetTemplatePath: string;
-begin
-  // Android sandbox-compatible path
-  Result := TPath.Combine(TPath.GetDocumentsPath, 'card_template.html');
-end;
-
+{ Copy Template to Internal Storage }
 procedure CopyTemplateToInternalStorage;
 var
   SourcePath, DestinationPath: string;
 begin
   DestinationPath := GetTemplatePath;
 
-  // Only copy if the template does not already exist
   if not TFile.Exists(DestinationPath) then
   begin
-{$IFDEF ANDROID}
-    // Path to assets for Android
-    SourcePath := TPath.Combine(TPath.GetDocumentsPath, 'card_template.html');
-{$ELSE}
-    // Path for Windows
-    SourcePath := TPath.Combine(TPath.GetHomePath, 'card_template.html');
-{$ENDIF}
+    {$IFDEF ANDROID}
+    SourcePath := TPath.Combine(TPath.GetDocumentsPath, TemplateFileName);
+    {$ELSE}
+    SourcePath := TPath.Combine(TPath.GetHomePath, TemplateFileName);
+    {$ENDIF}
+
     try
       if TFile.Exists(SourcePath) then
         TFile.Copy(SourcePath, DestinationPath)
@@ -109,21 +120,143 @@ begin
   end;
 end;
 
-function LoadTemplate(const FileName: string;
-  const DefaultTemplate: string = ''): string;
+{ Load Template }
+function LoadTemplate(const FileName: string; const DefaultTemplate: string = ''): string;
 var
   FullPath: string;
 begin
   CopyTemplateToInternalStorage;
 
-  // Read the template from internal storage
-  FullPath := TPath.Combine(TPath.GetDocumentsPath, FileName);
+  FullPath := TPath.Combine(GetAppDirectory, FileName);
   if TFile.Exists(FullPath) then
     Result := TFile.ReadAllText(FullPath, TEncoding.UTF8)
   else if DefaultTemplate <> '' then
     Result := DefaultTemplate
   else
     raise Exception.Create('Template file not found: ' + FullPath);
+end;
+
+{ Cache Directory Management }
+function GetCacheDirectory: string;
+begin
+  Result := TPath.Combine(GetAppDirectory, 'Cache');
+  if not TDirectory.Exists(Result) then
+    TDirectory.CreateDirectory(Result);
+end;
+
+{ Cached Image Path }
+function GetCachedImagePath(const URL: string): string;
+var
+  Hash: string;
+begin
+  Hash := THashSHA2.GetHashString(URL);
+  Result := TPath.Combine(GetCacheDirectory, Hash);
+end;
+
+{ Mana Symbol Path }
+function GetIconPath(const FileName: string): string;
+begin
+  Result := TPath.Combine(GetAppDirectory, TPath.Combine('MTGIconsPNG', FileName));
+end;
+
+{ Placeholder Replacement }
+function ReplacePlaceholder(const Template, Placeholder, Value: string): string;
+begin
+  Result := StringReplace(Template, '{{' + Placeholder + '}}', Value, [rfReplaceAll]);
+end;
+
+{ Image to Base64 Conversion }
+function ImageToBase64(const ImagePath: string): string;
+begin
+  if FBase64ImageCache.TryGetValue(ImagePath, Result) then
+    Exit;
+
+  if not TFile.Exists(ImagePath) then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  var Bytes: TBytes := TFile.ReadAllBytes(ImagePath);
+  Result := TNetEncoding.Base64.EncodeBytesToString(Bytes);
+  FBase64ImageCache.Add(ImagePath, Result);
+end;
+
+{ Popular Cards Setup }
+procedure SetupPopularCards(PopularCards: TStringList);
+begin
+  PopularCards.Clear;
+  PopularCards.AddStrings(['Black Lotus', 'Ancestral Recall', 'Mox Sapphire',
+    'Mox Jet', 'Mox Ruby', 'Mox Pearl', 'Time Walk', 'Tarmogoyf', 'Force of Will']);
+end;
+
+{ Save Catalogs to File }
+procedure SaveCatalogsToFile(const FileName: string; const Catalogs: TDictionary<string, TScryfallCatalog>);
+var
+  JsonCatalogs: TJsonObject;
+  CatalogName: string;
+  CatalogData: TJsonArray;
+  FullFilePath: string;
+begin
+  FullFilePath := TPath.Combine(GetAppDirectory, FileName);
+  JsonCatalogs := TJsonObject.Create;
+  try
+    for CatalogName in Catalogs.Keys do
+    begin
+      var Catalog := Catalogs[CatalogName];
+      CatalogData := TJsonArray.Create;
+      for var Item in Catalog.Data do
+        CatalogData.Add(Item);
+
+      JsonCatalogs.O[CatalogName] := TJsonObject.Create;
+      JsonCatalogs.O[CatalogName].S['name'] := Catalog.Name;
+      JsonCatalogs.O[CatalogName].A['data'] := CatalogData;
+      JsonCatalogs.O[CatalogName].I['total_items'] := Catalog.TotalItems;
+    end;
+
+    JsonCatalogs.SaveToFile(FullFilePath, False, TEncoding.UTF8, True);
+  finally
+    JsonCatalogs.Free;
+  end;
+end;
+
+{ Load Catalogs from File }
+procedure LoadCatalogsFromFile(const FileName: string; var Catalogs: TDictionary<string, TScryfallCatalog>);
+var
+  JsonCatalogs: TJsonObject;
+  FullFilePath: string;
+begin
+  FullFilePath := TPath.Combine(GetAppDirectory, FileName);
+
+  if not TFile.Exists(FullFilePath) then
+  begin
+    Catalogs.Clear;
+    Exit;
+  end;
+
+  JsonCatalogs := TJsonObject.Create;
+  try
+    JsonCatalogs.LoadFromFile(FullFilePath);
+
+    Catalogs.Clear;
+    for var I := 0 to JsonCatalogs.Count - 1 do
+    begin
+      var CatalogName := JsonCatalogs.Names[I];
+      var CatalogObj := JsonCatalogs.O[CatalogName];
+      var Catalog: TScryfallCatalog;
+      Catalog.Name := CatalogObj.S['name'];
+      Catalog.TotalItems := CatalogObj.I['total_items'];
+
+      var CatalogDataArray := CatalogObj.A['data'];
+      SetLength(Catalog.Data, CatalogDataArray.Count);
+      for var J := 0 to CatalogDataArray.Count - 1 do
+        Catalog.Data[J] := CatalogDataArray.S[J];
+
+      Catalogs.Add(CatalogName, Catalog);
+    end;
+  finally
+    JsonCatalogs.Free;
+  end;
 end;
 
 procedure InitializeManaSymbolMap;
@@ -187,21 +320,6 @@ begin
 
 end;
 
-function GetAppPath: string;
-begin
-  Result := TPath.GetDirectoryName(ParamStr(0));
-end;
-
-function GetIconPath(const FileName: string): string;
-begin
-{$IFDEF ANDROID}
-  Result := TPath.Combine(TPath.GetDocumentsPath, TPath.Combine('MTGIconsPNG',
-    FileName));
-{$ELSE}
-  Result := TPath.Combine(GetAppPath, TPath.Combine('MTGIconsPNG', FileName));
-{$ENDIF}
-end;
-
 function ParseTextWithSymbolsManual(const Input: string): TArray<string>;
 var
   Regex: TRegEx;
@@ -225,29 +343,6 @@ begin
   end;
 end;
 
-function GetCacheDirectory: string;
-begin
-{$IFDEF ANDROID}
-  // Use cache directory specific to Android
-  Result := TPath.Combine(TPath.GetCachePath, 'MTGCardFetch');
-{$ELSE}
-  // Use documents directory for Windows
-  Result := TPath.Combine(TPath.GetDocumentsPath, 'MTGCardFetch');
-{$ENDIF}
-  if not TDirectory.Exists(Result) then
-    TDirectory.CreateDirectory(Result);
-end;
-
-function GetCachedImagePath(const URL: string): string;
-var
-  Hash: string;
-  FileName: string;
-begin
-  // Use SHA2 hash to ensure unique filenames
-  Hash := THashSHA2.GetHashString(URL);
-  FileName := Hash;
-  Result := TPath.Combine(GetCacheDirectory, FileName);
-end;
 
 function GetStatusClass(const LegalityStatus: string): string;
 begin
@@ -261,60 +356,6 @@ begin
     Result := 'restricted'
   else
     Result := 'unknown';
-end;
-
-procedure SetupPopularCards(PopularCards: TStringList);
-begin
-  PopularCards.Clear;
-  PopularCards.AddStrings(['Black Lotus', 'Ancestral Recall', 'Mox Sapphire',
-    'Mox Jet', 'Mox Ruby', 'Mox Pearl', 'Mox Emerald', 'Time Walk',
-    'Timetwister', 'Tarmogoyf', 'Jace, the Mind Sculptor',
-    'Liliana of the Veil', 'Force of Will', 'Snapcaster Mage', 'Dark Confidant',
-    'Lightning Bolt', 'Birds of Paradise', 'Serra Angel', 'Shivan Dragon',
-    'Swords to Plowshares', 'Brainstorm', 'Counterspell', 'Sol Ring',
-    'Mana Crypt', 'Mana Vault', 'Ancient Tomb', 'Bazaar of Baghdad',
-    'Library of Alexandria', 'The Tabernacle at Pendrell Vale',
-    'Gaea''s Cradle', 'Nicol Bolas, the Ravager', 'Teferi, Hero of Dominaria',
-    'Elspeth, Sun''s Champion', 'Primeval Titan', 'Emrakul, the Aeons Torn',
-    'Ulamog, the Infinite Gyre', 'Blightsteel Colossus', 'Aether Vial',
-    'Sensei''s Divining Top', 'Thalia, Guardian of Thraben', 'Noble Hierarch',
-    'Deathrite Shaman', 'Wasteland', 'Strip Mine', 'Blood Moon', 'Thoughtseize',
-    'Inquisition of Kozilek', 'Cabal Therapy', 'Yawgmoth''s Will', 'Tinker',
-    'Demonic Tutor', 'Vampiric Tutor', 'Mystical Tutor', 'Enlightened Tutor',
-    'Imperial Seal', 'Necropotence', 'Phyrexian Arena', 'Sylvan Library',
-    'Lotus Petal', 'Chrome Mox', 'Grim Monolith', 'Lion''s Eye Diamond',
-    'Arcbound Ravager', 'Chalice of the Void', 'Karn Liberated',
-    'Ugin, the Spirit Dragon', 'Cryptic Command', 'Thought-Knot Seer',
-    'Reality Smasher', 'Scalding Tarn', 'Misty Rainforest', 'Verdant Catacombs',
-    'Polluted Delta', 'Flooded Strand', 'Platinum Angel', 'Eternal Witness',
-    'Dark Ritual', 'Gilded Lotus', 'Birthing Pod', 'Hullbreacher',
-    'Opposition Agent', 'Dockside Extortionist', 'Rhystic Study',
-    'Mystic Remora', 'Mother of Runes', 'Stoneforge Mystic',
-    'Sword of Fire and Ice', 'Sword of Feast and Famine', 'Batterskull',
-    'Sigarda, Host of Herons', 'Zur the Enchanter', 'Atraxa, Praetors'' Voice',
-    'Edgar Markov', 'Marrow-Gnawer', 'Krenko, Mob Boss',
-    'Prossh, Skyraider of Kher', 'Meren of Clan Nel Toth', 'The Gitrog Monster',
-    'Omnath, Locus of Creation', 'Karn, the Great Creator',
-    'Oko, Thief of Crowns', 'Thassa''s Oracle', 'Underworld Breach']);
-
-end;
-
-function ImageToBase64(const ImagePath: string): string;
-begin
-  if FBase64ImageCache.TryGetValue(ImagePath, Result) then
-    Exit; // Return cached value
-
-  if not TFile.Exists(ImagePath) then
-  begin
-    Result := '';
-    Exit;
-  end;
-
-  var
-    Bytes: TBytes := TFile.ReadAllBytes(ImagePath);
-  Result := TNetEncoding.Base64.EncodeBytesToString(Bytes);
-  FBase64ImageCache.Add(ImagePath, Result);
-
 end;
 
 function ReplaceManaSymbolsWithImages(const OracleText: string): string;
@@ -375,8 +416,12 @@ begin
   end;
 end;
 
-function GetLegalStatus(const Legalities: TCardLegalities;
-  const FieldName: string): string;
+function IsCardValid(const Card: TCardDetails): Boolean;
+begin
+  Result := not Card.CardName.IsEmpty and not Card.SFID.IsEmpty;
+end;
+
+function GetLegalStatus(const Legalities: TCardLegalities; const FieldName: string): string;
 begin
   if FieldName = 'Standard' then
     Result := Legalities.Standard
@@ -414,206 +459,14 @@ begin
     Result := '';
 end;
 
-procedure LoadCachedOrDownloadImage(const URL: string; Bitmap: TBitmap);
-var
-  FilePath: string;
-  MemoryStream: TMemoryStream;
-begin
-  FilePath := GetCachedImagePath(URL);
 
-  if TFile.Exists(FilePath) then
-  begin
-    Bitmap.LoadFromFile(FilePath);
-
-  end
-  else
-  begin
-    MemoryStream := TMemoryStream.Create;
-    try
-      try
-        HttpClient.Get(URL, MemoryStream);
-        MemoryStream.Position := 0;
-        MemoryStream.SaveToFile(FilePath);
-        MemoryStream.Position := 0;
-        Bitmap.LoadFromStream(MemoryStream);
-
-      except
-        on E: ENetHTTPRequestException do
-          TThread.Queue(nil,
-            procedure
-            begin
-              ShowMessage('Network error: ' + E.Message);
-            end);
-        on E: Exception do
-          TThread.Queue(nil,
-            procedure
-            begin
-              ShowMessage('Error loading image: ' + E.Message);
-            end);
-      end;
-    finally
-      MemoryStream.Free;
-    end;
-  end;
-end;
-
-procedure LoadCachedOrDownloadImageAsync(const URL: string;
-ImageControl: TImageControl);
-begin
-  TTask.Run(
-    procedure
-    var
-      Bitmap: TBitmap;
-    begin
-      Bitmap := TBitmap.Create;
-      try
-        LoadCachedOrDownloadImage(URL, Bitmap);
-        TThread.Synchronize(nil,
-          procedure
-          begin
-            ImageControl.Bitmap.Assign(Bitmap);
-          end);
-      finally
-        Bitmap.Free;
-      end;
-    end);
-end;
-
-function ReplacePlaceholder(const Template, Placeholder, Value: string): string;
-begin
-  Result := StringReplace(Template, '{{' + Placeholder + '}}', Value,
-    [rfReplaceAll]);
-end;
-
-function IsCardValid(const Card: TCardDetails): Boolean;
-begin
-  Result := not Card.CardName.IsEmpty and not Card.SFID.IsEmpty;
-end;
-
-
-procedure SaveCatalogsToFile(const FileName: string; const Catalogs: TDictionary<string, TScryfallCatalog>);
-var
-  AppDirectory, FullFilePath: string;
-  JsonCatalogs: TJsonObject;
-  CatalogName: string;
-  CatalogData: TJsonArray;
-  Catalog: TScryfallCatalog;
-begin
-  // Determine the platform-specific file path and subdirectory
-  {$IF DEFINED(MSWINDOWS)}
-  AppDirectory := TPath.Combine(TPath.GetDocumentsPath, 'MTGCardFetch');
-  {$ELSEIF DEFINED(ANDROID)}
-  AppDirectory := TPath.Combine(TPath.GetSharedDocumentsPath, 'MTGCardFetch');
-  {$ELSE}
-  raise Exception.Create('Unsupported platform');
-  {$ENDIF}
-
-  // Ensure the subdirectory exists
-  if not ForceDirectories(AppDirectory) then
-    raise Exception.CreateFmt('Failed to create directory: %s', [AppDirectory]);
-
-  // Combine the app directory with the filename
-  FullFilePath := TPath.Combine(AppDirectory, FileName);
-
-  // Create a JSON object to hold the catalogs
-  JsonCatalogs := TJsonObject.Create;
-  try
-    for CatalogName in Catalogs.Keys do
-    begin
-      Catalog := Catalogs[CatalogName];
-
-      // Create a JSON array for the catalog data
-      CatalogData := TJsonArray.Create;
-      for var Item in Catalog.Data do
-        CatalogData.Add(Item);
-
-      // Add the catalog name, data, and metadata to the JSON object
-      JsonCatalogs.O[CatalogName] := TJsonObject.Create;
-      JsonCatalogs.O[CatalogName].S['name'] := Catalog.Name;
-      JsonCatalogs.O[CatalogName].A['data'] := CatalogData;
-      JsonCatalogs.O[CatalogName].I['total_items'] := Catalog.TotalItems;
-    end;
-
-    // Save the JSON object to the file
-    JsonCatalogs.SaveToFile(FullFilePath, False, TEncoding.UTF8, True);
-  finally
-   JsonCatalogs.Free;
-  end;
-end;
-
-procedure LoadCatalogsFromFile(const FileName: string; var Catalogs: TDictionary<string, TScryfallCatalog>);
-var
-  AppDirectory, FullFilePath: string;
-  JsonCatalogs: TJsonObject;
-  CatalogName: string;
-  CatalogObj: TJsonObject;
-  Catalog: TScryfallCatalog;
-  CatalogDataArray: TJsonArray;
-begin
-  // Determine the platform-specific file path and subdirectory
-  {$IF DEFINED(MSWINDOWS)}
-  AppDirectory := TPath.Combine(TPath.GetDocumentsPath, 'MTGCardFetch');
-  {$ELSEIF DEFINED(ANDROID)}
-  AppDirectory := TPath.Combine(TPath.GetSharedDocumentsPath, 'MTGCardFetch');
-  {$ELSE}
-  raise Exception.Create('Unsupported platform');
-  {$ENDIF}
-
-  // Combine the app directory with the filename
-  FullFilePath := TPath.Combine(AppDirectory, FileName);
-
-  // Ensure the file exists; if not, create an empty dictionary and exit
-  if not TFile.Exists(FullFilePath) then
-  begin
-    Catalogs.Clear; // Clear any existing data
-    Exit;
-  end;
-
-  // Load the JSON object from the file
-  JsonCatalogs := TJsonObject.Create;
-  try
-    try
-      JsonCatalogs.LoadFromFile(FullFilePath);
-    except
-      on E: Exception do
-      begin
-        // Handle invalid file format by clearing the dictionary and exiting
-        Catalogs.Clear;
-        raise Exception.CreateFmt('Failed to load catalogs: %s', [E.Message]);
-      end;
-    end;
-
-    // Clear the existing catalog dictionary to avoid conflicts
-    Catalogs.Clear;
-
-    // Iterate through the catalogs in the JSON file
-    for var I := 0 to JsonCatalogs.Count - 1 do
-    begin
-      CatalogName := JsonCatalogs.Names[I]; // Get the catalog name
-      CatalogObj := JsonCatalogs.O[CatalogName]; // Get the catalog object
-      Catalog.Name := CatalogObj.S['name'];
-      Catalog.TotalItems := CatalogObj.I['total_items'];
-
-      // Load the catalog's data array
-      CatalogDataArray := CatalogObj.A['data'];
-      SetLength(Catalog.Data, CatalogDataArray.Count);
-      for var J := 0 to CatalogDataArray.Count - 1 do
-        Catalog.Data[J] := CatalogDataArray.S[J];
-
-      // Add the catalog to the dictionary
-      Catalogs.Add(CatalogName, Catalog);
-    end;
-  finally
-    JsonCatalogs.Free;
-  end;
-end;
 
 initialization
-
-InitializeManaSymbolMap;
+  FBase64ImageCache := TDictionary<string, string>.Create;
+  InitializeManaSymbolMap;
 
 finalization
-
-FManaSymbolMap.Free;
+  FBase64ImageCache.Free;
+  FManaSymbolMap.Free;
 
 end.

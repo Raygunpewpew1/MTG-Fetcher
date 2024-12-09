@@ -69,3 +69,4 @@ __recovery/
 modules/
 /Android64
 /Win64
+AndroidManifest.template.xml

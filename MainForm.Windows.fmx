@@ -37,6 +37,7 @@ inherited Form1_Windows: TForm1_Windows
       end
       inherited DisplayUniq: TLabel
         Position.X = 115.000000000000000000
+        Position.Y = 139.000000000000000000
         Size.Width = 157.000000000000000000
         Text = 'Display Unique Art On Search'
       end
