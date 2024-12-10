@@ -163,7 +163,9 @@ end;
 procedure TScryfallAPI.FillCardDetailsFromJson(const JsonObj: TJsonObject;
   out CardDetails: TCardDetails);
 begin
-  CardDetails.Clear;
+
+if CardDetails.SFID.IsEmpty = false then
+CardDetails.Clear;
 
   try
     // Existing fields with platform-safe string assignment

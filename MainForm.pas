@@ -194,7 +194,7 @@ begin
   ComboBoxSetCode.Items.Add('All Sets');
 
   try
-    // FScryfallAPI.PreloadAllSets;
+    //FScryfallAPI.PreloadAllSets;
     SetDetailsArray := FScryfallAPI.GetAllSets;
     // Fetch all sets from Scryfall
     for SetDetails in SetDetailsArray do
@@ -265,34 +265,75 @@ begin
 end;
 
 procedure TForm1.DelayTimerTimer(Sender: TObject);
+
 begin
   if BrIsLoaded then
     Exit;
 
-  TTask.Run(
+    //DisplayCardInBrowser
+
+TTask.Run(
     procedure
     var
-      PopularCards: TStringList;
-      RandomCardName: string;
+      RandomCard: TCardDetails;
     begin
-      PopularCards := TStringList.Create;
       try
-        SetupPopularCards(PopularCards);
-        if PopularCards.Count > 0 then
-          RandomCardName := PopularCards[Random(PopularCards.Count)];
-      finally
-        PopularCards.Free;
-      end;
+        // Fetch a random card
+        RandomCard := FScryfallAPI.GetRandomCard;
 
-      TThread.Queue(nil,
-        procedure
+        // Update the UI
+        TThread.Synchronize(nil,
+          procedure
+          begin
+          //  DisplayCardInBrowser(RandomCard, []); // Display in browser / not really needed
+            AddCardToListView(RandomCard);       // Add to ListView
+            BrIsLoaded := True;                  // Mark as loaded
+            DelayTimer.Enabled := False;         // Disable timer
+             if ListViewCards.Items.Count > 0 then
+             begin
+                ListViewCards.Selected := ListViewCards.Items[0];
+                ShowCardDetails(ListViewCards.Items[0]); // Full view in browsers and sets up possible saving
+             end;
+          end);
+      except
+        on E: Exception do
         begin
-          if not RandomCardName.IsEmpty then
-            DisplayCardArtworks(RandomCardName);
-          BrIsLoaded := True;
-          DelayTimer.Enabled := False;
-        end);
-    end);
+          TThread.Synchronize(nil,
+            procedure
+            begin
+              ShowMessage('Error fetching random card: ' + E.Message);
+            end);
+        end;
+      end;
+    end).Start;
+
+
+
+
+//  TTask.Run(
+//    procedure
+//    var
+//      PopularCards: TStringList;
+//      RandomCardName: string;
+//    begin
+//      PopularCards := TStringList.Create;
+//      try
+//        SetupPopularCards(PopularCards);
+//        if PopularCards.Count > 0 then
+//          RandomCardName := PopularCards[Random(PopularCards.Count)];
+//      finally
+//        PopularCards.Free;
+//      end;
+//
+//      TThread.Queue(nil,
+//        procedure
+//        begin
+//          if not RandomCardName.IsEmpty then
+//            DisplayCardArtworks(RandomCardName);
+//          BrIsLoaded := True;
+//          DelayTimer.Enabled := False;
+//        end);
+//    end);
 end;
 
 procedure TForm1.DisplayCardArtworks(const CardName: string);
