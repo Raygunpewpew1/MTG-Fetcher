@@ -99,6 +99,10 @@ This project is licensed under the MIT License. See the [LICENSE](./LICENSE) fil
 The **JsonDataObjects** library, used in this project, is also licensed under the MIT License. You can find details in its respective repository.
 
 ---
+  
+This project is powered by the Scryfall API but is not produced or endorsed by Scryfall.  
+For more information, visit: https://scryfall.com/
+
 
 ## Acknowledgments
 
