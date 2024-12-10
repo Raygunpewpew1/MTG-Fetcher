@@ -27,7 +27,55 @@ The **JsonDataObjects** library is licensed under the MIT License.
 ---
 
 ## Installation
-You will need to possibibly copy 'card_template.html' and 'Collection.db' to you public documents folder.
+Installation Instructions
+
+To set up and run the application on another machine, follow these steps:
+
+1. Build and Run the Application:
+
+Open the project in Delphi and build it.
+
+Run the application once to generate the necessary files and folder structure, ignore the errors.
+
+This will create a folder in your Public Documents directory:
+C:\Users\yourusername\Documents\MTGCardFetch
+
+
+
+2. Copy Required Files:
+
+Place the following files into the MTGCardFetch folder:
+
+card_template.html (included in the repository).
+
+The MTGIconsPNG folder (included in the repository).
+
+
+
+
+3. Verify Setup:
+
+Ensure that the catalogs.json file is present in the MTGCardFetch folder after running the app for the first time.
+
+Double-check that the card_template.html file and the MTGIconsPNG folder are in the same directory.
+
+
+
+4. Run the Application:
+
+The application should now work as intended!
+
+
+
+
+
+---
+
+Notes
+
+The MTGIconsPNG folder contains the mana symbol icons and other necessary assets. Ensure this folder is copied without any changes to its structure.
+
+Future versions of the application may automate this setup process.
 
 
 ### Requirements
