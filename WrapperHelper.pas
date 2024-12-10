@@ -31,14 +31,14 @@ begin
   else
   begin
     BaseUrl := Format('%s?q=%s', [EndpointSearch,
-      TNetEncoding.URL.Encode(Query)]);
+      TNetEncoding.URL.Encode(Query.ToLower)]);
 
     if SetCode <> '' then
-      BaseUrl := BaseUrl + '+set%3A' + TNetEncoding.URL.Encode(SetCode);
+      BaseUrl := BaseUrl + '+set%3A' + TNetEncoding.URL.Encode(SetCode.ToLower);
     if Rarity <> '' then
-      BaseUrl := BaseUrl + '+rarity%3A' + TNetEncoding.URL.Encode(Rarity);
+      BaseUrl := BaseUrl + '+rarity%3A' + TNetEncoding.URL.Encode(Rarity.ToLower);
     if Colors <> '' then
-      BaseUrl := BaseUrl + '+color%3A' + TNetEncoding.URL.Encode(Colors);
+      BaseUrl := BaseUrl + '+color%3A' + TNetEncoding.URL.Encode(Colors.ToLower);
     if Unique then
       BaseUrl := BaseUrl + '&unique=prints';
 

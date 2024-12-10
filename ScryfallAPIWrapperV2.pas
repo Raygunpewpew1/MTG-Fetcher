@@ -164,7 +164,7 @@ procedure TScryfallAPI.FillCardDetailsFromJson(const JsonObj: TJsonObject;
   out CardDetails: TCardDetails);
 begin
 
-if CardDetails.SFID.IsEmpty = false then
+if (CardDetails.SFID.IsEmpty = false) or (CardDetails.OracleID.IsEmpty = false) then
 CardDetails.Clear;
 
   try

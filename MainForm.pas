@@ -362,6 +362,8 @@ begin
     SelectedRareCode := ''
   else
     SelectedRareCode := ComboBoxRarity.Text;
+     if ComboBoxRarity.Text = 'Mythic Rare' then
+       SelectedRareCode := 'Mythic';
 
   // Get the selected colors
   if ComboBoxColors.Text = 'All Colors' then
