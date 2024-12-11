@@ -7,7 +7,7 @@ uses
   SGlobalsZ, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf,
   FireDAC.Stan.Def, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, MLogic,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.FMXUI.Wait, FireDAC.DApt.Intf,
-  FireDAC.Comp.DataSet;
+  FireDAC.Comp.DataSet,WrapperHelper;
 
 type
   TDataModule1 = class(TDataModule)
@@ -15,7 +15,7 @@ type
     FDQuery1: TFDQuery;
 
   private
-    procedure LogError(const Msg: string);
+
 
   public
     procedure SetupDatabase(const DBPath: string);
@@ -34,17 +34,7 @@ implementation
 
 {$R *.dfm}
 
-procedure TDataModule1.LogError(const Msg: string);
-var
-  LogFile: string;
-begin
-  LogFile := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'ErrorLog.txt';
-  try
-    //TFile.AppendAllText(LogFile, Format('[%s] %s%s', [DateTimeToStr(Now), Msg, sLineBreak]), TEncoding.UTF8);
-  except
-    // Suppress logging errors
-  end;
-end;
+
 
 procedure TDataModule1.SetupDatabase(const DBPath: string);
 begin

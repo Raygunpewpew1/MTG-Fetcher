@@ -72,3 +72,4 @@ modules/
 /Win64
 AndroidManifest.template.xml
 deployedassets.txt
+*.gex

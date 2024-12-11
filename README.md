@@ -92,6 +92,8 @@ Future versions of the application may automate this setup process.
 
 ## License
 
+All images are copyright Wizards of the Coast ([http://magicthegathering.com](http://magicthegathering.com))
+
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
 
 **Note:** This project was created using Delphi Community Edition, which is free for certain use cases, including open-source projects and individual developers. Ensure your use of Delphi complies with the Community Edition license terms.

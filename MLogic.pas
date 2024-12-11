@@ -20,7 +20,7 @@ function ParseTextWithSymbolsManual(const Input: string): TArray<string>;
 function GetCacheDirectory: string;
 function GetCachedImagePath(const URL: string): string;
 function GetStatusClass(const LegalityStatus: string): string;
-procedure SetupPopularCards(PopularCards: TStringList);
+//procedure SetupPopularCards(PopularCards: TStringList);
 function ReplaceManaSymbolsWithImages(const OracleText: string): string;
 function ImageToBase64(const ImagePath: string): string;
 function ReplacePlaceholder(const Template, Placeholder, Value: string): string;
@@ -86,7 +86,7 @@ end;
 { Copy Database to Internal Storage }
 function GetDatabasePath: string;
 begin
-  Result := TPath.Combine(GetAppDirectory, 'Collection.db');
+  Result := TPath.Combine(GetAppDirectory, DatabaseFileName);
 end;
 
 procedure CopyDatabaseToInternalStorage;
@@ -195,13 +195,13 @@ begin
   FBase64ImageCache.Add(ImagePath, Result);
 end;
 
-{ Popular Cards Setup }
-procedure SetupPopularCards(PopularCards: TStringList);
-begin
-  PopularCards.Clear;
-  PopularCards.AddStrings(['Black Lotus', 'Ancestral Recall', 'Mox Sapphire',
-    'Mox Jet', 'Mox Ruby', 'Mox Pearl', 'Time Walk', 'Tarmogoyf', 'Force of Will']);
-end;
+//{ Popular Cards Setup }
+//procedure SetupPopularCards(PopularCards: TStringList);
+//begin
+//  PopularCards.Clear;
+//  PopularCards.AddStrings(['Black Lotus', 'Ancestral Recall', 'Mox Sapphire',
+//    'Mox Jet', 'Mox Ruby', 'Mox Pearl', 'Time Walk', 'Tarmogoyf', 'Force of Will']);
+//end;
 
 { Save Catalogs to File }
 procedure SaveCatalogsToFile(const FileName: string; const Catalogs: TDictionary<string, TScryfallCatalog>);
@@ -273,64 +273,56 @@ begin
 end;
 
 procedure InitializeManaSymbolMap;
+const
+  // Static mana symbols
+  StaticSymbols: array [0 .. 26] of string = (
+    '{T}', '{W}', '{U}', '{B}', '{R}', '{G}', '{C}', '{X}', '{A}', '{H}', '{Y}', '{Z}',
+    '{½}', '{∞}', '{100}', '{1000000}', '{W/U}', '{W/B}', '{U/B}', '{U/R}', '{B/R}',
+    '{B/G}', '{R/G}', '{R/W}', '{G/W}', '{G/U}', '{W/P}'
+  );
+  // Hybrid and phyrexian mana symbols
+  HybridSymbols: array [0 .. 6] of string = (
+    '{U/P}', '{B/P}', '{R/P}', '{G/P}', '{B/G/P}', '{G/W/P}', '{U/B/P}'
+  );
+  // Additional symbols
+  ExtraSymbols: array [0 .. 7] of string = (
+    '{W/B/P}', '{W/U/P}', '{B/R/P}', '{Q}', '{S}', '{E}', '{P}', '{PW}'
+  );
+  // Planeswalker and special symbols
+  SpecialSymbols: array [0 .. 3] of string = ('{HW}', '{HR}', '{TK}', '{PW}');
+var
+  Symbol: string;
+  i: Integer;
 begin
   if Assigned(FManaSymbolMap) then
     Exit; // Already initialized
 
   FManaSymbolMap := TDictionary<string, string>.Create;
 
-  // Populate mana symbols
-  FManaSymbolMap.Add('{T}', '{T}.png');
-  FManaSymbolMap.Add('{W}', '{W}.png');
-  FManaSymbolMap.Add('{U}', '{U}.png');
-  FManaSymbolMap.Add('{B}', '{B}.png');
-  FManaSymbolMap.Add('{R}', '{R}.png');
-  FManaSymbolMap.Add('{G}', '{G}.png');
-  FManaSymbolMap.Add('{C}', '{C}.png');
-  FManaSymbolMap.Add('{X}', '{X}.png');
-  FManaSymbolMap.Add('{A}', '{A}.png');
-  FManaSymbolMap.Add('{H}', '{H}.png');
-  FManaSymbolMap.Add('{Y}', '{Y}.png');
-  FManaSymbolMap.Add('{Z}', '{Z}.png');
+  // Add static symbols
+  for Symbol in StaticSymbols do
+    FManaSymbolMap.Add(Symbol, Symbol.Replace('/', '_') + '.png');
 
-  for var i := 0 to 20 do
-    FManaSymbolMap.Add('{' + i.ToString + '}', '{' + i.ToString + '}.png');
+  // Add hybrid and phyrexian mana symbols
+  for Symbol in HybridSymbols do
+    FManaSymbolMap.Add(Symbol, Symbol.Replace('/', '_').Replace('/P', '_P') + '.png');
 
-  FManaSymbolMap.Add('{½}', '{½}.png');
-  FManaSymbolMap.Add('{∞}', '{∞}.png');
-  FManaSymbolMap.Add('{100}', '{100}.png');
-  FManaSymbolMap.Add('{1000000}', '{1000000}.png');
-  FManaSymbolMap.Add('{W/U}', '{W_U}.png');
-  FManaSymbolMap.Add('{W/B}', '{W_B}.png');
-  FManaSymbolMap.Add('{U/B}', '{U_B}.png');
-  FManaSymbolMap.Add('{U/R}', '{U_R}.png');
-  FManaSymbolMap.Add('{B/R}', '{B_R}.png');
-  FManaSymbolMap.Add('{B/G}', '{B_G}.png');
-  FManaSymbolMap.Add('{R/G}', '{R_G}.png');
-  FManaSymbolMap.Add('{R/W}', '{R_W}.png');
-  FManaSymbolMap.Add('{G/W}', '{G_W}.png');
-  FManaSymbolMap.Add('{G/U}', '{G_U}.png');
-  FManaSymbolMap.Add('{W/P}', '{W_P}.png');
-  FManaSymbolMap.Add('{U/P}', '{U_P}.png');
-  FManaSymbolMap.Add('{B/P}', '{B_P}.png');
-  FManaSymbolMap.Add('{R/P}', '{R_P}.png');
-  FManaSymbolMap.Add('{G/P}', '{G_P}.png');
-  FManaSymbolMap.Add('{B/G/P}', '{B_G_P}.png');
-  FManaSymbolMap.Add('{G/W/P}', '{G_W_P}.png');
-  FManaSymbolMap.Add('{U/B/P}', '{U_B_P}.png');
-  FManaSymbolMap.Add('{W/B/P}', '{W_B_P}.png');
-  FManaSymbolMap.Add('{W/U/P}', '{W_U_P}.png');
-  FManaSymbolMap.Add('{B/R/P}', '{B_R_P}.png');
+  // Add special symbols
+  for Symbol in ExtraSymbols do
+    FManaSymbolMap.Add(Symbol, Symbol.Replace('/', '_') + '.png');
 
-  FManaSymbolMap.Add('{Q}', '{Q}.png');
-  FManaSymbolMap.Add('{S}', '{S}.png');
-  FManaSymbolMap.Add('{E}', '{E}.png');
-  FManaSymbolMap.Add('{P}', '{P}.png');
-  FManaSymbolMap.Add('{PW}', '{PW}.png');
-  FManaSymbolMap.Add('{HW}', '{HW}.png');
-  FManaSymbolMap.Add('{HR}', '{HR}.png');
-  FManaSymbolMap.Add('{TK}', '{TK}.png');
+  // Add numbers from 0 to 20
+  for i := 0 to 20 do
+    FManaSymbolMap.Add(Format('{%d}', [i]), Format('{%d}.png', [i]));
 
+  // Add special numbers and symbols
+for Symbol in SpecialSymbols do
+begin
+  if not FManaSymbolMap.ContainsKey(Symbol) then
+    FManaSymbolMap.Add(Symbol, Symbol.Replace('/', '_') + '.png')
+  else
+   // LogError('Duplicate symbol detected: ' + Symbol); having issues here
+end;
 end;
 
 function ParseTextWithSymbolsManual(const Input: string): TArray<string>;

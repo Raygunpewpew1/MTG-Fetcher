@@ -272,7 +272,7 @@ end;
 procedure TForm1.DelayTimerTimer(Sender: TObject);
 
 begin
-  if BrIsLoaded then
+  if BrIsLoaded or WebBrowserInitialized then
     Exit;
 
     //DisplayCardInBrowser
@@ -285,15 +285,15 @@ TTask.Run(
       try
         // Fetch a random card
         RandomCard := FScryfallAPI.GetRandomCard;
-        WebBrowserInitialized := true;
+      //  WebBrowserInitialized := true;
         // Update the UI
         TThread.Synchronize(nil,
           procedure
           begin
           //  DisplayCardInBrowser(RandomCard, []); // Display in browser / not really needed
-            BrIsLoaded := True;
+
             AddCardToListView(RandomCard);       // Add to ListView
-                            // Mark as loaded
+             BrIsLoaded := True;               // Mark as loaded
             DelayTimer.Enabled := False;         // Disable timer
              if ListViewCards.Items.Count > 0 then
              begin
