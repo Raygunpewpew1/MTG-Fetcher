@@ -287,8 +287,9 @@ TTask.Run(
           procedure
           begin
           //  DisplayCardInBrowser(RandomCard, []); // Display in browser / not really needed
+            BrIsLoaded := True;
             AddCardToListView(RandomCard);       // Add to ListView
-            BrIsLoaded := True;                  // Mark as loaded
+                            // Mark as loaded
             DelayTimer.Enabled := False;         // Disable timer
              if ListViewCards.Items.Count > 0 then
              begin
