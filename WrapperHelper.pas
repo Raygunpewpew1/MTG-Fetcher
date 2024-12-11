@@ -212,6 +212,12 @@ begin
           (FaceObj.Types[FieldToughness] = jdtString) then
           CardFaces[I].Toughness := FaceObj.S[FieldToughness];
 
+         if FaceObj.Contains(FieldFlavorText) and
+          (FaceObj.Types[FieldFlavorText] = jdtString) then
+          CardFaces[I].FlavorText:= FaceObj.S[FieldFlavorText];
+
+          //FieldFlavorText
+
         // Parse nested ImageUris
         ParseImageUris(FaceObj, CardFaces[I].ImageUris);
       end;

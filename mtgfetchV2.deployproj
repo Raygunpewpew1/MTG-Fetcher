@@ -28,6 +28,16 @@
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
+        <DeployFile Include="Win32\Release\mtgfetchV2.exe" Condition="'$(Config)'=='Release'">
+            <RemoteDir>mtgfetchV2\</RemoteDir>
+            <RemoteName>mtgfetchV2.exe</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
         <DeployFile Include="Win32\Debug\mtgfetchV2.exe" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\</RemoteDir>
             <RemoteName>mtgfetchV2.exe</RemoteName>
@@ -60,9 +70,9 @@
         </DeployFile>
     </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='Android64'">
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W_B_P}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{W_B_P}.png</RemoteName>
+            <RemoteName>{P}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -74,15 +84,6 @@
             <RemoteName>strings.xml</RemoteName>
             <DeployClass>Android_Strings</DeployClass>
             <Operation>1</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{17}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{17}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -105,9 +106,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{19}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{14}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{19}.png</RemoteName>
+            <RemoteName>{14}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -141,27 +142,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B_P}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{C_G}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{B_P}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{HW}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{HW}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{20}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{20}.png</RemoteName>
+            <RemoteName>{C_G}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -224,18 +207,27 @@
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{T}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{2}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{T}.png</RemoteName>
+            <RemoteName>{2}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{L}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{B_R_P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{L}.png</RemoteName>
+            <RemoteName>{B_R_P}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="card_template.html" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
+            <RemoteName>card_template.html</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -251,9 +243,18 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R_G}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{G_W}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{R_G}.png</RemoteName>
+            <RemoteName>{G_W}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{½}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{½}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -278,18 +279,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{Q}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{TK}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{Q}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{6}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{6}.png</RemoteName>
+            <RemoteName>{TK}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -301,15 +293,6 @@
             <RemoteName>mtgfetchV2.classes</RemoteName>
             <DeployClass>AndroidClasses</DeployClass>
             <Operation>64</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{4}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{4}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -328,24 +311,6 @@
             <RemoteName>splash_vector.xml</RemoteName>
             <DeployClass>Android_VectorizedSplash</DeployClass>
             <Operation>1</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{12}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{12}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{10}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{10}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -377,45 +342,63 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{15}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{18}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{15}.png</RemoteName>
+            <RemoteName>{18}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_P}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\default.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{C_P}.png</RemoteName>
+            <RemoteName>default.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_R}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{HW}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{C_R}.png</RemoteName>
+            <RemoteName>{HW}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{∞}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{W_B}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{∞}.png</RemoteName>
+            <RemoteName>{W_B}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{PW}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{G_P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{PW}.png</RemoteName>
+            <RemoteName>{G_P}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{CHAOS}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{CHAOS}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{20}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{20}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -431,36 +414,45 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W_B}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{Z}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{W_B}.png</RemoteName>
+            <RemoteName>{Z}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G_W}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{S}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{G_W}.png</RemoteName>
+            <RemoteName>{S}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G_U}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{Q}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{G_U}.png</RemoteName>
+            <RemoteName>{Q}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{CHAOS}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{U_P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{CHAOS}.png</RemoteName>
+            <RemoteName>{U_P}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{U_R}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{U_R}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -476,9 +468,36 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{D}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{G_U}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{D}.png</RemoteName>
+            <RemoteName>{G_U}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{B_G}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{B_G}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{C_U}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{C_U}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{G_U_P}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{G_U_P}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -503,15 +522,6 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{½}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{½}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
         <DeployFile Include="CalypsoSE_Win.style" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
             <RemoteName>CalypsoSE_Win.style</RemoteName>
@@ -521,9 +531,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{13}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{T}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{13}.png</RemoteName>
+            <RemoteName>{T}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -575,9 +585,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R_G_P}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{10}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{R_G_P}.png</RemoteName>
+            <RemoteName>{10}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -602,9 +612,18 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W_U}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{G_W_P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{W_U}.png</RemoteName>
+            <RemoteName>{G_W_P}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{R_W}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{R_W}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -638,9 +657,27 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{6}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{R}.png</RemoteName>
+            <RemoteName>{6}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{X}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{X}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{4}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{4}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -665,15 +702,6 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{H}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{H}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
         <DeployFile Include="Android64\Debug\colors.xml" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\res\values\</RemoteDir>
             <RemoteName>colors.xml</RemoteName>
@@ -683,126 +711,72 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2_B}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{13}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{2_B}.png</RemoteName>
+            <RemoteName>{13}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G_P}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{2_W}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{G_P}.png</RemoteName>
+            <RemoteName>{2_W}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U_B}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{A}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{U_B}.png</RemoteName>
+            <RemoteName>{A}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U_B_P}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{R_G_P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{U_B_P}.png</RemoteName>
+            <RemoteName>{R_G_P}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{8}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{W}.png</RemoteName>
+            <RemoteName>{8}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{19}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{U}.png</RemoteName>
+            <RemoteName>{19}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{16}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{B}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{16}.png</RemoteName>
+            <RemoteName>{B}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{14}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{2_G}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{14}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B_R}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{B_R}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{3}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{3}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_W}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{C_W}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{1}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{1}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_U}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{C_U}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2_R}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{2_R}.png</RemoteName>
+            <RemoteName>{2_G}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -838,36 +812,27 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G_U_P}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{G}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{G_U_P}.png</RemoteName>
+            <RemoteName>{G}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\card_template.html" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
-            <RemoteName>card_template.html</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\card_template.html" Condition="'$(Config)'=='Release'">
-            <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
-            <RemoteName>card_template.html</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{8}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{U_R_P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{8}.png</RemoteName>
+            <RemoteName>{U_R_P}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{R_P}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{R_P}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -901,11 +866,38 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{1000000}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{1000000}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="Android64\Release\splash_image_def-v21.xml" Condition="'$(Config)'=='Release'">
             <RemoteDir>mtgfetchV2\res\drawable-anydpi-v21\</RemoteDir>
             <RemoteName>splash_image_def.xml</RemoteName>
             <DeployClass>AndroidSplashImageDefV21</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{100}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{100}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{1}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{1}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -928,9 +920,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{C_R}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{C}.png</RemoteName>
+            <RemoteName>{C_R}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -964,18 +956,18 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R_W}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{Y}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{R_W}.png</RemoteName>
+            <RemoteName>{Y}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W_U_P}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{∞}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{W_U_P}.png</RemoteName>
+            <RemoteName>{∞}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -991,6 +983,51 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
             <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{0}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{0}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{17}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{17}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{E}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{E}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{C_W}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{C_W}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{HR}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{HR}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_96x96.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\res\drawable-xxxhdpi\</RemoteDir>
@@ -1030,36 +1067,27 @@
             <Overwrite>True</Overwrite>
             <Required>True</Required>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{TK}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{9}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{TK}.png</RemoteName>
+            <RemoteName>{9}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2_W}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{2_B}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{2_W}.png</RemoteName>
+            <RemoteName>{2_B}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{S}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{C_B}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{S}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2_U}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{2_U}.png</RemoteName>
+            <RemoteName>{C_B}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1075,15 +1103,6 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
             <Required>True</Required>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R_P}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{R_P}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_LauncherIcon_36x36.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\res\drawable-ldpi\</RemoteDir>
@@ -1121,54 +1140,18 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{A}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{12}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{A}.png</RemoteName>
+            <RemoteName>{12}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G_W_P}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{C_P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{G_W_P}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U_P}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{U_P}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{HR}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{HR}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{X}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{X}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{Z}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{Z}.png</RemoteName>
+            <RemoteName>{C_P}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1180,6 +1163,15 @@
             <RemoteName>ic_launcher.xml</RemoteName>
             <DeployClass>Android_AdaptiveIconV33</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{W_U}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{W_U}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -1211,36 +1203,27 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{5}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{H}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{5}.png</RemoteName>
+            <RemoteName>{H}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{7}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{15}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{7}.png</RemoteName>
+            <RemoteName>{15}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{1000000}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{C}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{1000000}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{18}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{18}.png</RemoteName>
+            <RemoteName>{C}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1266,6 +1249,15 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
             <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{U_B}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{U_B}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin\Artwork\Android\FM_AdaptiveIcon_Foreground.xml" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\res\drawable\</RemoteDir>
@@ -1303,54 +1295,72 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{9}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{9}.png</RemoteName>
+        <DeployFile Include="Collection.db" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
+            <RemoteName>Collection.db</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B_G_P}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{5}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{5}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{7}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{7}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{U_B_P}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{U_B_P}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{W_B_P}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{W_B_P}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{W_P}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{W_P}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{D}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{D}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{B_G_P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
             <RemoteName>{B_G_P}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U_R}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{U_R}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{G}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{G}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{U_R_P}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{U_R_P}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{P}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{P}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1362,42 +1372,6 @@
             <RemoteName>splash_image_def.xml</RemoteName>
             <DeployClass>AndroidSplashImageDefV21</DeployClass>
             <Operation>1</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\Collection.db" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets\internal\</RemoteDir>
-            <RemoteName>Collection.db</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{B}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_G}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{C_G}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{W_P}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{W_P}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -1465,34 +1439,7 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{0}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{0}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{2}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\default.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\</RemoteDir>
-            <RemoteName>default.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{R_W_P}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{R_W_P}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
             <RemoteName>{R_W_P}.png</RemoteName>
             <DeployClass>File</DeployClass>
@@ -1501,9 +1448,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{11}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{R_G}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{11}.png</RemoteName>
+            <RemoteName>{R_G}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1546,54 +1493,27 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{100}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{16}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{100}.png</RemoteName>
+            <RemoteName>{16}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{2_G}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{2_R}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{2_G}.png</RemoteName>
+            <RemoteName>{2_R}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{C_B}.png" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="MTGIconsPNG\{W}.png" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{C_B}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{E}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{E}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{Y}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{Y}.png</RemoteName>
-            <DeployClass>File</DeployClass>
-            <Operation>0</Operation>
-            <LocalCommand/>
-            <RemoteCommand/>
-            <Overwrite>True</Overwrite>
-        </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B_G}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
-            <RemoteName>{B_G}.png</RemoteName>
+            <RemoteName>{W}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -1614,6 +1534,42 @@
             <RemoteName>splash_image.png</RemoteName>
             <DeployClass>Android_SplashImage426</DeployClass>
             <Operation>1</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{U}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{U}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{W_U_P}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{W_U_P}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{PW}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{PW}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{L}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{L}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
             <LocalCommand/>
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
@@ -1645,9 +1601,54 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\MTGCardFetch\MTGIconsPNG\{B_R_P}.png" Condition="'$(Config)'=='Debug'">
-            <RemoteDir>mtgfetchV2\</RemoteDir>
-            <RemoteName>{B_R_P}.png</RemoteName>
+        <DeployFile Include="MTGIconsPNG\{11}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{11}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{2_U}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{2_U}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{B_R}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{B_R}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{B_P}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{B_P}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{3}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{3}.png</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="MTGIconsPNG\{R}.png" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\assets/internal/MTGCardFetch/MTGIconsPNG\</RemoteDir>
+            <RemoteName>{R}.png</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -2050,9 +2051,9 @@
         </DeployFile>
     </ItemGroup>
     <ItemGroup Condition="'$(Platform)'=='Win64'">
-        <DeployFile Include="C:\Users\raygu\Documents\Collection.db" Condition="'$(Config)'=='Debug'">
+        <DeployFile Include="WebView2Loader.dll" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\</RemoteDir>
-            <RemoteName>Collection.db</RemoteName>
+            <RemoteName>WebView2Loader.dll</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -2060,6 +2061,16 @@
             <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="Win64\Debug\mtgfetchV2.exe" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\</RemoteDir>
+            <RemoteName>mtgfetchV2.exe</RemoteName>
+            <DeployClass>ProjectOutput</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+            <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="Win64\Release\mtgfetchV2.exe" Condition="'$(Config)'=='Release'">
             <RemoteDir>mtgfetchV2\</RemoteDir>
             <RemoteName>mtgfetchV2.exe</RemoteName>
             <DeployClass>ProjectOutput</DeployClass>
@@ -2078,9 +2089,9 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
         </DeployFile>
-        <DeployFile Include="C:\Users\raygu\Documents\card_template.html" Condition="'$(Config)'=='Release'">
+        <DeployFile Include="Collection.db" Condition="'$(Config)'=='Debug'">
             <RemoteDir>mtgfetchV2\</RemoteDir>
-            <RemoteName>card_template.html</RemoteName>
+            <RemoteName>Collection.db</RemoteName>
             <DeployClass>File</DeployClass>
             <Operation>0</Operation>
             <LocalCommand/>
@@ -2106,6 +2117,24 @@
             <RemoteCommand/>
             <Overwrite>True</Overwrite>
             <Required>True</Required>
+        </DeployFile>
+        <DeployFile Include="card_template.html" Condition="'$(Config)'=='Debug'">
+            <RemoteDir>mtgfetchV2\</RemoteDir>
+            <RemoteName>$(AppDir)\MTGCardFetch\card_template.html</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
+        <DeployFile Include="card_template.html" Condition="'$(Config)'=='Release'">
+            <RemoteDir>mtgfetchV2\</RemoteDir>
+            <RemoteName>card_template.html</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>0</Operation>
+            <LocalCommand/>
+            <RemoteCommand/>
+            <Overwrite>True</Overwrite>
         </DeployFile>
         <DeployFile Include="$(BDS)\bin64\sk4d.dll" Condition="'$(Config)'=='Debug' And '$(SKIADIR)'==''">
             <RemoteDir>mtgfetchV2\</RemoteDir>

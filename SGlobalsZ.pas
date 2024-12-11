@@ -51,6 +51,7 @@ type
   // Card Face for multi-faced cards (e.g., double-sided cards)
   TCardFace = record
     Name: string;
+    FlavorText: string;
     ManaCost: string;
     TypeLine: string;
     OracleText: string;

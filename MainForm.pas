@@ -169,6 +169,7 @@ procedure TForm1.FormCreate(Sender: TObject);
 var
   SetDetailsArray: TArray<TSetDetails>;
   SetDetails: TSetDetails;
+
   // CardTypes: TScryfallCatalog;
   // CreaTypeStr: string;
 begin

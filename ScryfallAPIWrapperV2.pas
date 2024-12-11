@@ -75,28 +75,65 @@ begin
 end;
 
 function TScryfallAPI.ExecuteRequest(const Endpoint: string): TJsonObject;
+const
+  MaxRetries = 3;
 var
   Response: string;
   Client: THTTPClient;
   ResponseStream: TStringStream;
+  RetryCount: Integer;
+  StatusCode: Integer;
 begin
+  Result := nil;
   Client := THTTPClient.Create;
   ResponseStream := TStringStream.Create;
   try
     Client.CustomHeaders['User-Agent'] := UserAgent;
     Client.CustomHeaders['Accept'] := AcceptHeader;
 
-    if Client.Get(BaseUrl + Endpoint, ResponseStream).StatusCode = 404 then
-      raise EScryfallAPIError.Create
-        (ErrorCardNotFound);
+    RetryCount := 0;
+    repeat
+      try
+        // GET request
+        StatusCode := Client.Get(BaseUrl + Endpoint, ResponseStream).StatusCode;
 
-    if Client.Get(BaseUrl + Endpoint, ResponseStream).StatusCode <> 200 then
-      raise EScryfallAPIError.CreateFmt(ErrorRequestFailed,
-        [BaseUrl + Endpoint]);
+        // Check the response code
+        if StatusCode = 200 then
+        begin
+          Response := ResponseStream.DataString;
+          //LogError( Response );
+          try
+            Result := TJsonObject.Parse(Response) as TJsonObject;
+          except
+            on E: Exception do
+              raise EScryfallAPIError.CreateFmt(
+                'Error parsing JSON response: %s', [E.Message]);
+          end;
+          Exit; // Exit the retry loop on success
+        end
+        else if StatusCode = 404 then
+          raise EScryfallAPIError.Create(ErrorCardNotFound)
+        else
+          raise EScryfallAPIError.CreateFmt(ErrorRequestFailed,
+            [StatusCode, BaseUrl + Endpoint]);
 
-    Response := ResponseStream.DataString;
-    // LogError('Raw JSON Response: ' + Response);
-    Result := TJsonObject.Parse(Response) as TJsonObject;
+      except
+        on E: EScryfallAPIError do
+        begin
+          Inc(RetryCount);
+          LogError(Format('Attempt %d: %s', [RetryCount, E.Message]));
+          if RetryCount = MaxRetries then
+            raise; // Re-raise after the last retry
+          Sleep(500); // Small delay before retrying
+        end;
+        on E: Exception do
+        begin
+          LogError('Unexpected error during HTTP request: ' + E.Message);
+          raise;
+        end;
+      end;
+    until RetryCount >= MaxRetries;
+
   finally
     Client.Free;
     ResponseStream.Free;
@@ -330,7 +367,6 @@ begin
     // Make a request to the "random" endpoint
     JsonResponse := ExecuteRequest(EndpointRandomCard);
     try
-      // Parse the response into a TCardDetails object
       FillCardDetailsFromJson(JsonResponse, Result);
     finally
       JsonResponse.Free;
@@ -339,7 +375,7 @@ begin
     on E: Exception do
     begin
       LogError('Error fetching random card: ' + E.Message);
-      raise; // Re-raise the exception so the calling code can handle it
+      raise;
     end;
   end;
 end;
@@ -533,11 +569,14 @@ begin
   CacheKey := Format('%s:%s:%s:%s:%d:%d', [Query, SetCode, Rarity, Colors, Page,
     Ord(Unique)]);
 
+
+TMonitor.Enter(FCache);
+try
   if FCache.TryGetValue(CacheKey, CachedResponse) then
-  begin
-    Result := ParseSearchResult(CachedResponse);
-    Exit;
-  end;
+    Exit(ParseSearchResult(CachedResponse));
+finally
+  TMonitor.Exit(FCache);
+end;
 
   SearchUrl := ConstructSearchUrl(Query, SetCode, Rarity, Colors, Fuzzy,
     Unique, Page);

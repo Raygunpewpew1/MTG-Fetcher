@@ -3,7 +3,7 @@ unit CardDisplayHelpers;
 interface
 
 uses
-  System.Generics.Collections, System.SysUtils, SGlobalsZ;
+  System.Generics.Collections, System.SysUtils, SGlobalsZ, System.StrUtils;
 
 procedure AddCoreReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
@@ -31,31 +31,70 @@ uses
 
 procedure AddCoreReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
+var
+  FacesHtml: string;
 begin
-  Replacements.Add('{{CardName}}',
-    TNetEncoding.HTML.Encode(CardDetails.CardName));
-  Replacements.Add('{{FlavorText}}',
-    TNetEncoding.HTML.Encode(CardDetails.FlavorText));
-  Replacements.Add('{{SetIcon}}', CardDetails.SetIconURI);
-  Replacements.Add('{{SetName}}',
-    TNetEncoding.HTML.Encode(CardDetails.SetName));
-  Replacements.Add('{{TypeLine}}',
-    TNetEncoding.HTML.Encode(CardDetails.TypeLine));
-  Replacements.Add('{{ManaCost}}',
-    ReplaceManaSymbolsWithImages(CardDetails.ManaCost));
-  Replacements.Add('{{OracleText}}',
-    ReplaceManaSymbolsWithImages(CardDetails.OracleText));
-  Replacements.Add('{{PowerToughness}}', BuildPowerToughnessHtml(CardDetails));
-  Replacements.Add('{{Rarity}}', TNetEncoding.HTML.Encode(CardDetails.Rarity));
-  Replacements.Add('{{RarityClass}}', GetRarityClass(CardDetails.Rarity));
-  Replacements.Add('{{Artist}}', TNetEncoding.HTML.Encode(CardDetails.Artist));
-  Replacements.Add('{{CollectorNumber}}',
-    TNetEncoding.HTML.Encode(CardDetails.CollectorNumber));
-  Replacements.Add('{{Frame}}', TNetEncoding.HTML.Encode(CardDetails.Frame));
-  Replacements.Add('{{BorderColor}}',
-    TNetEncoding.HTML.Encode(CardDetails.BorderColor));
-  Replacements.Add('{{ReleasedAt}}',
-    TNetEncoding.HTML.Encode(CardDetails.ReleasedAt));
+if Length(CardDetails.CardFaces) = 0 then
+      Replacements.AddOrSetValue('{{FlavorText}}',
+      TNetEncoding.HTML.Encode(CardDetails.FlavorText));
+
+  Replacements.AddOrSetValue('{{CardName}}', TNetEncoding.HTML.Encode(CardDetails.CardName));
+  Replacements.AddOrSetValue('{{SetName}}', TNetEncoding.HTML.Encode(CardDetails.SetName));
+  Replacements.AddOrSetValue('{{SetIcon}}', CardDetails.SetIconURI);
+  Replacements.AddOrSetValue('{{Rarity}}', TNetEncoding.HTML.Encode(CardDetails.Rarity));
+  Replacements.AddOrSetValue('{{RarityClass}}', GetRarityClass(CardDetails.Rarity));
+  Replacements.AddOrSetValue('{{TypeLine}}', TNetEncoding.HTML.Encode(CardDetails.TypeLine));
+  Replacements.AddOrSetValue('{{ManaCost}}', ReplaceManaSymbolsWithImages(CardDetails.ManaCost));
+  Replacements.AddOrSetValue('{{Artist}}', TNetEncoding.HTML.Encode(CardDetails.Artist));
+  Replacements.AddOrSetValue('{{CollectorNumber}}', TNetEncoding.HTML.Encode(CardDetails.CollectorNumber));
+  Replacements.AddOrSetValue('{{Frame}}', TNetEncoding.HTML.Encode(CardDetails.Frame));
+  Replacements.AddOrSetValue('{{BorderColor}}', TNetEncoding.HTML.Encode(CardDetails.BorderColor));
+  Replacements.AddOrSetValue('{{ReleasedAt}}', TNetEncoding.HTML.Encode(CardDetails.ReleasedAt));
+  Replacements.AddOrSetValue('{{StorySpotlight}}', IfThen(CardDetails.StorySpotlight, 'Yes', 'No'));
+
+  // Handle Oracle Text and Multi-Faced Cards
+  if Length(CardDetails.CardFaces) > 0 then
+  begin
+    FacesHtml := ''; // Initialize HTML for card faces
+
+    for var Face in CardDetails.CardFaces do
+    begin
+      FacesHtml := FacesHtml + Format(
+        '<div class="card-face-details">' +
+        '<p><strong>Face Name:</strong> %s</p>' +
+        '<p><strong>Mana Cost:</strong> %s</p>' +
+        '<p><strong>Type Line:</strong> %s</p>' +
+        '<p><strong>Oracle Text:</strong> %s</p>' +
+        '<p><strong>Power/Toughness:</strong> %s/%s</p>' +
+        '<p><strong></strong> %s</p>' +
+        '</div>',
+        [
+          TNetEncoding.HTML.Encode(Face.Name),
+          ReplaceManaSymbolsWithImages(Face.ManaCost),
+          TNetEncoding.HTML.Encode(Face.TypeLine),
+          ReplaceManaSymbolsWithImages(Face.OracleText),
+          TNetEncoding.HTML.Encode(Face.Power),
+          TNetEncoding.HTML.Encode(Face.Toughness),
+          TNetEncoding.HTML.Encode(Face.FlavorText)
+
+
+        ]
+      );
+   //   Replacements.AddOrSetValue('{{FlavorText}}', TNetEncoding.HTML.Encode(Face.FlavorText));
+    end;
+
+
+
+    Replacements.AddOrSetValue('{{OracleText}}', FacesHtml); // Replace OracleText with faces
+  end
+  else
+  begin
+    // Single-faced card
+    Replacements.AddOrSetValue('{{OracleText}}', ReplaceManaSymbolsWithImages(CardDetails.OracleText));
+  end;
+
+  // Handle Power/Toughness or Loyalty
+  Replacements.AddOrSetValue('{{PowerToughness}}', BuildPowerToughnessHtml(CardDetails));
 end;
 
 procedure AddImageReplacements(Replacements: TDictionary<string, string>;
@@ -175,10 +214,10 @@ begin
   else
     Replacements.Add('{{Reserved}}', '');
 
-  if CardDetails.StorySpotlight then
-    Replacements.Add('{{StorySpotlight}}', 'Yes')
-  else
-    Replacements.Add('{{StorySpotlight}}', 'No');
+//  if CardDetails.StorySpotlight then
+//    Replacements.Add('{{StorySpotlight}}', 'Yes')
+//  else
+//    Replacements.Add('{{StorySpotlight}}', 'No');
 end;
 
 procedure AddKeywordsReplacement(Replacements: TDictionary<string, string>;
