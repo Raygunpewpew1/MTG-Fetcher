@@ -69,6 +69,8 @@ type
     procedure ButtonNextPageClick(Sender: TObject);
 
   private
+
+    WebBrowserInitialized: Boolean;
     CurrentPage: Integer;
     HasMorePages: Boolean;
     SearchTerm: string;
@@ -173,6 +175,8 @@ var
   // CardTypes: TScryfallCatalog;
   // CreaTypeStr: string;
 begin
+  WebBrowserInitialized := False;
+
   WebBrowser1.URL := SAboutBlank;
   LoadAllCatalogs;
   // PopulateComboBoxFromCatalog(ComboBox1, CatalogLandTypes);
@@ -281,7 +285,7 @@ TTask.Run(
       try
         // Fetch a random card
         RandomCard := FScryfallAPI.GetRandomCard;
-
+        WebBrowserInitialized := true;
         // Update the UI
         TThread.Synchronize(nil,
           procedure
@@ -308,7 +312,6 @@ TTask.Run(
         end;
       end;
     end).Start;
-
 
 
 

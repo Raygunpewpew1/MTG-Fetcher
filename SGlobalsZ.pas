@@ -58,6 +58,7 @@ type
     Power: string;
     Toughness: string;
     ImageUris: TImageUris;
+    Loyalty: string;
   end;
 
 type

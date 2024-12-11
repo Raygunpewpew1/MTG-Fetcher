@@ -104,6 +104,7 @@ const
   FieldDuel = 'duel';
   FieldPenny = 'penny';
   FieldCardFaces = 'card_faces';
+  FieldCardFaceLoyalty = 'loyalty';
 
   // Set Details Field Names
   FieldCode = 'code';

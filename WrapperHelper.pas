@@ -17,6 +17,10 @@ procedure ParseLegalities(const JsonObj: TJsonObject;
 procedure ParsePrices(const JsonObj: TJsonObject; out Prices: TCardPrices);
 procedure ParseCardFaces(const JsonObj: TJsonObject;
   out CardFaces: TArray<TCardFace>);
+procedure FillSetDetailsFromJson(const JsonObj: TJsonObject;
+out SetDetails: TSetDetails);
+procedure FillCardDetailsFromJson(const JsonObj: TJsonObject;
+  out CardDetails: TCardDetails);
 
 implementation
 
@@ -216,7 +220,14 @@ begin
           (FaceObj.Types[FieldFlavorText] = jdtString) then
           CardFaces[I].FlavorText:= FaceObj.S[FieldFlavorText];
 
-          //FieldFlavorText
+
+         if FaceObj.Contains(FieldCardFaceLoyalty) and
+          (FaceObj.Types[FieldCardFaceLoyalty] = jdtString) then
+          CardFaces[I].Loyalty:= FaceObj.S[FieldCardFaceLoyalty];
+
+
+
+
 
         // Parse nested ImageUris
         ParseImageUris(FaceObj, CardFaces[I].ImageUris);
@@ -227,6 +238,190 @@ begin
     SetLength(CardFaces, 0); // No card faces
 
 
+
+end;
+
+procedure FillSetDetailsFromJson(const JsonObj: TJsonObject;
+out SetDetails: TSetDetails);
+begin
+  SetDetails.Clear;
+  SetDetails.SFID := JsonObj.S[FieldID];
+  SetDetails.Code := JsonObj.S[FieldCode];
+  SetDetails.Name := JsonObj.S[FieldName];
+  SetDetails.ReleaseDate := JsonObj.S[FieldReleasedAt];
+  SetDetails.SetType := JsonObj.S[FieldSetType];
+  SetDetails.Block := JsonObj.S[FieldBlock];
+  SetDetails.BlockCode := JsonObj.S[FieldBlockCode];
+  SetDetails.ParentSetCode := JsonObj.S[FieldParentSetCode];
+  SetDetails.CardCount := JsonObj.I[FieldCardCount];
+  SetDetails.Digital := JsonObj.B[FieldDigital];
+  SetDetails.FoilOnly := JsonObj.B[FieldFoilOnly];
+  SetDetails.IconSVGURI := TEncoding.UTF8.GetString
+    (TEncoding.ANSI.GetBytes(JsonObj.S[FieldIconSvgUri]));
+  SetDetails.ScryfallURI := JsonObj.S[FieldScryfallUri];
+  SetDetails.URI := JsonObj.S[FieldUri];
+  SetDetails.SearchURI := JsonObj.S[FieldSearchUri];
+end;
+procedure FillCardDetailsFromJson(const JsonObj: TJsonObject;
+  out CardDetails: TCardDetails);
+begin
+
+if (CardDetails.SFID.IsEmpty = false) or (CardDetails.OracleID.IsEmpty = false) then
+CardDetails.Clear;
+
+  try
+    // Existing fields with platform-safe string assignment
+    if JsonObj.Contains(FieldTypeLine) and (JsonObj.Types[FieldTypeLine] = jdtString) then
+    begin
+{$IF DEFINED(MSWINDOWS)}
+      CardDetails.TypeLine := TEncoding.UTF8.GetString(
+        TEncoding.ANSI.GetBytes(JsonObj.S[FieldTypeLine]));
+{$ELSE}
+      CardDetails.TypeLine := JsonObj.S[FieldTypeLine];
+{$ENDIF}
+    end;
+
+    if JsonObj.Contains(FieldID) and (JsonObj.Types[FieldID] = jdtString) then
+      CardDetails.SFID := JsonObj.S[FieldID];
+
+    if JsonObj.Contains(FieldName) and (JsonObj.Types[FieldName] = jdtString) then
+    begin
+{$IF DEFINED(MSWINDOWS)}
+      CardDetails.CardName := TEncoding.UTF8.GetString(
+        TEncoding.ANSI.GetBytes(JsonObj.S[FieldName]));
+{$ELSE}
+      CardDetails.CardName := JsonObj.S[FieldName];
+{$ENDIF}
+    end;
+
+    if JsonObj.Contains(FieldManaCost) and (JsonObj.Types[FieldManaCost] = jdtString) then
+      CardDetails.ManaCost := JsonObj.S[FieldManaCost];
+
+    if JsonObj.Contains(FieldOracleText) and (JsonObj.Types[FieldOracleText] = jdtString) then
+    begin
+{$IF DEFINED(MSWINDOWS)}
+      CardDetails.OracleText := TEncoding.UTF8.GetString(
+        TEncoding.ANSI.GetBytes(JsonObj.S[FieldOracleText]));
+{$ELSE}
+      CardDetails.OracleText := JsonObj.S[FieldOracleText];
+{$ENDIF}
+    end;
+
+    if JsonObj.Contains(FieldKeywords) and (JsonObj.Types[FieldKeywords] = jdtArray) then
+    begin
+      var KeywordsArray := JsonObj.A[FieldKeywords];
+      SetLength(CardDetails.Keywords, KeywordsArray.Count);
+      for var I := 0 to KeywordsArray.Count - 1 do
+        if KeywordsArray.Types[I] = jdtString then
+          CardDetails.Keywords[I] := KeywordsArray.S[I];
+    end
+    else
+      SetLength(CardDetails.Keywords, 0);
+
+    if JsonObj.Contains(FieldSet) and (JsonObj.Types[FieldSet] = jdtString) then
+      CardDetails.SetCode := JsonObj.S[FieldSet];
+
+    if JsonObj.Contains(FieldSetName) and (JsonObj.Types[FieldSetName] = jdtString) then
+      CardDetails.SetName := JsonObj.S[FieldSetName];
+
+    if JsonObj.Contains(FieldRarity) and (JsonObj.Types[FieldRarity] = jdtString) then
+      CardDetails.Rarity := JsonObj.S[FieldRarity];
+
+    if JsonObj.Contains(FieldPower) and (JsonObj.Types[FieldPower] = jdtString) then
+      CardDetails.Power := JsonObj.S[FieldPower];
+
+    if JsonObj.Contains(FieldToughness) and (JsonObj.Types[FieldToughness] = jdtString) then
+      CardDetails.Toughness := JsonObj.S[FieldToughness];
+
+    if JsonObj.Contains(FieldLoyalty) and (JsonObj.Types[FieldLoyalty] = jdtString) then
+      CardDetails.Loyalty := JsonObj.S[FieldLoyalty];
+
+    if JsonObj.Contains(FieldPrintsSearchUri) and (JsonObj.Types[FieldPrintsSearchUri] = jdtString) then
+      CardDetails.PrintsSearchUri := JsonObj.S[FieldPrintsSearchUri];
+
+    if JsonObj.Contains(FieldOracleID) and (JsonObj.Types[FieldOracleID] = jdtString) then
+      CardDetails.OracleID := JsonObj.S[FieldOracleID];
+
+    if JsonObj.Contains(FieldFlavorText) and (JsonObj.Types[FieldFlavorText] = jdtString) then
+    begin
+{$IF DEFINED(MSWINDOWS)}
+      CardDetails.FlavorText := TEncoding.UTF8.GetString(
+        TEncoding.ANSI.GetBytes(JsonObj.S[FieldFlavorText]));
+{$ELSE}
+      CardDetails.FlavorText := JsonObj.S[FieldFlavorText];
+{$ENDIF}
+    end;
+
+    if JsonObj.Contains(FieldLayout) and (JsonObj.Types[FieldLayout] = jdtString) then
+      CardDetails.Layout := JsonObj.S[FieldLayout].ToLower;
+
+    if JsonObj.Contains(FieldLang) and (JsonObj.Types[FieldLang] = jdtString) then
+      CardDetails.Lang := JsonObj.S[FieldLang];
+
+    if JsonObj.Contains(FieldReleasedAt) and (JsonObj.Types[FieldReleasedAt] = jdtString) then
+      CardDetails.ReleasedAt := JsonObj.S[FieldReleasedAt];
+
+    if JsonObj.Contains(FieldCMC) and (JsonObj.Types[FieldCMC] = jdtFloat) then
+      CardDetails.CMC := JsonObj.F[FieldCMC];
+
+    if JsonObj.Contains(FieldReserved) and (JsonObj.Types[FieldReserved] = jdtBool) then
+      CardDetails.Reserved := JsonObj.B[FieldReserved];
+
+    if JsonObj.Contains(FieldFoil) and (JsonObj.Types[FieldFoil] = jdtBool) then
+      CardDetails.Foil := JsonObj.B[FieldFoil];
+
+    if JsonObj.Contains(FieldNonFoil) and (JsonObj.Types[FieldNonFoil] = jdtBool) then
+      CardDetails.NonFoil := JsonObj.B[FieldNonFoil];
+
+    if JsonObj.Contains(FieldOversized) and (JsonObj.Types[FieldOversized] = jdtBool) then
+      CardDetails.Oversized := JsonObj.B[FieldOversized];
+
+    if JsonObj.Contains(FieldPromo) and (JsonObj.Types[FieldPromo] = jdtBool) then
+      CardDetails.Promo := JsonObj.B[FieldPromo];
+
+    if JsonObj.Contains(FieldReprint) and (JsonObj.Types[FieldReprint] = jdtBool) then
+      CardDetails.Reprint := JsonObj.B[FieldReprint];
+
+    if JsonObj.Contains(FieldDigital) and (JsonObj.Types[FieldDigital] = jdtBool) then
+      CardDetails.Digital := JsonObj.B[FieldDigital];
+
+    if JsonObj.Contains(FieldArtist) and (JsonObj.Types[FieldArtist] = jdtString) then
+      CardDetails.Artist := JsonObj.S[FieldArtist];
+
+    if JsonObj.Contains(FieldCollectorNumber) and (JsonObj.Types[FieldCollectorNumber] = jdtString) then
+      CardDetails.CollectorNumber := JsonObj.S[FieldCollectorNumber];
+
+    if JsonObj.Contains(FieldBorderColor) and (JsonObj.Types[FieldBorderColor] = jdtString) then
+      CardDetails.BorderColor := JsonObj.S[FieldBorderColor];
+
+    if JsonObj.Contains(FieldFrame) and (JsonObj.Types[FieldFrame] = jdtString) then
+      CardDetails.Frame := JsonObj.S[FieldFrame];
+
+    if JsonObj.Contains(FieldSecurityStamp) and (JsonObj.Types[FieldSecurityStamp] = jdtString) then
+      CardDetails.SecurityStamp := JsonObj.S[FieldSecurityStamp];
+
+    if JsonObj.Contains(FieldFullArt) and (JsonObj.Types[FieldFullArt] = jdtBool) then
+      CardDetails.FullArt := JsonObj.B[FieldFullArt];
+
+    if JsonObj.Contains(FieldTextless) and (JsonObj.Types[FieldTextless] = jdtBool) then
+      CardDetails.Textless := JsonObj.B[FieldTextless];
+
+    if JsonObj.Contains(FieldStorySpotlight) and (JsonObj.Types[FieldStorySpotlight] = jdtBool) then
+      CardDetails.StorySpotlight := JsonObj.B[FieldStorySpotlight];
+
+    // Parse nested objects
+    ParseImageUris(JsonObj, CardDetails.ImageUris);
+    ParseLegalities(JsonObj, CardDetails.Legalities);
+    ParsePrices(JsonObj, CardDetails.Prices);
+    ParseCardFaces(JsonObj, CardDetails.CardFaces);
+
+  except
+    on E: Exception do
+    begin
+      LogError(Format(ErrorFillingCardDetails, [E.Message]));
+      CardDetails.Clear;
+    end;
+  end;
 end;
 
 end.

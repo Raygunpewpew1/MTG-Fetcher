@@ -3,220 +3,224 @@ unit DataModuleUnit;
 interface
 
 uses
-  System.SysUtils, System.Classes, FireDAC.Stan.Intf, FireDAC.Stan.Option,
-  FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
-  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.SQLite,
-  FireDAC.Phys.SQLiteDef, FireDAC.Stan.ExprFuncs,
-  FireDAC.Phys.SQLiteWrapper.Stat, FireDAC.FMXUI.Wait, FireDAC.Stan.Param,
-  FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet,
-  FireDAC.Comp.Client, fmx.Dialogs,
-  System.IOUtils, SGlobalsZ;
+  System.SysUtils, System.Classes, FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DApt, FireDAC.DatS, Data.DB,
+  SGlobalsZ, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf,
+  FireDAC.Stan.Def, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, MLogic,
+  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.FMXUI.Wait, FireDAC.DApt.Intf,
+  FireDAC.Comp.DataSet;
 
 type
   TDataModule1 = class(TDataModule)
-    FDQuery1: TFDQuery;
     FDConnection1: TFDConnection;
+    FDQuery1: TFDQuery;
+
   private
     procedure LogError(const Msg: string);
-    // procedure ListCardDetailsFields;
+
   public
-    procedure CreateCardDetailsTable;
-    procedure SaveCardToDatabase(const CardDetails: TCardDetails;
-      ImageStream: TMemoryStream; Quantity: Integer);
+    procedure SetupDatabase(const DBPath: string);
+    procedure CreateDatabaseSchema;
+    procedure SaveCardToDatabase(const CardDetails: TCardDetails);
     function CheckCardExists(const SFID: string): Boolean;
-    procedure SetupDatabaseConnection(const DBPath: string);
   end;
 
 var
   DataModule1: TDataModule1;
 
+
 implementation
 
 {%CLASSGROUP 'FMX.Controls.TControl'}
+
 {$R *.dfm}
-{ TDataModule1 }
 
 procedure TDataModule1.LogError(const Msg: string);
 var
   LogFile: string;
 begin
-  LogFile := TPath.Combine(TPath.GetDocumentsPath, 'ErrorLog.txt');
+  LogFile := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'ErrorLog.txt';
   try
-    TFile.AppendAllText(LogFile, Format('[%s] %s%s', [DateTimeToStr(Now), Msg,
-      sLineBreak]), TEncoding.UTF8);
+    //TFile.AppendAllText(LogFile, Format('[%s] %s%s', [DateTimeToStr(Now), Msg, sLineBreak]), TEncoding.UTF8);
   except
-    // Error handling for logging failure
+    // Suppress logging errors
   end;
 end;
 
-// procedure TDataModule1.ListCardDetailsFields;
-// begin
-// FDQuery1.SQL.Text := 'PRAGMA table_info(CardDetails);';
-// FDQuery1.Open;
-// try
-// while not FDQuery1.Eof do
-// begin
-// ShowMessage(
-// Format('Field: %s | Type: %s',
-// [FDQuery1.FieldByName('name').AsString,
-// FDQuery1.FieldByName('type').AsString]));
-// FDQuery1.Next;
-// end;
-// finally
-// FDQuery1.Close;
-// end;
-// end;
-
-procedure TDataModule1.CreateCardDetailsTable;
-begin
-  if not FDConnection1.Connected then
-    FDConnection1.Connected := True;
-  try
-    FDConnection1.ExecSQL('DROP TABLE IF EXISTS CardDetails;');
-    FDConnection1.ExecSQL('CREATE TABLE IF NOT EXISTS CardDetails (' +
-      'ID INTEGER PRIMARY KEY AUTOINCREMENT, ' + 'CardName TEXT, ' +
-      'TypeLine TEXT, ' + 'ManaCost TEXT, ' + 'OracleText TEXT, ' +
-      'SetCode TEXT, ' + 'SetName TEXT, ' + 'Rarity TEXT, ' + 'Power TEXT, ' +
-      'Toughness TEXT, ' + 'PrintsSearchUri TEXT, ' + 'ImageUriSmall TEXT, ' +
-      'ImageUriNormal TEXT, ' + 'ImageUriLarge TEXT, ' + 'ImageUriPng TEXT, ' +
-      'PriceUsd TEXT, ' + 'PriceUsdFoil TEXT, ' + 'PriceEur TEXT, ' +
-      'PriceTix TEXT, ' + 'LegalStandard TEXT, ' + 'LegalPioneer TEXT, ' +
-      'LegalModern TEXT, ' + 'LegalLegacy TEXT, ' + 'LegalCommander TEXT, ' +
-      'ImageBlob BLOB, ' + 'Quantity INTEGER, ' + 'OracleID TEXT, ' +
-      'SFID TEXT UNIQUE);');
-  except
-    on E: Exception do
-    begin
-      LogError('Error creating table: ' + E.Message);
-      ShowMessage('Error creating table: ' + E.Message);
-    end;
-  end;
-end;
-
-procedure TDataModule1.SaveCardToDatabase(const CardDetails: TCardDetails;
-  ImageStream: TMemoryStream; Quantity: Integer);
-var
-  Query: TFDQuery;
-begin
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FDConnection1;
-    Query.SQL.Text :=
-      'INSERT INTO CardDetails (CardName, TypeLine, ManaCost, OracleText, ' +
-      'SetCode, SetName, Rarity, Power, Toughness, PrintsSearchUri, ImageUriSmall, '
-      + 'ImageUriNormal, ImageUriLarge, ImageUriPng, PriceUsd, PriceUsdFoil, PriceEur, '
-      + 'PriceTix, LegalStandard, LegalPioneer, LegalModern, LegalLegacy, LegalCommander, '
-      + 'ImageBlob, Quantity, SFID, OracleID) ' +
-      'VALUES (:CardName, :TypeLine, :ManaCost, :OracleText, :SetCode, :SetName, '
-      + ':Rarity, :Power, :Toughness, :PrintsSearchUri, :ImageUriSmall, :ImageUriNormal, '
-      + ':ImageUriLarge, :ImageUriPng, :PriceUsd, :PriceUsdFoil, :PriceEur, :PriceTix, '
-      + ':LegalStandard, :LegalPioneer, :LegalModern, :LegalLegacy, :LegalCommander, '
-      + ':ImageBlob, :Quantity, :SFID, :OracleID)';
-
-    FDConnection1.StartTransaction;
-    try
-      Query.ParamByName('CardName').AsString := CardDetails.CardName;
-      Query.ParamByName('TypeLine').AsString := CardDetails.TypeLine;
-      Query.ParamByName('ManaCost').AsString := CardDetails.ManaCost;
-      Query.ParamByName('OracleText').AsString := CardDetails.OracleText;
-      Query.ParamByName('SetCode').AsString := CardDetails.SetCode;
-      Query.ParamByName('SetName').AsString := CardDetails.SetName;
-      Query.ParamByName('Rarity').AsString := CardDetails.Rarity;
-      Query.ParamByName('Power').AsString := CardDetails.Power;
-      Query.ParamByName('Toughness').AsString := CardDetails.Toughness;
-      Query.ParamByName('PrintsSearchUri').AsString :=
-        CardDetails.PrintsSearchUri;
-      Query.ParamByName('ImageUriSmall').AsString :=
-        CardDetails.ImageUris.Small;
-      Query.ParamByName('ImageUriNormal').AsString :=
-        CardDetails.ImageUris.Normal;
-      Query.ParamByName('ImageUriLarge').AsString :=
-        CardDetails.ImageUris.Large;
-      Query.ParamByName('ImageUriPng').AsString := CardDetails.ImageUris.PNG;
-      Query.ParamByName('PriceUsd').AsString := CardDetails.Prices.USD;
-      Query.ParamByName('PriceUsdFoil').AsString := CardDetails.Prices.USD_Foil;
-      Query.ParamByName('PriceEur').AsString := CardDetails.Prices.EUR;
-      Query.ParamByName('PriceTix').AsString := CardDetails.Prices.Tix;
-      Query.ParamByName('LegalStandard').AsString :=
-        CardDetails.Legalities.Standard;
-      Query.ParamByName('LegalPioneer').AsString :=
-        CardDetails.Legalities.Pioneer;
-      Query.ParamByName('LegalModern').AsString :=
-        CardDetails.Legalities.Modern;
-      Query.ParamByName('LegalLegacy').AsString :=
-        CardDetails.Legalities.Legacy;
-      Query.ParamByName('LegalCommander').AsString :=
-        CardDetails.Legalities.Commander;
-      Query.ParamByName('OracleID').AsString := CardDetails.OracleID;
-      Query.ParamByName('SFID').AsString := CardDetails.SFID;
-      Query.ParamByName('Quantity').AsInteger := Quantity;
-
-      if Assigned(ImageStream) and (ImageStream.Size > 0) then
-      begin
-        ImageStream.Position := 0;
-        Query.ParamByName('ImageBlob').LoadFromStream(ImageStream, ftBlob);
-      end
-      else
-        Query.ParamByName('ImageBlob').Clear;
-
-      Query.ExecSQL;
-      FDConnection1.Commit;
-      ShowMessage('Card saved successfully.');
-    except
-      on E: Exception do
-      begin
-        FDConnection1.Rollback;
-        LogError('Error saving card to database: ' + E.Message);
-        ShowMessage('Error saving card to database: ' + E.Message);
-      end;
-    end;
-  finally
-    Query.Free;
-  end;
-end;
-
-function TDataModule1.CheckCardExists(const SFID: string): Boolean;
-var
-  Query: TFDQuery;
-begin
-  Result := False;
-  Query := TFDQuery.Create(nil);
-  try
-    Query.Connection := FDConnection1;
-    Query.SQL.Text :=
-      'SELECT COUNT(*) AS Count FROM CardDetails WHERE SFID = :SFID';
-    Query.ParamByName('SFID').AsString := SFID;
-    Query.Open;
-
-    if not Query.IsEmpty then
-      Result := Query.FieldByName('Count').AsInteger > 0;
-  finally
-    Query.Free;
-  end;
-end;
-
-procedure TDataModule1.SetupDatabaseConnection(const DBPath: string);
+procedure TDataModule1.SetupDatabase(const DBPath: string);
 begin
   try
-    FDConnection1.Close;
-
+    FDConnection1.Connected := False;
     FDConnection1.Params.DriverID := 'SQLite';
     FDConnection1.Params.Database := DBPath;
     FDConnection1.Params.Add('LockingMode=Normal');
     FDConnection1.Params.Add('Synchronous=Normal');
-
-    FDConnection1.DriverName := 'SQLite';
     FDConnection1.LoginPrompt := False;
     FDConnection1.Connected := True;
-    FDConnection1.Connected := True;
-
-    // ShowMessage('Database connection established successfully.');
   except
     on E: Exception do
     begin
-      LogError('Error setting up database connection: ' + E.Message);
-      ShowMessage('Error setting up database connection: ' + E.Message);
+      LogError('Error setting up database: ' + E.Message);
+      raise;
     end;
+  end;
+end;
+
+procedure TDataModule1.CreateDatabaseSchema;
+begin
+  if not FDConnection1.Connected then
+    Exit;
+
+  try
+    FDConnection1.ExecSQL('CREATE TABLE IF NOT EXISTS CardDetails (' +
+      'ID INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+      'SFID TEXT UNIQUE NOT NULL, OracleID TEXT, CardName TEXT, ' +
+      'TypeLine TEXT, ManaCost TEXT, OracleText TEXT, FlavorText TEXT, ' +
+      'Power TEXT, Toughness TEXT, Loyalty TEXT, Rarity TEXT, ' +
+      'SetCode TEXT, SetName TEXT, ReleasedAt TEXT, ImageUriSmall TEXT, ' +
+      'ImageUriNormal TEXT, ImageUriLarge TEXT, ImageUriPng TEXT, Reserved INTEGER, ' +
+      'Digital INTEGER, FullArt INTEGER, Textless INTEGER, StorySpotlight INTEGER, ' +
+      'Quantity INTEGER DEFAULT 0, PriceUsd TEXT, PriceUsdFoil TEXT, PriceEur TEXT, PriceTix TEXT);');
+
+    FDConnection1.ExecSQL('CREATE TABLE IF NOT EXISTS CardFaces (' +
+      'ID INTEGER PRIMARY KEY AUTOINCREMENT, CardID INTEGER NOT NULL, ' +
+      'FaceName TEXT, ManaCost TEXT, TypeLine TEXT, OracleText TEXT, Power TEXT, ' +
+      'Toughness TEXT, Loyalty TEXT, ImageUriSmall TEXT, ImageUriNormal TEXT, ImageUriLarge TEXT, ' +
+      'FOREIGN KEY (CardID) REFERENCES CardDetails(ID) ON DELETE CASCADE);');
+
+    FDConnection1.ExecSQL('CREATE TABLE IF NOT EXISTS Legalities (' +
+      'ID INTEGER PRIMARY KEY AUTOINCREMENT, CardID INTEGER NOT NULL, ' +
+      'Format TEXT, Legality TEXT, FOREIGN KEY (CardID) REFERENCES CardDetails(ID) ON DELETE CASCADE);');
+
+    FDConnection1.ExecSQL('CREATE TABLE IF NOT EXISTS Keywords (' +
+      'ID INTEGER PRIMARY KEY AUTOINCREMENT, CardID INTEGER NOT NULL, ' +
+      'Keyword TEXT, FOREIGN KEY (CardID) REFERENCES CardDetails(ID) ON DELETE CASCADE);');
+  except
+    on E: Exception do
+    begin
+      LogError('Error creating database schema: ' + E.Message);
+      raise;
+    end;
+  end;
+end;
+
+procedure TDataModule1.SaveCardToDatabase(const CardDetails: TCardDetails);
+var
+  CardID: Integer;
+begin
+  if not FDConnection1.Connected then
+    Exit;
+
+  FDConnection1.StartTransaction;
+  try
+    // Insert into CardDetails
+    FDQuery1.SQL.Text := 'INSERT OR REPLACE INTO CardDetails (' +
+      'SFID, OracleID, CardName, TypeLine, ManaCost, OracleText, FlavorText, ' +
+      'Power, Toughness, Loyalty, Rarity, SetCode, SetName, ReleasedAt, ImageUriSmall, ' +
+      'ImageUriNormal, ImageUriLarge, ImageUriPng, Reserved, Digital, FullArt, Textless, ' +
+      'StorySpotlight, Quantity, PriceUsd, PriceUsdFoil, PriceEur, PriceTix) ' +
+      'VALUES (:SFID, :OracleID, :CardName, :TypeLine, :ManaCost, :OracleText, :FlavorText, ' +
+      ':Power, :Toughness, :Loyalty, :Rarity, :SetCode, :SetName, :ReleasedAt, :ImageUriSmall, ' +
+      ':ImageUriNormal, :ImageUriLarge, :ImageUriPng, :Reserved, :Digital, :FullArt, :Textless, ' +
+      ':StorySpotlight, :Quantity, :PriceUsd, :PriceUsdFoil, :PriceEur, :PriceTix);';
+
+    FDQuery1.ParamByName('SFID').AsString := CardDetails.SFID;
+    FDQuery1.ParamByName('OracleID').AsString := CardDetails.OracleID;
+    FDQuery1.ParamByName('CardName').AsString := CardDetails.CardName;
+    FDQuery1.ParamByName('TypeLine').AsString := CardDetails.TypeLine;
+    FDQuery1.ParamByName('ManaCost').AsString := CardDetails.ManaCost;
+    FDQuery1.ParamByName('OracleText').AsString := CardDetails.OracleText;
+    FDQuery1.ParamByName('FlavorText').AsString := CardDetails.FlavorText;
+    FDQuery1.ParamByName('Power').AsString := CardDetails.Power;
+    FDQuery1.ParamByName('Toughness').AsString := CardDetails.Toughness;
+    FDQuery1.ParamByName('Loyalty').AsString := CardDetails.Loyalty;
+    FDQuery1.ParamByName('Rarity').AsString := CardDetails.Rarity;
+    FDQuery1.ParamByName('SetCode').AsString := CardDetails.SetCode;
+    FDQuery1.ParamByName('SetName').AsString := CardDetails.SetName;
+    FDQuery1.ParamByName('ReleasedAt').AsString := CardDetails.ReleasedAt;
+    FDQuery1.ParamByName('ImageUriSmall').AsString := CardDetails.ImageUris.Small;
+    FDQuery1.ParamByName('ImageUriNormal').AsString := CardDetails.ImageUris.Normal;
+    FDQuery1.ParamByName('ImageUriLarge').AsString := CardDetails.ImageUris.Large;
+    FDQuery1.ParamByName('ImageUriPng').AsString := CardDetails.ImageUris.PNG;
+    FDQuery1.ParamByName('Reserved').AsInteger := Integer(CardDetails.Reserved);
+    FDQuery1.ParamByName('Digital').AsInteger := Integer(CardDetails.Digital);
+    FDQuery1.ParamByName('FullArt').AsInteger := Integer(CardDetails.FullArt);
+    FDQuery1.ParamByName('Textless').AsInteger := Integer(CardDetails.Textless);
+    FDQuery1.ParamByName('StorySpotlight').AsInteger := Integer(CardDetails.StorySpotlight);
+    FDQuery1.ParamByName('Quantity').AsInteger := 1; // Default to 1
+    FDQuery1.ParamByName('PriceUsd').AsString := CardDetails.Prices.USD;
+    FDQuery1.ParamByName('PriceUsdFoil').AsString := CardDetails.Prices.USD_Foil;
+    FDQuery1.ParamByName('PriceEur').AsString := CardDetails.Prices.EUR;
+    FDQuery1.ParamByName('PriceTix').AsString := CardDetails.Prices.Tix;
+    FDQuery1.ExecSQL;
+
+    // Retrieve the CardID of the inserted record
+    CardID := FDConnection1.GetLastAutoGenValue('CardDetails');
+
+    // Insert into CardFaces
+    for var Face in CardDetails.CardFaces do
+    begin
+      FDQuery1.SQL.Text := 'INSERT INTO CardFaces (CardID, FaceName, ManaCost, TypeLine, OracleText, ' +
+        'Power, Toughness, Loyalty, ImageUriSmall, ImageUriNormal, ImageUriLarge) ' +
+        'VALUES (:CardID, :FaceName, :ManaCost, :TypeLine, :OracleText, :Power, :Toughness, ' +
+        ':Loyalty, :ImageUriSmall, :ImageUriNormal, :ImageUriLarge);';
+      FDQuery1.ParamByName('CardID').AsInteger := CardID;
+      FDQuery1.ParamByName('FaceName').AsString := Face.Name;
+      FDQuery1.ParamByName('ManaCost').AsString := Face.ManaCost;
+      FDQuery1.ParamByName('TypeLine').AsString := Face.TypeLine;
+      FDQuery1.ParamByName('OracleText').AsString := Face.OracleText;
+      FDQuery1.ParamByName('Power').AsString := Face.Power;
+      FDQuery1.ParamByName('Toughness').AsString := Face.Toughness;
+      FDQuery1.ParamByName('Loyalty').AsString := Face.Loyalty;
+      FDQuery1.ParamByName('ImageUriSmall').AsString := Face.ImageUris.Small;
+      FDQuery1.ParamByName('ImageUriNormal').AsString := Face.ImageUris.Normal;
+      FDQuery1.ParamByName('ImageUriLarge').AsString := Face.ImageUris.Large;
+      FDQuery1.ExecSQL;
+    end;
+
+    // Insert into Legalities
+    for var FormatName in LegalitiesArray do
+    begin
+      var Legality := GetLegalStatus(CardDetails.Legalities, FormatName);
+      if Legality <> '' then
+      begin
+        FDQuery1.SQL.Text := 'INSERT INTO Legalities (CardID, Format, Legality) ' +
+          'VALUES (:CardID, :Format, :Legality);';
+        FDQuery1.ParamByName('CardID').AsInteger := CardID;
+        FDQuery1.ParamByName('Format').AsString := FormatName;
+        FDQuery1.ParamByName('Legality').AsString := Legality;
+        FDQuery1.ExecSQL;
+      end;
+    end;
+
+    // Insert into Keywords
+    for var Keyword in CardDetails.Keywords do
+    begin
+      FDQuery1.SQL.Text := 'INSERT INTO Keywords (CardID, Keyword) VALUES (:CardID, :Keyword);';
+      FDQuery1.ParamByName('CardID').AsInteger := CardID;
+      FDQuery1.ParamByName('Keyword').AsString := Keyword;
+      FDQuery1.ExecSQL;
+    end;
+
+    FDConnection1.Commit;
+  except
+    on E: Exception do
+    begin
+      FDConnection1.Rollback;
+      LogError('Error saving card to database: ' + E.Message);
+      raise;
+    end;
+  end;
+end;
+
+function TDataModule1.CheckCardExists(const SFID: string): Boolean;
+begin
+  FDQuery1.SQL.Text := 'SELECT COUNT(*) FROM CardDetails WHERE SFID = :SFID;';
+  FDQuery1.ParamByName('SFID').AsString := SFID;
+  FDQuery1.Open;
+  try
+    Result := FDQuery1.Fields[0].AsInteger > 0;
+  finally
+    FDQuery1.Close;
   end;
 end;
 
