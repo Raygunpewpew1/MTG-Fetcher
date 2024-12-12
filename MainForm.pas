@@ -1,4 +1,11 @@
-﻿//I really need to move the app data to relative paths/ the images, json data etc.
+﻿{ I need to move the app data to relative paths/ the images, json data etc.
+ https://api.scryfall.com/symbology is what im looking at to fetch symbols
+ instead of having them local then save to local/cache for less api requests
+ Need to get away from converting png's to Base64
+
+ TODO Organize code, UI improvments
+
+ }
 
 
 unit MainForm;
@@ -50,10 +57,10 @@ type
     CountLabel: TLabel;
     ButtonNextPage: TButton;
     StyleBook1: TStyleBook;
-    LayoutMain: TLayout; // Main layout container
-    LayoutControls: TLayout; // Layout for controls like ComboBox, Edit, Button
+    LayoutMain: TLayout; // Main layout
+    LayoutControls: TLayout; // Layout for controls
     LayoutContent: TLayout; // Layout for ListView and WebBrowser
-    LayoutButtons: TLayout; // Layout for buttons like Save, Collection, etc.
+    LayoutButtons: TLayout; // Layout for buttons
     SplitterMain: TSplitter;
     Switch1: TSwitch;
     DisplayUniq: TLabel;
@@ -78,12 +85,11 @@ type
     HasMorePages: Boolean;
     SearchTerm: string;
     HttpClient: THTTPClient;
-    FCardDetailsObject: TCardDetailsObject; // Private field
-    CardTitle: string; // Private field
+    FCardDetailsObject: TCardDetailsObject;
+    CardTitle: string;
     CardDataList: TList<TCardDetails>;
-    // Encapsulated within the form
-    CardCount: Integer; // Encapsulated within the form
-    AppClose: Boolean; // Encapsulated within the form
+    CardCount: Integer;
+    AppClose: Boolean;
     FScryfallAPI: TScryfallAPI; // Instance of TScryfallAPI
 
     BrIsLoaded: Boolean;
@@ -163,6 +169,21 @@ begin
       ComboBox1.Items.AddStrings(Catalogs[CatalogKeywordAbilities].Data);
       ComboBox1.ItemIndex := 0;
     end;
+
+    {Other Catalogs to do
+    CatalogCreatureTypes,
+    CatalogPlaneswalkerTypes,
+    CatalogArtifactTypes,
+    CatalogEnchantmentTypes,
+    CatalogLandTypes,
+    CatalogSpellTypes,
+    CatalogPowers,
+    CatalogToughnesses,
+    CatalogLoyalties,
+    CatalogWatermarks,
+    CatalogKeywordAbilities,
+    CatalogKeywordActions,
+    CatalogAbilityWords}
 
     // ShowMessage('Keyword Abilities: ' + String.Join(', ', Catalogs[CatalogKeywordAbilities].Data));
   finally
@@ -257,14 +278,12 @@ end;
 
 procedure TForm1.ListViewCardsItemClick(const Sender: TObject;
   const AItem: TListViewItem);
-// var
-// CardDetailsObject: TCardDetailsObject;
+
 begin
   if Assigned(AItem) and Assigned(AItem.TagObject) and
     (AItem.TagObject is TCardDetailsObject) then
   begin
-    // Retrieve the card details from the item's TagObject
-    // CardDetailsObject := TCardDetailsObject(AItem.TagObject);
+
     // Call ShowCardDetails with the selected card details
     ShowCardDetails(AItem);
   end
@@ -355,7 +374,7 @@ begin
   CurrentPage := 1;
   HasMorePages := False;
 
-  // Show the progress bar
+  // Show the progress bar for giggles
   ProgressBar1.Visible := True;
   ProgressBar1.Value := 0;
 
@@ -407,7 +426,6 @@ begin
       TThread.Synchronize(nil,
         procedure
         begin
-          // Hide the progress bar when done
           ProgressBar1.Visible := False;
 
           try
@@ -456,7 +474,7 @@ begin
           end;
         end);
 
-      // Enable the button
+      // Enable the buttons
       LayoutControls.Enabled := True;
     end);
 end;
@@ -501,10 +519,10 @@ begin
       SelectedCard := CardDetailsObject.CardDetails;
       FCardDetailsObject := CardDetailsObject;
 
-      // Enable the high-res button
-      ShowHighResButton.Enabled := SelectedCard.ImageUris.Normal <> '';
-      ShowHighResButton.TagString := SelectedCard.ImageUris.Normal;
-      CardTitle := SelectedCard.CardName;
+
+//      ShowHighResButton.Enabled := SelectedCard.ImageUris.Normal <> '';
+//      ShowHighResButton.TagString := SelectedCard.ImageUris.Normal;
+//      CardTitle := SelectedCard.CardName;
 
       // Display card details immediately without set details
       // DisplayCardInBrowser(SelectedCard, []);
@@ -564,7 +582,7 @@ begin
   try
     // Load the HTML template
     Template := LoadTemplate(SCard_templateHtml);
-    // Ensure this file exists and includes proper placeholders
+
 
     // Initialize the replacements dictionary
     Replacements := TDictionary<string, string>.Create;
@@ -577,6 +595,7 @@ begin
       AddBadgesReplacements(Replacements, CardDetails);
       // FullArt, Promo, Reserved badges
       AddKeywordsReplacement(Replacements, CardDetails); // Keywords section
+      //Will add more
 
       // Perform the replacements in the template
       for var Key in Replacements.Keys do

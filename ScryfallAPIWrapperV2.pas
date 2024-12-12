@@ -414,6 +414,12 @@ var
   Endpoint: string;
   JsonResponse: TJsonObject;
 begin
+
+{exact 	String 		The exact card name to search for, case insenstive.
+fuzzy 	String 		A fuzzy card name to search for.
+See https://scryfall.com/docs/api/cards/named }
+
+
   if Fuzzy then
     Endpoint := Format('%s?fuzzy=%s',
       [EndpointNamed, TNetEncoding.URL.Encode(CardName)])
