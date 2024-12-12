@@ -76,6 +76,16 @@ begin
   end;
 end;
 
+
+function GetSafeStringField(const Obj: TJsonObject;
+    const FieldName: string): string;
+  begin
+    if Obj.Contains(FieldName) and (Obj.Types[FieldName] = jdtString) then
+      Result := Obj.S[FieldName]
+    else
+      Result := ''; // Return an empty string
+  end;
+
 procedure ParseImageUris(const JsonObj: TJsonObject; out ImageUris: TImageUris);
 var
   ImageUrisObj: TJsonObject;
@@ -84,24 +94,32 @@ begin
   then
   begin
     ImageUrisObj := JsonObj.O[FieldImageUris];
-    if ImageUrisObj.Contains(FieldSmall) and
-      (ImageUrisObj.Types[FieldSmall] = jdtString) then
-      ImageUris.Small := ImageUrisObj.S[FieldSmall];
-    if ImageUrisObj.Contains(FieldNormal) and
-      (ImageUrisObj.Types[FieldNormal] = jdtString) then
-      ImageUris.Normal := ImageUrisObj.S[FieldNormal];
-    if ImageUrisObj.Contains(FieldLarge) and
-      (ImageUrisObj.Types[FieldLarge] = jdtString) then
-      ImageUris.Large := ImageUrisObj.S[FieldLarge];
-    if ImageUrisObj.Contains(FieldPng) and (ImageUrisObj.Types[FieldPng] = jdtString)
-    then
-      ImageUris.PNG := ImageUrisObj.S[FieldPng];
-    if ImageUrisObj.Contains(FieldBorderCrop) and
-      (ImageUrisObj.Types[FieldBorderCrop] = jdtString) then
-      ImageUris.border_crop := ImageUrisObj.S[FieldBorderCrop];
-    if ImageUrisObj.Contains(FieldArtCrop) and
-      (ImageUrisObj.Types[FieldArtCrop] = jdtString) then
-      ImageUris.art_crop := ImageUrisObj.S[FieldArtCrop];
+
+     ImageUris.Small :=  GetSafeStringField(ImageUrisObj,FieldSmall);
+     ImageUris.Normal :=  GetSafeStringField(ImageUrisObj,FieldNormal);
+     ImageUris.Large :=  GetSafeStringField(ImageUrisObj,FieldLarge);
+     ImageUris.PNG := GetSafeStringField(ImageUrisObj,FieldPng);
+     ImageUris.Border_crop := GetSafeStringField(ImageUrisObj,FieldBorderCrop);
+     ImageUris.Art_crop := GetSafeStringField(ImageUrisObj,FieldArtCrop);
+
+//    if ImageUrisObj.Contains(FieldSmall) and
+//      (ImageUrisObj.Types[FieldSmall] = jdtString) then
+//      ImageUris.Small := ImageUrisObj.S[FieldSmall];
+//    if ImageUrisObj.Contains(FieldNormal) and
+//      (ImageUrisObj.Types[FieldNormal] = jdtString) then
+//      ImageUris.Normal := ImageUrisObj.S[FieldNormal];
+//    if ImageUrisObj.Contains(FieldLarge) and
+//      (ImageUrisObj.Types[FieldLarge] = jdtString) then
+//      ImageUris.Large := ImageUrisObj.S[FieldLarge];
+//    if ImageUrisObj.Contains(FieldPng) and (ImageUrisObj.Types[FieldPng] = jdtString)
+//    then
+//      ImageUris.PNG := ImageUrisObj.S[FieldPng];
+//    if ImageUrisObj.Contains(FieldBorderCrop) and
+//      (ImageUrisObj.Types[FieldBorderCrop] = jdtString) then
+//      ImageUris.border_crop := ImageUrisObj.S[FieldBorderCrop];
+//    if ImageUrisObj.Contains(FieldArtCrop) and
+//      (ImageUrisObj.Types[FieldArtCrop] = jdtString) then
+//      ImageUris.art_crop := ImageUrisObj.S[FieldArtCrop];
   end
   else
     ImageUris := Default (TImageUris); // Default values if not found or invalid
@@ -111,23 +129,13 @@ procedure ParseLegalities(const JsonObj: TJsonObject;
   out Legalities: TCardLegalities);
 var
   LegalitiesObj: TJsonObject;
-
-  function GetSafeStringField(const Obj: TJsonObject;
-    const FieldName: string): string;
-  begin
-    if Obj.Contains(FieldName) and (Obj.Types[FieldName] = jdtString) then
-      Result := Obj.S[FieldName]
-    else
-      Result := ''; // Return an empty string if the field is missing or invalid
-  end;
-
 begin
   if JsonObj.Contains(FieldLegalities) and (JsonObj.Types[FieldLegalities] = jdtObject)
   then
   begin
     LegalitiesObj := JsonObj.O[FieldLegalities];
 
-    // Safely extract all legalities
+
     Legalities.Standard := GetSafeStringField(LegalitiesObj, FieldStandard);
     Legalities.Pioneer := GetSafeStringField(LegalitiesObj, FieldPioneer);
     Legalities.Modern := GetSafeStringField(LegalitiesObj, FieldModern);
@@ -160,15 +168,20 @@ begin
   begin
     PricesObj := JsonObj.O[FieldPrices];
 
-    if PricesObj.Contains(FieldUsd) and (PricesObj.Types[FieldUsd] = jdtString) then
-      Prices.USD := PricesObj.S[FieldUsd];
-    if PricesObj.Contains(FieldUsdFoil) and
-      (PricesObj.Types[FieldUsdFoil] = jdtString) then
-      Prices.USD_Foil := PricesObj.S[FieldUsdFoil];
-    if PricesObj.Contains(FieldEur) and (PricesObj.Types[FieldEur] = jdtString) then
-      Prices.EUR := PricesObj.S[FieldEur];
-    if PricesObj.Contains(FieldTix) and (PricesObj.Types[FieldTix] = jdtString) then
-      Prices.Tix := PricesObj.S[FieldTix];
+     Prices.USD := GetSafeStringField(PricesObj,FieldUsd);
+     Prices.USD_Foil := GetSafeStringField(PricesObj,FieldUsdFoil);
+     Prices.EUR := GetSafeStringField(PricesObj,FieldEur);
+     Prices.Tix := GetSafeStringField(PricesObj,FieldTix);
+
+//    if PricesObj.Contains(FieldUsd) and (PricesObj.Types[FieldUsd] = jdtString) then
+//      Prices.USD := PricesObj.S[FieldUsd];
+//    if PricesObj.Contains(FieldUsdFoil) and
+//      (PricesObj.Types[FieldUsdFoil] = jdtString) then
+//      Prices.USD_Foil := PricesObj.S[FieldUsdFoil];
+//    if PricesObj.Contains(FieldEur) and (PricesObj.Types[FieldEur] = jdtString) then
+//      Prices.EUR := PricesObj.S[FieldEur];
+//    if PricesObj.Contains(FieldTix) and (PricesObj.Types[FieldTix] = jdtString) then
+//      Prices.Tix := PricesObj.S[FieldTix];
   end
   else
     Prices := Default (TCardPrices);
@@ -193,37 +206,47 @@ begin
         var
         FaceObj := FacesArray.O[I];
 
-        if FaceObj.Contains(FieldName) and (FaceObj.Types[FieldName] = jdtString) then
-          CardFaces[I].Name := FaceObj.S[FieldName];
-
-        if FaceObj.Contains(FieldManaCost) and
-          (FaceObj.Types[FieldManaCost] = jdtString) then
-          CardFaces[I].ManaCost := FaceObj.S[FieldManaCost];
-
-        if FaceObj.Contains(FieldTypeLine) and
-          (FaceObj.Types[FieldTypeLine] = jdtString) then
-          CardFaces[I].TypeLine := FaceObj.S[FieldTypeLine];
-
-        if FaceObj.Contains(FieldOracleText) and
-          (FaceObj.Types[FieldOracleText] = jdtString) then
-          CardFaces[I].OracleText := FaceObj.S[FieldOracleText];
-
-        if FaceObj.Contains(FieldPower) and (FaceObj.Types[FieldPower] = jdtString)
-        then
-          CardFaces[I].Power := FaceObj.S[FieldPower];
-
-        if FaceObj.Contains(FieldToughness) and
-          (FaceObj.Types[FieldToughness] = jdtString) then
-          CardFaces[I].Toughness := FaceObj.S[FieldToughness];
-
-         if FaceObj.Contains(FieldFlavorText) and
-          (FaceObj.Types[FieldFlavorText] = jdtString) then
-          CardFaces[I].FlavorText:= FaceObj.S[FieldFlavorText];
+         CardFaces[I].Name := GetSafeStringField(FaceObj, FieldName);
+         CardFaces[I].ManaCost := GetSafeStringField(FaceObj,FieldManaCost);
+         CardFaces[I].TypeLine := GetSafeStringField(FaceObj,FieldTypeLine);
+         CardFaces[I].OracleText := GetSafeStringField(FaceObj,FieldOracleText);
+         CardFaces[I].Power := GetSafeStringField(FaceObj,FieldPower);
+         CardFaces[I].Toughness := GetSafeStringField(FaceObj,FieldToughness);
+         CardFaces[I].FlavorText:= GetSafeStringField(FaceObj,FieldFlavorText);
+         CardFaces[I].Loyalty:= GetSafeStringField(FaceObj,FieldCardFaceLoyalty);
 
 
-         if FaceObj.Contains(FieldCardFaceLoyalty) and
-          (FaceObj.Types[FieldCardFaceLoyalty] = jdtString) then
-          CardFaces[I].Loyalty:= FaceObj.S[FieldCardFaceLoyalty];
+//        if FaceObj.Contains(FieldName) and (FaceObj.Types[FieldName] = jdtString) then
+//          CardFaces[I].Name := FaceObj.S[FieldName];
+
+//        if FaceObj.Contains(FieldManaCost) and
+//          (FaceObj.Types[FieldManaCost] = jdtString) then
+//          CardFaces[I].ManaCost := FaceObj.S[FieldManaCost];
+
+//        if FaceObj.Contains(FieldTypeLine) and
+//          (FaceObj.Types[FieldTypeLine] = jdtString) then
+//          CardFaces[I].TypeLine := FaceObj.S[FieldTypeLine];
+
+//        if FaceObj.Contains(FieldOracleText) and
+//          (FaceObj.Types[FieldOracleText] = jdtString) then
+//          CardFaces[I].OracleText := FaceObj.S[FieldOracleText];
+
+//        if FaceObj.Contains(FieldPower) and (FaceObj.Types[FieldPower] = jdtString)
+//        then
+//          CardFaces[I].Power := FaceObj.S[FieldPower];
+
+//        if FaceObj.Contains(FieldToughness) and
+//          (FaceObj.Types[FieldToughness] = jdtString) then
+//          CardFaces[I].Toughness := FaceObj.S[FieldToughness];
+//
+//         if FaceObj.Contains(FieldFlavorText) and
+//          (FaceObj.Types[FieldFlavorText] = jdtString) then
+//          CardFaces[I].FlavorText:= FaceObj.S[FieldFlavorText];
+
+
+//         if FaceObj.Contains(FieldCardFaceLoyalty) and
+//          (FaceObj.Types[FieldCardFaceLoyalty] = jdtString) then
+//          CardFaces[I].Loyalty:= FaceObj.S[FieldCardFaceLoyalty];
 
 
 

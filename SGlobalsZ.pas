@@ -24,8 +24,8 @@ type
     Large: string;
     BackFace: string;
     PNG: string;
-    border_crop: string;
-    art_crop: string;
+    Border_crop: string;
+    Art_crop: string;
   end;
 
   // Legalities for different formats
