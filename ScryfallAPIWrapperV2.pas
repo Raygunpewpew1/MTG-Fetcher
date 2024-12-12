@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.NetEncoding, System.Threading, JsonDataObjects, SGlobalsZ,
   System.Net.HttpClient,
-  WrapperHelper, APIConstants,fmx.Dialogs;
+  WrapperHelper, APIConstants;
 
 type
   // Custom exception class for Scryfall API errors

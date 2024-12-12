@@ -1,4 +1,7 @@
-﻿unit MainForm;
+﻿//I really need to move the app data to relative paths/ the images, json data etc.
+
+
+unit MainForm;
 
 interface
 
