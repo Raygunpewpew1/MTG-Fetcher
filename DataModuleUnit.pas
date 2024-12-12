@@ -3,11 +3,14 @@ unit DataModuleUnit;
 interface
 
 uses
-  System.SysUtils, System.Classes, FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DApt, FireDAC.DatS, Data.DB,
-  SGlobalsZ, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf,
-  FireDAC.Stan.Def, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef, MLogic,
+  System.SysUtils, System.Classes, FireDAC.Comp.Client, FireDAC.Stan.Param,
+    FireDAC.DApt, FireDAC.DatS, Data.DB,
+  SGlobalsZ, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+    FireDAC.UI.Intf, FireDAC.Phys.Intf,
+  FireDAC.Stan.Def, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
+    MLogic,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.FMXUI.Wait, FireDAC.DApt.Intf,
-  FireDAC.Comp.DataSet,WrapperHelper;
+  FireDAC.Comp.DataSet, WrapperHelper;
 
 type
   TDataModule1 = class(TDataModule)
@@ -15,7 +18,6 @@ type
     FDQuery1: TFDQuery;
 
   private
-
 
   public
     procedure SetupDatabase(const DBPath: string);
@@ -27,14 +29,11 @@ type
 var
   DataModule1: TDataModule1;
 
-
 implementation
 
 {%CLASSGROUP 'FMX.Controls.TControl'}
 
 {$R *.dfm}
-
-
 
 procedure TDataModule1.SetupDatabase(const DBPath: string);
 begin
@@ -127,18 +126,23 @@ begin
     FDQuery1.ParamByName('SetCode').AsString := CardDetails.SetCode;
     FDQuery1.ParamByName('SetName').AsString := CardDetails.SetName;
     FDQuery1.ParamByName('ReleasedAt').AsString := CardDetails.ReleasedAt;
-    FDQuery1.ParamByName('ImageUriSmall').AsString := CardDetails.ImageUris.Small;
-    FDQuery1.ParamByName('ImageUriNormal').AsString := CardDetails.ImageUris.Normal;
-    FDQuery1.ParamByName('ImageUriLarge').AsString := CardDetails.ImageUris.Large;
+    FDQuery1.ParamByName('ImageUriSmall').AsString :=
+      CardDetails.ImageUris.Small;
+    FDQuery1.ParamByName('ImageUriNormal').AsString :=
+      CardDetails.ImageUris.Normal;
+    FDQuery1.ParamByName('ImageUriLarge').AsString :=
+      CardDetails.ImageUris.Large;
     FDQuery1.ParamByName('ImageUriPng').AsString := CardDetails.ImageUris.PNG;
     FDQuery1.ParamByName('Reserved').AsInteger := Integer(CardDetails.Reserved);
     FDQuery1.ParamByName('Digital').AsInteger := Integer(CardDetails.Digital);
     FDQuery1.ParamByName('FullArt').AsInteger := Integer(CardDetails.FullArt);
     FDQuery1.ParamByName('Textless').AsInteger := Integer(CardDetails.Textless);
-    FDQuery1.ParamByName('StorySpotlight').AsInteger := Integer(CardDetails.StorySpotlight);
+    FDQuery1.ParamByName('StorySpotlight').AsInteger :=
+      Integer(CardDetails.StorySpotlight);
     FDQuery1.ParamByName('Quantity').AsInteger := 1; // Default to 1
     FDQuery1.ParamByName('PriceUsd').AsString := CardDetails.Prices.USD;
-    FDQuery1.ParamByName('PriceUsdFoil').AsString := CardDetails.Prices.USD_Foil;
+    FDQuery1.ParamByName('PriceUsdFoil').AsString :=
+      CardDetails.Prices.USD_Foil;
     FDQuery1.ParamByName('PriceEur').AsString := CardDetails.Prices.EUR;
     FDQuery1.ParamByName('PriceTix').AsString := CardDetails.Prices.Tix;
     FDQuery1.ExecSQL;
@@ -149,7 +153,8 @@ begin
     // Insert into CardFaces
     for var Face in CardDetails.CardFaces do
     begin
-      FDQuery1.SQL.Text := 'INSERT INTO CardFaces (CardID, FaceName, ManaCost, TypeLine, OracleText, ' +
+      FDQuery1.SQL.Text :=
+        'INSERT INTO CardFaces (CardID, FaceName, ManaCost, TypeLine, OracleText, ' +
         'Power, Toughness, Loyalty, ImageUriSmall, ImageUriNormal, ImageUriLarge) ' +
         'VALUES (:CardID, :FaceName, :ManaCost, :TypeLine, :OracleText, :Power, :Toughness, ' +
         ':Loyalty, :ImageUriSmall, :ImageUriNormal, :ImageUriLarge);';
@@ -173,7 +178,8 @@ begin
       var Legality := GetLegalStatus(CardDetails.Legalities, FormatName);
       if Legality <> '' then
       begin
-        FDQuery1.SQL.Text := 'INSERT INTO Legalities (CardID, Format, Legality) ' +
+        FDQuery1.SQL.Text := 'INSERT INTO Legalities (CardID, Format, Legality) '
+          +
           'VALUES (:CardID, :Format, :Legality);';
         FDQuery1.ParamByName('CardID').AsInteger := CardID;
         FDQuery1.ParamByName('Format').AsString := FormatName;
@@ -185,7 +191,8 @@ begin
     // Insert into Keywords
     for var Keyword in CardDetails.Keywords do
     begin
-      FDQuery1.SQL.Text := 'INSERT INTO Keywords (CardID, Keyword) VALUES (:CardID, :Keyword);';
+      FDQuery1.SQL.Text :=
+        'INSERT INTO Keywords (CardID, Keyword) VALUES (:CardID, :Keyword);';
       FDQuery1.ParamByName('CardID').AsInteger := CardID;
       FDQuery1.ParamByName('Keyword').AsString := Keyword;
       FDQuery1.ExecSQL;
