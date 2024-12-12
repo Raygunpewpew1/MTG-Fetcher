@@ -25,17 +25,43 @@ function FormatLegalityStatus(const LegalityStatus: string): string;
 implementation
 
 uses
-  System.NetEncoding, MLogic; // Include units you need
+  System.NetEncoding, MLogic;
 
-// Implement all the helper methods here, exactly as they were refactored earlier
 
+ {It took me hours to get this correct..}
 procedure AddCoreReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
 var
-  FacesHtml: string;
+  FacesHtml, ProcessedOracleText: string;
+
+  function ProcessOracleText(const OracleText: string): string;
+  var
+    Parts: TArray<string>;
+    Part: string;
+  begin
+    Result := ''; // Initialize result
+
+    // Parse the Oracle text into parts (symbols and plain text)
+    Parts := ParseTextWithSymbolsManual(OracleText);
+
+    for Part in Parts do
+    begin
+      if Part.StartsWith('{') and Part.EndsWith('}') then
+      begin
+        // Handle mana symbols
+        Result := Result + ReplaceManaSymbolsWithImages(Part);
+      end
+      else
+      begin
+        // Handle plain text with line breaks replaced by <br>'s / this works but ugly
+        Result := Result + StringReplace(TNetEncoding.HTML.Encode(Part), #10, '<br><br>', [rfReplaceAll]);
+      end;
+    end;
+  end;
+
 begin
-if Length(CardDetails.CardFaces) = 0 then
-      Replacements.AddOrSetValue('{{FlavorText}}',
+  if Length(CardDetails.CardFaces) = 0 then
+    Replacements.AddOrSetValue('{{FlavorText}}',
       TNetEncoding.HTML.Encode(CardDetails.FlavorText));
 
   Replacements.AddOrSetValue('{{CardName}}', TNetEncoding.HTML.Encode(CardDetails.CardName));
@@ -59,6 +85,9 @@ if Length(CardDetails.CardFaces) = 0 then
 
     for var Face in CardDetails.CardFaces do
     begin
+      // Process Oracle Text for the face
+      ProcessedOracleText := ProcessOracleText(Face.OracleText);
+
       FacesHtml := FacesHtml + Format(
         '<div class="card-face-details">' +
         '<p><strong>Face Name:</strong> %s</p>' +
@@ -66,31 +95,27 @@ if Length(CardDetails.CardFaces) = 0 then
         '<p><strong>Type Line:</strong> %s</p>' +
         '<p><strong>Oracle Text:</strong> %s</p>' +
         '<p><strong>Power/Toughness:</strong> %s/%s</p>' +
-        '<p><strong></strong> %s</p>' +
+        '<p><strong>Flavor Text:</strong> %s</p>' +
         '</div>',
         [
           TNetEncoding.HTML.Encode(Face.Name),
           ReplaceManaSymbolsWithImages(Face.ManaCost),
           TNetEncoding.HTML.Encode(Face.TypeLine),
-          ReplaceManaSymbolsWithImages(Face.OracleText),
+          ProcessedOracleText,
           TNetEncoding.HTML.Encode(Face.Power),
           TNetEncoding.HTML.Encode(Face.Toughness),
           TNetEncoding.HTML.Encode(Face.FlavorText)
-
-
         ]
       );
-   //   Replacements.AddOrSetValue('{{FlavorText}}', TNetEncoding.HTML.Encode(Face.FlavorText));
     end;
-
-
 
     Replacements.AddOrSetValue('{{OracleText}}', FacesHtml); // Replace OracleText with faces
   end
   else
   begin
     // Single-faced card
-    Replacements.AddOrSetValue('{{OracleText}}', ReplaceManaSymbolsWithImages(CardDetails.OracleText));
+    ProcessedOracleText := ProcessOracleText(CardDetails.OracleText);
+    Replacements.AddOrSetValue('{{OracleText}}', ProcessedOracleText);
   end;
 
   // Handle Power/Toughness or Loyalty
@@ -105,7 +130,8 @@ begin
   FlipIndicatorHtml := ''; // Default empty
 
   if (CardDetails.Layout.ToLower = 'transform') or
-    (CardDetails.Layout.ToLower = 'modal_dfc') or (CardDetails.Layout.ToLower = 'reversible_card') then
+    (CardDetails.Layout.ToLower = 'modal_dfc') or
+    (CardDetails.Layout.ToLower = 'reversible_card') then
   begin
     if Length(CardDetails.CardFaces) > 1 then
     begin
@@ -214,10 +240,10 @@ begin
   else
     Replacements.Add('{{Reserved}}', '');
 
-//  if CardDetails.StorySpotlight then
-//    Replacements.Add('{{StorySpotlight}}', 'Yes')
-//  else
-//    Replacements.Add('{{StorySpotlight}}', 'No');
+  // if CardDetails.StorySpotlight then
+  // Replacements.Add('{{StorySpotlight}}', 'Yes')
+  // else
+  // Replacements.Add('{{StorySpotlight}}', 'No');
 end;
 
 procedure AddKeywordsReplacement(Replacements: TDictionary<string, string>;

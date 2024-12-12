@@ -270,7 +270,7 @@ begin
     begin
 {$IF DEFINED(MSWINDOWS)}
       CardDetails.TypeLine := TEncoding.UTF8.GetString
-        (TEncoding.ANSI.GetBytes(JsonObj.S[FieldTypeLine]));
+        (TEncoding.ANSI.GetBytes(JsonObj.S[FieldTypeLine]));     // Still not sure this is needed
 {$ELSE}
       CardDetails.TypeLine := JsonObj.S[FieldTypeLine];
 {$ENDIF}
@@ -304,6 +304,8 @@ begin
       CardDetails.OracleText := JsonObj.S[FieldOracleText];
 {$ENDIF}
     end;
+
+
 
     if JsonObj.Contains(FieldKeywords) and
       (JsonObj.Types[FieldKeywords] = jdtArray) then

@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.NetEncoding, System.Threading, JsonDataObjects, SGlobalsZ,
   System.Net.HttpClient,
-  WrapperHelper, APIConstants;
+  WrapperHelper, APIConstants,fmx.Dialogs;
 
 type
   // Custom exception class for Scryfall API errors
@@ -99,6 +99,7 @@ begin
         if StatusCode = 200 then
         begin
           Response := ResponseStream.DataString;
+       
           //LogError( Response );
           try
             Result := TJsonObject.Parse(Response) as TJsonObject;

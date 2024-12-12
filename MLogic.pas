@@ -393,22 +393,26 @@ begin
       ImageBase64 := ImageToBase64(ImagePath);
       if ImageBase64 = '' then
         Continue; // Skip if conversion failed
+      ImageMimeType := 'image/png';
 
-      // Determine the MIME type based on the file extension
-      if ImagePath.EndsWith('.png', True) then
-        ImageMimeType := 'image/png'
-      else if ImagePath.EndsWith('.jpg', True) or
-        ImagePath.EndsWith('.jpeg', True) then
-        ImageMimeType := 'image/jpeg'
-      else if ImagePath.EndsWith('.gif', True) then
-        ImageMimeType := 'image/gif'
-      else
-        ImageMimeType := 'application/octet-stream'; // Default MIME type
+//      // Determine the MIME type
+//      if ImagePath.EndsWith('.png', True) then
+//        ImageMimeType := 'image/png'
+//      else if ImagePath.EndsWith('.jpg', True) or
+//        ImagePath.EndsWith('.jpeg', True) then
+//        ImageMimeType := 'image/jpeg'
+//      else if ImagePath.EndsWith('.gif', True) then
+//        ImageMimeType := 'image/gif'
+//      else
+//        ImageMimeType := 'application/octet-stream'; // Default MIME type
 
-      // Construct the data URI
+
+        // Remove any stray <br> tags or unwanted characters
+      //ImagePath := ImagePath.Replace('<br>', '').Replace(#13#10, '').Replace(#10, '').Replace(#13, '');
+
       ImagePath := Format('data:%s;base64,%s', [ImageMimeType, ImageBase64]);
 
-      // Append the <img> tag with improved vertical alignment
+      // Append the <img> tag
       Result := Result +
         Format('<img src="%s" alt="%s" style="display:inline-block; width:16px; height:16px; vertical-align:middle; margin:0 2px;">',
         [ImagePath, TNetEncoding.HTML.Encode(Part)]);

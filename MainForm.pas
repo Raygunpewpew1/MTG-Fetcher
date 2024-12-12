@@ -214,7 +214,7 @@ begin
     ComboBoxRarity.ItemIndex := 0;
   end;
 
-  DelayTimer.Enabled := True;
+ DelayTimer.Enabled := True;
   // Form1.StyleBook := HighResForm.HighResImageForm.StyleBook1;
 
   // AdjustLayout;
