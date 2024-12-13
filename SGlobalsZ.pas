@@ -22,7 +22,7 @@ type
     Small: string;
     Normal: string;
     Large: string;
-    BackFace: string;
+    BackFace: string;  //added for flip cards
     PNG: string;
     Border_crop: string;
     Art_crop: string;
@@ -117,6 +117,7 @@ type
     FullArt: Boolean;                   // If the card is a full-art card
     Textless: Boolean;                  // If the card is textless
     StorySpotlight: Boolean;            // If the card is part of a story spotlight
+    Games: TArray<string>;              // If the card is available in paper,arena etc
 
     // Additional Card Faces (for transform or modal cards)
     CardFaces: TArray<TCardFace>;       // Array of card faces (if applicable)

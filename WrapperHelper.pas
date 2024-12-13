@@ -240,6 +240,7 @@ begin
   //SetDetails.SFID := JsonObj.S[FieldID];
 
   SetDetails.SFID := GetSafeStringField(JsonObj,FieldID);
+  SetDetails.Name := GetSafeStringField(JsonObj,FieldName);
   SetDetails.Code := GetSafeStringField(JsonObj,FieldCode);
   SetDetails.ReleaseDate := GetSafeStringField(JsonObj,FieldReleasedAt);
   SetDetails.SetType := GetSafeStringField(JsonObj,FieldSetType);
@@ -306,6 +307,20 @@ begin
       CardDetails.OracleText := JsonObj.S[FieldOracleText];
 {$ENDIF}
     end;
+
+
+        if JsonObj.Contains(FeildGames) and
+      (JsonObj.Types[FeildGames] = jdtArray) then
+    begin
+      var
+      GamesArray := JsonObj.A[FeildGames];
+      SetLength(CardDetails.Games,GamesArray.Count);
+      for var I := 0 to GamesArray.Count - 1 do
+        if GamesArray.Types[I] = jdtString then
+         CardDetails.Games[I] := GamesArray.S[I]
+    end
+    else
+    SetLength(CardDetails.Games,0);
 
 
 

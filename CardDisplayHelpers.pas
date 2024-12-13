@@ -131,7 +131,8 @@ begin
 
   if (CardDetails.Layout.ToLower = 'transform') or
     (CardDetails.Layout.ToLower = 'modal_dfc') or
-    (CardDetails.Layout.ToLower = 'reversible_card') then
+    (CardDetails.Layout.ToLower = 'reversible_card')
+     then
   begin
     if Length(CardDetails.CardFaces) > 1 then
     begin

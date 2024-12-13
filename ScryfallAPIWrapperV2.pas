@@ -98,7 +98,7 @@ begin
     begin
       // Clear previous response before retry
       ResponseStream.Clear;
-
+      LogStuff(URL);
       try
         StatusCode := Client.Get(URL, ResponseStream).StatusCode;
 
@@ -412,7 +412,7 @@ end;
   JsonResponse := ExecuteRequest(SearchUrl);
   try
     Result := ParseSearchResult(JsonResponse);
-    FCache.Add(CacheKey, JsonResponse.Clone as TJsonObject);  //need to start using clone
+    FCache.Add(CacheKey, JsonResponse.Clone as TJsonObject);  //This needs to change
   finally
     JsonResponse.Free;
     LogStuff(SearchUrl);

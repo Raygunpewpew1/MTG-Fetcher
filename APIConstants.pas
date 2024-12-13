@@ -72,6 +72,7 @@ const
   FieldFullArt = 'full_art';
   FieldTextless = 'textless';
   FieldStorySpotlight = 'story_spotlight';
+  FeildGames = 'games';
   FieldImageUris = 'image_uris';
   FieldSmall = 'small';
   FieldNormal = 'normal';
