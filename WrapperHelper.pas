@@ -59,7 +59,7 @@ begin
     {$IF DEFINED(ANDROID)}
     LogFilePath := TPath.Combine(TPath.GetSharedDownloadsPath, 'application_log.txt');
     {$ELSEIF DEFINED(MSWINDOWS)}
-    LogFilePath := TPath.Combine(TPath.GetDocumentsPath, 'application_log.txt');
+    LogFilePath := TPath.Combine(TPath.GetAppPath, 'application_log.txt');
     {$ENDIF}
 
   //  TMonitor.Enter(TObject(LogFilePath));

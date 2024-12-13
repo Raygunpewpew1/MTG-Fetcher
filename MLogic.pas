@@ -272,7 +272,7 @@ begin
   end;
 end;
 
-procedure InitializeManaSymbolMap;
+procedure InitializeManaSymbolMap;  //need to change to other Symbol method to aviod this
 const
   // Static mana symbols
   StaticSymbols: array [0 .. 26] of string = (
