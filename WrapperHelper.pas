@@ -8,7 +8,7 @@ uses
 
 function ConstructSearchUrl(const Query, SetCode, Rarity, Colors: string;
   Fuzzy, Unique: Boolean; Page: Integer): string;
-procedure LogError(const Msg: string);
+procedure LogStuff(const Msg: string);
 procedure ParseImageUris(const JsonObj: TJsonObject; out ImageUris: TImageUris);
 procedure ParseLegalities(const JsonObj: TJsonObject;
   out Legalities: TCardLegalities);
@@ -50,26 +50,28 @@ begin
   end;
 end;
 
-procedure LogError(const Msg: string);
+procedure LogStuff(const Msg: string);
 var
   LogFilePath: string;
   LogFile: TStreamWriter;
 begin
   try
-{$IF DEFINED(ANDROID)}
-    // Save the log to the public "Downloads" folder
-    LogFilePath := TPath.Combine(TPath.GetSharedDownloadsPath,
-      'application_log.txt');
-{$ELSEIF DEFINED(MSWINDOWS)}
-    LogFilePath := TPath.Combine(TPath.GetDocumentsPath, LogFileName);
-{$ENDIF}
-    // Write to the log file
-    LogFile := TStreamWriter.Create(LogFilePath, True, TEncoding.UTF8);
+    {$IF DEFINED(ANDROID)}
+    LogFilePath := TPath.Combine(TPath.GetSharedDownloadsPath, 'application_log.txt');
+    {$ELSEIF DEFINED(MSWINDOWS)}
+    LogFilePath := TPath.Combine(TPath.GetDocumentsPath, 'application_log.txt');
+    {$ENDIF}
+
+  //  TMonitor.Enter(TObject(LogFilePath));
     try
-      LogFile.WriteLine(Format('[%s] %s', [FormatDateTime('yyyy-mm-dd hh:nn:ss',
-        Now), Msg]));
+      LogFile := TStreamWriter.Create(LogFilePath, True, TEncoding.UTF8);
+      try
+        LogFile.WriteLine(Format('[%s] %s', [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), Msg]));
+      finally
+        LogFile.Free;
+      end;
     finally
-      LogFile.Free;
+//      TMonitor.Exit(TObject(LogFilePath));
     end;
   except
     // If logging fails, avoid crashing the app
@@ -445,7 +447,7 @@ begin
   except
     on E: Exception do
     begin
-      LogError(Format(ErrorFillingCardDetails, [E.Message]));
+      LogStuff(Format(ErrorFillingCardDetails, [E.Message]));
       CardDetails.Clear;
     end;
   end;

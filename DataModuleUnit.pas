@@ -48,7 +48,7 @@ begin
   except
     on E: Exception do
     begin
-      LogError('Error setting up database: ' + E.Message);
+      LogStuff('Error setting up database: ' + E.Message);
       raise;
     end;
   end;
@@ -86,7 +86,7 @@ begin
   except
     on E: Exception do
     begin
-      LogError('Error creating database schema: ' + E.Message);
+      LogStuff('Error creating database schema: ' + E.Message);
       raise;
     end;
   end;
@@ -203,7 +203,7 @@ begin
     on E: Exception do
     begin
       FDConnection1.Rollback;
-      LogError('Error saving card to database: ' + E.Message);
+      LogStuff('Error saving card to database: ' + E.Message);
       raise;
     end;
   end;

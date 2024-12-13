@@ -75,64 +75,71 @@ end;
 function TScryfallAPI.ExecuteRequest(const Endpoint: string): TJsonObject;
 const
   MaxRetries = 3;
+  RetryDelayMs = 500;
 var
-  Response: string;
   Client: THTTPClient;
   ResponseStream: TStringStream;
-  RetryCount: Integer;
+  Response: string;
   StatusCode: Integer;
+  i: Integer;
+  URL: string;
 begin
   Result := nil;
+  URL := BaseUrl + Endpoint;
   Client := THTTPClient.Create;
   ResponseStream := TStringStream.Create;
   try
+    // Set headers
     Client.CustomHeaders['User-Agent'] := UserAgent;
     Client.CustomHeaders['Accept'] := AcceptHeader;
 
-    RetryCount := 0;
-    repeat
-      try
-        // GET request
-        StatusCode := Client.Get(BaseUrl + Endpoint, ResponseStream).StatusCode;
+    // Attempt up to MaxRetries
+    for i := 1 to MaxRetries do
+    begin
+      // Clear previous response before retry
+      ResponseStream.Clear;
 
-        // Check the response code
-        if StatusCode = 200 then
-        begin
-          Response := ResponseStream.DataString;
-       
-          //LogError( Response );
-          try
-            Result := TJsonObject.Parse(Response) as TJsonObject;
-          except
-            on E: Exception do
-              raise EScryfallAPIError.CreateFmt(
-                'Error parsing JSON response: %s', [E.Message]);
-          end;
-          Exit; // Exit the retry loop on success
-        end
-        else if StatusCode = 404 then
-          raise EScryfallAPIError.Create(ErrorCardNotFound)
+      try
+        StatusCode := Client.Get(URL, ResponseStream).StatusCode;
+
+        case StatusCode of
+          200:
+            begin
+              // Parse the JSON response
+              Response := ResponseStream.DataString;
+              try
+                Result := TJsonObject.Parse(Response) as TJsonObject;
+                Exit; // Successfully parsed, exit the function
+              except
+                on E: Exception do
+                  raise EScryfallAPIError.CreateFmt(
+                    'Error parsing JSON response: %s', [E.Message]);
+              end;
+            end;
+          404:
+            raise EScryfallAPIError.Create(ErrorCardNotFound);
         else
-          raise EScryfallAPIError.CreateFmt(ErrorRequestFailed,
-            [StatusCode, BaseUrl + Endpoint]);
+          // Other non-200 codes are considered request failures
+          raise EScryfallAPIError.CreateFmt(
+            ErrorRequestFailed, [StatusCode, URL]);
+        end;
 
       except
         on E: EScryfallAPIError do
         begin
-          Inc(RetryCount);
-          LogError(Format('Attempt %d: %s', [RetryCount, E.Message]));
-          if RetryCount = MaxRetries then
-            raise; // Re-raise after the last retry
-          Sleep(500); // Small delay before retrying
+          LogStuff(Format('Attempt %d: %s', [i, E.Message]));
+          if i = MaxRetries then
+            raise; // Re-raise after the last attempt
+          Sleep(RetryDelayMs); // Wait before retrying
         end;
         on E: Exception do
         begin
-          LogError('Unexpected error during HTTP request: ' + E.Message);
+          LogStuff('Unexpected error during HTTP request: ' + E.Message);
           raise;
         end;
       end;
-    until RetryCount >= MaxRetries;
-
+    end;
+    // If we reach here, all retries have failed, Result remains nil.
   finally
     Client.Free;
     ResponseStream.Free;
@@ -150,7 +157,7 @@ begin
     if JsonResponse.Contains(FieldData) then
     begin
       CardsArray := JsonResponse.A[FieldData]; // Access the FieldData array
-      LogError('Data Array Count: ' + CardsArray.Count.ToString);
+      LogStuff('Data Array Count: ' + CardsArray.Count.ToString);
       SetLength(Result.Cards, CardsArray.Count);
 
       for I := 0 to CardsArray.Count - 1 do
@@ -164,13 +171,13 @@ begin
           end
           else
           begin
-            LogError(Format('Skipping non-object element at index %d', [I]));
+            LogStuff(Format('Skipping non-object element at index %d', [I]));
             Result.Cards[I].Clear; // Ensure this index is cleared
           end;
         except
           on E: Exception do
           begin
-            LogError(Format('Error parsing card at index %d: %s',
+            LogStuff(Format('Error parsing card at index %d: %s',
               [I, E.Message]));
             Result.Cards[I].Clear; // Clear invalid data
           end;
@@ -179,7 +186,7 @@ begin
     end
     else
     begin
-      LogError(ErrorMissingDataKey);
+      LogStuff(ErrorMissingDataKey);
       SetLength(Result.Cards, 0); // No data
     end;
 
@@ -190,7 +197,7 @@ begin
   except
     on E: Exception do
     begin
-      LogError('Error in ParseSearchResult: ' + E.Message);
+      LogStuff('Error in ParseSearchResult: ' + E.Message);
       raise; // Re-raise the exception after logging
     end;
   end;
@@ -213,7 +220,7 @@ begin
   except
     on E: Exception do
     begin
-      LogError('Error fetching random card: ' + E.Message);
+      LogStuff('Error fetching random card: ' + E.Message);
       raise;
     end;
   end;
@@ -319,7 +326,7 @@ begin
   // Check the cache outside the lock
   if FSetDetailsCache.TryGetValue(SetCode, Result) then
   begin
-    LogError(Format(LogCacheHit, [SetCode]));
+    LogStuff(Format(LogCacheHit, [SetCode]));
     Exit;
   end;
 
@@ -328,14 +335,14 @@ begin
   try
     if FSetDetailsCache.TryGetValue(SetCode, Result) then
     begin
-      LogError(Format(LogCacheHitDoubleCheck, [SetCode]));
+      LogStuff(Format(LogCacheHitDoubleCheck, [SetCode]));
       Exit;
     end;
 
     // Construct the API endpoint
     Endpoint := Format('%s%s',
       [EndpointSets, TNetEncoding.URL.Encode(SetCode)]);
-    LogError(Format(LogFetchingSetCode, [SetCode]));
+    LogStuff(Format(LogFetchingSetCode, [SetCode]));
 
     // Fetch data from the API
     JsonResponse := nil;
@@ -348,7 +355,7 @@ begin
 
         // Add to cache
         FSetDetailsCache.Add(SetCode, Result);
-        LogError(Format(LogSetCodeAddedToCache, [SetCode]));
+        LogStuff(Format(LogSetCodeAddedToCache, [SetCode]));
       end
       else
         raise EScryfallAPIError.CreateFmt(ErrorNoDataForSetCode,
@@ -392,9 +399,12 @@ begin
 TMonitor.Enter(FCache);
 try
   if FCache.TryGetValue(CacheKey, CachedResponse) then
+
     Exit(ParseSearchResult(CachedResponse));
 finally
   TMonitor.Exit(FCache);
+
+
 end;
 
   SearchUrl := ConstructSearchUrl(Query, SetCode, Rarity, Colors, Fuzzy,
@@ -402,9 +412,10 @@ end;
   JsonResponse := ExecuteRequest(SearchUrl);
   try
     Result := ParseSearchResult(JsonResponse);
-    FCache.Add(CacheKey, JsonResponse.Clone as TJsonObject);
+    FCache.Add(CacheKey, JsonResponse.Clone as TJsonObject);  //need to start using clone
   finally
     JsonResponse.Free;
+    LogStuff(SearchUrl);
   end;
 end;
 

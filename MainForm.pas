@@ -453,7 +453,7 @@ begin
               end
               else
               begin
-                LogError(Format('Skipping invalid card at index %d: %s',
+                LogStuff(Format('Skipping invalid card at index %d: %s',
                   [CardIndex, Cards[CardIndex].CardName]));
               end;
             end;
@@ -486,7 +486,7 @@ begin
   // Skip invalid cards
   if Card.CardName.IsEmpty or Card.SFID.IsEmpty then
   begin
-    LogError('Skipping card: missing "name" or "id".');
+    LogStuff('Skipping card: missing "name" or "id".');
     Exit;
   end;
 
@@ -551,7 +551,7 @@ begin
                 end);
             except
               on E: Exception do
-                LogError('Failed to fetch set details: ' + E.Message);
+                LogStuff('Failed to fetch set details: ' + E.Message);
             end;
           end);
       end;
