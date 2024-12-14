@@ -41,7 +41,7 @@ var
 
 implementation
 
-{ Centralized App Directory Logic }
+{ Need To Change This to relative paths }
 function GetAppDirectory: string;
 begin
   {$IF DEFINED(MSWINDOWS)}

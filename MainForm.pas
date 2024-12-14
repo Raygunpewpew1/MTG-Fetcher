@@ -4,6 +4,7 @@
  Need to get away from converting png's to Base64
 
  TODO Organize code, UI improvments
+ Need to focus on Windows, less time worrying about Android.
 
  }
 
