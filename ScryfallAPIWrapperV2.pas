@@ -4,9 +4,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  System.NetEncoding, System.Threading, JsonDataObjects, SGlobalsZ,
-  System.Net.HttpClient,
-  WrapperHelper, APIConstants;
+  System.Threading, JsonDataObjects, SGlobalsZ,
+  System.Net.HttpClient;
 
 type
   // Custom exception class for Scryfall API errors
@@ -55,6 +54,9 @@ type
   end;
 
 implementation
+
+uses
+WrapperHelper, APIConstants, System.NetEncoding;
 
 { TScryfallAPI }
 

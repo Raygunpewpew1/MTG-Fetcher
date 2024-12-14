@@ -22,12 +22,10 @@ uses
   FireDAC.Comp.Client,
   FireDAC.Comp.DataSet, FireDAC.Stan.Param, FireDAC.Phys.SQLite,
   FireDAC.Phys.SQLiteDef, Data.DB, FMX.Skia, System.Net.HttpClient,
-  System.Hash, ScryfallAPIWrapperV2, SGlobalsZ, WrapperHelper,
-
-  MLogic, APIConstants, System.StrUtils,
-  System.TypInfo, System.NetEncoding, Math, System.Threading,
+  System.Hash, SGlobalsZ, ScryfallAPIWrapperV2, System.StrUtils,
+  System.TypInfo, Math, System.Threading,
   FMX.Controls.Presentation, FMX.ListView.Types, FMX.ListView.Appearances,
-  FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, CardDisplayHelpers,
+  FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox,
   FMX.TabControl;
 
 type
@@ -120,6 +118,9 @@ implementation
 
 {$R *.fmx}
 {$R *.Windows.fmx MSWINDOWS}
+
+uses
+WrapperHelper,MLogic,APIConstants,CardDisplayHelpers,System.NetEncoding;
 
 const
   SAboutBlank = 'about:blank';

@@ -27,42 +27,40 @@ implementation
 uses
   System.NetEncoding, MLogic;
 
+function ProcessOracleText(const OracleText: string): string;
+var
+  Parts: TArray<string>;
+  Part: string;
+begin
+  Result := ''; // Initialize result
 
- {It took me hours to get this correct..}
+  // Parse the Oracle text into parts (symbols and plain text)
+  Parts := ParseTextWithSymbolsManual(OracleText);
+
+  for Part in Parts do
+  begin
+    if Part.StartsWith('{') and Part.EndsWith('}') then
+    begin
+      // Handle mana symbols
+      Result := Result + ReplaceManaSymbolsWithImages(Part);
+    end
+    else
+    begin
+      // Handle plain text with line breaks replaced by <br>
+      // This works but is somewhat "ugly"
+      Result := Result + StringReplace(TNetEncoding.HTML.Encode(Part), #10, '<br>', [rfReplaceAll]);
+    end;
+  end;
+end;
+
+{It took me hours to get this correct..}
 procedure AddCoreReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
 var
   FacesHtml, ProcessedOracleText: string;
-
-  function ProcessOracleText(const OracleText: string): string;
-  var
-    Parts: TArray<string>;
-    Part: string;
-  begin
-    Result := ''; // Initialize result
-
-    // Parse the Oracle text into parts (symbols and plain text)
-    Parts := ParseTextWithSymbolsManual(OracleText);
-
-    for Part in Parts do
-    begin
-      if Part.StartsWith('{') and Part.EndsWith('}') then
-      begin
-        // Handle mana symbols
-        Result := Result + ReplaceManaSymbolsWithImages(Part);
-      end
-      else
-      begin
-        // Handle plain text with line breaks replaced by <br>'s / this works but ugly
-        Result := Result + StringReplace(TNetEncoding.HTML.Encode(Part), #10, '<br>', [rfReplaceAll]);
-      end;
-    end;
-  end;
-
 begin
   if Length(CardDetails.CardFaces) = 0 then
-    Replacements.AddOrSetValue('{{FlavorText}}',
-      TNetEncoding.HTML.Encode(CardDetails.FlavorText));
+    Replacements.AddOrSetValue('{{FlavorText}}', TNetEncoding.HTML.Encode(CardDetails.FlavorText));
 
   Replacements.AddOrSetValue('{{CardName}}', TNetEncoding.HTML.Encode(CardDetails.CardName));
   Replacements.AddOrSetValue('{{SetName}}', TNetEncoding.HTML.Encode(CardDetails.SetName));
@@ -109,7 +107,8 @@ begin
       );
     end;
 
-    Replacements.AddOrSetValue('{{OracleText}}', FacesHtml); // Replace OracleText with faces
+    // Replace OracleText with the constructed FacesHtml for multi-faced cards
+    Replacements.AddOrSetValue('{{OracleText}}', FacesHtml);
   end
   else
   begin
@@ -130,26 +129,31 @@ begin
   FlipIndicatorHtml := ''; // Default empty
 
   if (CardDetails.Layout.ToLower = 'transform') or
-    (CardDetails.Layout.ToLower = 'modal_dfc') or
-    (CardDetails.Layout.ToLower = 'reversible_card')
-     then
+     (CardDetails.Layout.ToLower = 'modal_dfc') or
+     (CardDetails.Layout.ToLower = 'reversible_card') then
   begin
     if Length(CardDetails.CardFaces) > 1 then
     begin
-      FlipIndicatorHtml :=
-        '<div class="flip-indicator">Double-Faced Card: Click to Flip</div>';
-      CardImagesHtml := Format('<div class="flip-card" onclick="flipCard()">' +
+      FlipIndicatorHtml := '<div class="flip-indicator">Double-Faced Card: Click to Flip</div>';
+      CardImagesHtml := Format(
+        '<div class="flip-card" onclick="flipCard()">' +
         '<div class="card-face front"><img src="%s" alt="Front Face"></div>' +
         '<div class="card-face back"><img src="%s" alt="Back Face"></div>' +
-        '</div>', [TNetEncoding.HTML.Encode(CardDetails.CardFaces[0]
-        .ImageUris.Normal), TNetEncoding.HTML.Encode(CardDetails.CardFaces[1]
-        .ImageUris.Normal)]);
+        '</div>',
+        [
+          TNetEncoding.HTML.Encode(CardDetails.CardFaces[0].ImageUris.Normal),
+          TNetEncoding.HTML.Encode(CardDetails.CardFaces[1].ImageUris.Normal)
+        ]
+      );
     end;
   end
   else
-    CardImagesHtml :=
-      Format('<div class="single-card"><img src="%s" alt="Card Image"></div>',
-      [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)]);
+  begin
+    CardImagesHtml := Format(
+      '<div class="single-card"><img src="%s" alt="Card Image"></div>',
+      [TNetEncoding.HTML.Encode(CardDetails.ImageUris.Normal)]
+    );
+  end;
 
   Replacements.Add('{{CardImages}}', CardImagesHtml);
   Replacements.Add('{{FlipIndicator}}', FlipIndicatorHtml);
@@ -176,9 +180,9 @@ begin
       // Add a grid item for the format with the status badge
       LegalitiesHtml := LegalitiesHtml +
         Format('<div class="format-name">%s</div>' +
-        '<div class="status"><span class="%s">%s</span></div>',
-        [TNetEncoding.HTML.Encode(LegalityName), StatusClass,
-        TNetEncoding.HTML.Encode(LegalityStatus)]);
+               '<div class="status"><span class="%s">%s</span></div>',
+               [TNetEncoding.HTML.Encode(LegalityName), StatusClass,
+                TNetEncoding.HTML.Encode(LegalityStatus)]);
     end;
   end;
 
@@ -225,8 +229,7 @@ procedure AddBadgesReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
 begin
   if CardDetails.FullArt then
-    Replacements.Add('{{FullArt}}',
-      '<span class="badge full-art">Full Art</span>')
+    Replacements.Add('{{FullArt}}', '<span class="badge full-art">Full Art</span>')
   else
     Replacements.Add('{{FullArt}}', '');
 
@@ -236,15 +239,9 @@ begin
     Replacements.Add('{{Promo}}', '');
 
   if CardDetails.Reserved then
-    Replacements.Add('{{Reserved}}',
-      '<span class="badge reserved">Reserved</span>')
+    Replacements.Add('{{Reserved}}', '<span class="badge reserved">Reserved</span>')
   else
     Replacements.Add('{{Reserved}}', '');
-
-  // if CardDetails.StorySpotlight then
-  // Replacements.Add('{{StorySpotlight}}', 'Yes')
-  // else
-  // Replacements.Add('{{StorySpotlight}}', 'No');
 end;
 
 procedure AddKeywordsReplacement(Replacements: TDictionary<string, string>;
@@ -271,14 +268,24 @@ begin
 
   if (CardDetails.Power <> '') and (CardDetails.Toughness <> '') then
   begin
-    Result := Format('<p><strong>Power/Toughness:</strong> %s/%s</p>',
+    Result := Format(
+      '<div class="power-toughness">' +
+      '<span class="label">Power/Toughness:</span>' +
+      '<span class="value">%s/%s</span>' +
+      '</div>',
       [TNetEncoding.HTML.Encode(CardDetails.Power),
-      TNetEncoding.HTML.Encode(CardDetails.Toughness)]);
+       TNetEncoding.HTML.Encode(CardDetails.Toughness)]
+    );
   end
   else if CardDetails.Loyalty <> '' then
   begin
-    Result := Format('<p><strong>Loyalty:</strong> %s</p>',
-      [TNetEncoding.HTML.Encode(CardDetails.Loyalty)]);
+    Result := Format(
+      '<div class="power-toughness">' +
+      '<span class="label">Loyalty:</span>' +
+      '<span class="value">%s</span>' +
+      '</div>',
+      [TNetEncoding.HTML.Encode(CardDetails.Loyalty)]
+    );
   end;
 end;
 

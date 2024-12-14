@@ -4,9 +4,9 @@ interface
 
 uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
-  System.RegularExpressions, System.Hash, System.Classes, System.NetEncoding,
+  System.RegularExpressions, System.Hash, System.Classes,
   FMX.Dialogs, SGlobalsZ, FMX.Graphics, System.Net.HttpClient, FMX.StdCtrls,
-  System.Threading, JsonDataObjects;
+  System.Threading;
 
 procedure CopyDatabaseToInternalStorage;
 procedure InitializeManaSymbolMap;
@@ -40,6 +40,8 @@ var
   HttpClient: THTTPClient;
 
 implementation
+uses
+JsonDataObjects,System.NetEncoding;
 
 { Need To Change This to relative paths }
 function GetAppDirectory: string;
@@ -182,6 +184,7 @@ end;
 function ImageToBase64(const ImagePath: string): string;
 begin
   if FBase64ImageCache.TryGetValue(ImagePath, Result) then
+
     Exit;
 
   if not TFile.Exists(ImagePath) then

@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.NetEncoding, System.Classes, System.IOUtils,
-  JsonDataObjects, SGlobalsZ, APIConstants;
+  JsonDataObjects, SGlobalsZ;
 
 function ConstructSearchUrl(const Query, SetCode, Rarity, Colors: string;
   Fuzzy, Unique: Boolean; Page: Integer): string;
@@ -21,6 +21,8 @@ procedure FillCardDetailsFromJson(const JsonObj: TJsonObject;
   out CardDetails: TCardDetails);
 
 implementation
+uses
+APIConstants;
 
 function ConstructSearchUrl(const Query, SetCode, Rarity, Colors: string;
   Fuzzy, Unique: Boolean; Page: Integer): string;

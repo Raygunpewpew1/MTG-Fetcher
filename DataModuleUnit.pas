@@ -10,7 +10,7 @@ uses
   FireDAC.Stan.Def, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
     MLogic,
   FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.FMXUI.Wait, FireDAC.DApt.Intf,
-  FireDAC.Comp.DataSet, WrapperHelper;
+    FireDAC.Comp.DataSet, FireDAC.VCLUI.Wait;
 
 type
   TDataModule1 = class(TDataModule)
@@ -30,6 +30,8 @@ var
   DataModule1: TDataModule1;
 
 implementation
+uses
+WrapperHelper;
 
 {%CLASSGROUP 'FMX.Controls.TControl'}
 

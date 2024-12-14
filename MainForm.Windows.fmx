@@ -8,6 +8,7 @@ inherited Form1_Windows: TForm1_Windows
     Size.Height = 480.000000000000000000
     inherited LayoutControls: TLayout
       Size.Width = 724.000000000000000000
+      Size.Height = 143.000000000000000000
       inherited Edit1: TEdit
         Size.Width = 188.000000000000000000
       end
@@ -35,34 +36,38 @@ inherited Form1_Windows: TForm1_Windows
         Position.Y = 42.000000000000000000
         Size.Height = 25.000000000000000000
       end
+      inherited Switch1: TSwitch
+        Position.X = 266.000000000000000000
+        Position.Y = 75.000000000000000000
+      end
       inherited DisplayUniq: TLabel
-        Position.X = 115.000000000000000000
-        Position.Y = 139.000000000000000000
+        Position.X = 101.000000000000000000
+        Position.Y = 78.000000000000000000
         Size.Width = 157.000000000000000000
         Text = 'Display Unique Art On Search'
       end
       inherited ComboBox1: TComboBox
-        Position.X = 372.000000000000000000
-        Position.Y = 139.000000000000000000
+        Position.X = 88.000000000000000000
+        Position.Y = 48.000000000000000000
         Size.Width = 170.000000000000000000
         Size.PlatformDefault = False
       end
     end
     inherited LayoutContent: TLayout
       Size.Width = 744.000000000000000000
-      Size.Height = 210.000000000000000000
+      Size.Height = 247.000000000000000000
       inherited ListViewCards: TListView
         ItemAppearanceClassName = 'TListItemRightDetailAppearance'
         Size.Width = 393.000000000000000000
-        Size.Height = 210.000000000000000000
+        Size.Height = 247.000000000000000000
       end
       inherited SplitterMain: TSplitter
         Position.X = 393.000000000000000000
-        Size.Height = 210.000000000000000000
+        Size.Height = 247.000000000000000000
       end
       inherited WebBrowser1: TWebBrowser
         Size.Width = 343.000000000000000000
-        Size.Height = 210.000000000000000000
+        Size.Height = 247.000000000000000000
       end
     end
     inherited LayoutButtons: TLayout
@@ -25834,5 +25839,7 @@ inherited Form1_Windows: TForm1_Windows
           726D616C436F6C6F720708636C6157686974650C50726573736564436F6C6F72
           0708636C615768697465000000}
       end>
+    Left = 610
+    Top = 98
   end
 end

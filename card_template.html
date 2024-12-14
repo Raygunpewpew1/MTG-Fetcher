@@ -214,6 +214,12 @@
       line-height: 1.5;
       font-family: "Times New Roman", serif;
       font-size: 15px;
+      background: linear-gradient(90deg, #444, #222);
+      color: #fff;
+      padding: 15px;
+      border: 3px solid #ffd700;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.8)
     }
 
     /* Flavor Text */
@@ -227,11 +233,37 @@
 
     /* Power/Toughness or Loyalty */
     .power-toughness {
-      font-weight: bold;
-      text-align: right;
+      display: flex;
+      /* Use flexbox to align label and value */
+      justify-content: space-between;
+      /* Space between label and value */
+      align-items: center;
+      /* Vertically center-align content */
       margin-top: 10px;
-      border-top: 1px solid #333;
-      padding-top: 5px;
+      padding: 10px 15px;
+      border: 3px solid #ffd700;
+      /* Gold border */
+      border-radius: 8px;
+      background: linear-gradient(90deg, #444, #222);
+      /* Subtle gradient */
+      color: #fff;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+      /* Glowing effect */
+      font-size: 16px;
+    }
+
+    .power-toughness .label {
+      font-weight: bold;
+      color: #ffd700;
+      /* Gold text for label */
+      margin-right: 10px;
+      /* Space between label and value */
+    }
+
+    .power-toughness .value {
+      font-weight: bold;
+      color: #fff;
+      /* White text for value */
     }
 
     /* Format name styling */
@@ -545,15 +577,15 @@
       }
 
       .legalities-grid {
-    grid-template-columns: 1fr;
-  }
+        grid-template-columns: 1fr;
+      }
 
-  .prices-grid td {
-    display: block;
-    text-align: left;
-    font-size: 14px;
-    margin-bottom: 5px;
-  }
+      .prices-grid td {
+        display: block;
+        text-align: left;
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
     }
 
     .hidden {
