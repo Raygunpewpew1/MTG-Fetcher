@@ -74,3 +74,7 @@ AndroidManifest.template.xml
 deployedassets.txt
 *.gex
 /mtgfetchV2.Artwork/Android
+*.deployproj
+*.deployproj
+mtgfetchV2.deployproj
+mtgfetchV2.deployproj

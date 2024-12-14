@@ -86,7 +86,7 @@ type
     SearchTerm: string;
     HttpClient: THTTPClient;
     FCardDetailsObject: TCardDetailsObject;
-    CardTitle: string;
+//    CardTitle: string;
     CardDataList: TList<TCardDetails>;
     CardCount: Integer;
     AppClose: Boolean;

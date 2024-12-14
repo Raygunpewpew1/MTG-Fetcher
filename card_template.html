@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     /* General Body Styling */
+    html,
     body {
       text-rendering: optimizeLegibility;
       /* Ensures text is sharp and readable */
@@ -14,6 +15,7 @@
       font-family: Beleren, Arial, sans-serif;
       background-color: rgb(38, 67, 97);
       color: white;
+      height: 100%;
       margin: 0;
       padding: 0;
     }
@@ -23,6 +25,11 @@
       font-size: 28px;
       text-align: center;
       margin: 20px 0;
+    }
+
+    h2 {
+      margin: 0;
+      padding: 5px 0;
     }
 
     /* Card Container */
@@ -227,18 +234,6 @@
       padding-top: 5px;
     }
 
-    /* Legalities grid container */
-    .legalities-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      /* Two columns: Format and Status */
-      gap: 5px;
-      padding: 10px;
-      border: 1px solid #444;
-      border-radius: 8px;
-      background-color: rgb(38, 67, 97);
-    }
-
     /* Format name styling */
     .format-name {
       font-weight: bold;
@@ -250,15 +245,17 @@
     .legalities-grid {
       display: grid;
       grid-template-columns: auto 1fr;
-      /* Left column for format, right for status */
       gap: 5px;
-      /* Spacing between rows and columns */
       padding: 7px;
       border: 1px solid #444;
       border-radius: 8px;
       background-color: rgb(38, 67, 97);
       box-sizing: border-box;
       width: 100%;
+    }
+
+    .legalities-grid td {
+      padding: 5px;
     }
 
     /* Format name styling */
@@ -376,11 +373,6 @@
       margin-top: 10px;
     }
 
-    .legalities-grid td {
-      padding: 5px;
-      border: 1px solid #444;
-    }
-
     .legalities-grid td.format-name {
       text-align: left;
       font-weight: bold;
@@ -448,7 +440,7 @@
       padding: 5px 0;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 400px) {
       body {
         font-size: 90%;
         /* Scale down font sizes */
@@ -552,15 +544,20 @@
         /* Stack prices for smaller screens */
       }
 
-      .prices-grid td:first-child,
-      .prices-grid td:last-child {
-        display: block;
-        text-align: left;
-        font-size: 14px;
-        /* Adjust font size */
-        margin-bottom: 5px;
-        /* Add spacing */
-      }
+      .legalities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .prices-grid td {
+    display: block;
+    text-align: left;
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 
@@ -592,7 +589,7 @@
         {{Promo}}
         {{Reserved}}
       </div>
-      <div class="keywords" style="{{KeywordsDisplay}}">
+      <div class="keywords {{KeywordsClass}}">
         <strong>Keywords:</strong> {{Keywords}}
       </div>
       <div class="rarity {{RarityClass}}">{{Rarity}}</div>

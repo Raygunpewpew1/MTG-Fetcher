@@ -54,7 +54,7 @@ var
       else
       begin
         // Handle plain text with line breaks replaced by <br>'s / this works but ugly
-        Result := Result + StringReplace(TNetEncoding.HTML.Encode(Part), #10, '<br><br>', [rfReplaceAll]);
+        Result := Result + StringReplace(TNetEncoding.HTML.Encode(Part), #10, '<br>', [rfReplaceAll]);
       end;
     end;
   end;
@@ -256,12 +256,12 @@ begin
   begin
     KeywordsList := String.Join(', ', CardDetails.Keywords);
     Replacements.Add('{{Keywords}}', TNetEncoding.HTML.Encode(KeywordsList));
-    Replacements.Add('{{KeywordsDisplay}}', ''); // No style, section is visible
+    Replacements.Add('{{KeywordsClass}}', ''); // No class, section is visible
   end
   else
   begin
     Replacements.Add('{{Keywords}}', ''); // Empty content
-    Replacements.Add('{{KeywordsDisplay}}', 'display:none;'); // Hide section
+    Replacements.Add('{{KeywordsClass}}', 'hidden'); // Apply hidden class
   end;
 end;
 
