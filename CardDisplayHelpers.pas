@@ -25,7 +25,7 @@ function FormatLegalityStatus(const LegalityStatus: string): string;
 implementation
 
 uses
-  System.NetEncoding, MLogic;
+  System.NetEncoding, MLogic,mana;
 
 function ProcessOracleText(const OracleText: string): string;
 var

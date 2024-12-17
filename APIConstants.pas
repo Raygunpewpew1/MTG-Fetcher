@@ -7,6 +7,8 @@ const
   BaseUrl = 'https://api.scryfall.com/';
   UserAgent = 'MTGCardFetch/1.0';
   AcceptHeader = 'application/json';
+  MTGAppFolder = 'MTGCardFetch';
+
 
   // Endpoints
   EndpointCards = 'cards/';
@@ -16,6 +18,7 @@ const
   EndpointBulkData = 'bulk-data';
   EndpointRandomCard = '/cards/random';
   EndPointCreatureTypes = 'catalog/creature-types';
+  EndPointSymbology = 'https://api.scryfall.com/symbology';
 
   // Error Messages
   ErrorCardNotFound = 'Card not found. Please check your search criteria.';
@@ -38,6 +41,8 @@ const
   FieldNextPage = 'next_page';
   FieldTotalCards = 'total_cards';
   FieldTypeLine = 'type_line';
+  FeildSymbol = 'symbol';
+  FeildSVGUri = 'svg_uri';
 
   FieldID = 'id';
   FieldName = 'name';
@@ -134,6 +139,10 @@ const
   CatalogKeywordAbilities = 'keyword-abilities';
   CatalogKeywordActions = 'keyword-actions';
   CatalogAbilityWords = 'ability-words';
+
+  SVG_TEMPLATE =
+    '<img style="display:inline-block; width:16px; height:16px; vertical-align:text-bottom; margin:0 2px;" ' +
+    'src="data:image/svg+xml;base64,%s" alt="%s">';
 
 
 implementation

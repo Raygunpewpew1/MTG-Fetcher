@@ -251,6 +251,7 @@
         <DCCReference Include="CardDisplayHelpers.pas"/>
         <DCCReference Include="WrapperHelper.pas"/>
         <DCCReference Include="APIConstants.pas"/>
+        <DCCReference Include="mana.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

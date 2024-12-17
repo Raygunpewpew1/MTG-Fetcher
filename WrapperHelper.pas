@@ -19,6 +19,8 @@ procedure FillSetDetailsFromJson(const JsonObj: TJsonObject;
   out SetDetails: TSetDetails);
 procedure FillCardDetailsFromJson(const JsonObj: TJsonObject;
   out CardDetails: TCardDetails);
+  const
+  MTGAppFolder = 'MTGCardFetch';
 
 implementation
 uses

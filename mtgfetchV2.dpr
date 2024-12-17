@@ -3,6 +3,7 @@ program mtgfetchV2;
 
 
 
+
 uses
   System.StartUpCopy,
   FMX.Forms,
@@ -15,9 +16,8 @@ uses
   JsonDataObjects in 'JsonDataObjects.pas',
   CardDisplayHelpers in 'CardDisplayHelpers.pas',
   WrapperHelper in 'WrapperHelper.pas',
-  APIConstants in 'APIConstants.pas';
-
-{$R *.res}
+  APIConstants in 'APIConstants.pas',
+  mana in 'mana.pas';
 
 begin
   GlobalUseSkia := True;
