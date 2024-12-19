@@ -1,83 +1,7 @@
 inherited Form1_Windows: TForm1_Windows
-  ClientHeight = 480
-  ClientWidth = 744
-  WindowState = wsMaximized
+  ClientHeight = 524
+  ClientWidth = 820
   DesignerMasterStyle = 0
-  inherited LayoutMain: TLayout
-    Size.Width = 744.000000000000000000
-    Size.Height = 480.000000000000000000
-    inherited LayoutControls: TLayout
-      Size.Width = 724.000000000000000000
-      Size.Height = 143.000000000000000000
-      inherited Edit1: TEdit
-        Size.Width = 188.000000000000000000
-      end
-      inherited Button1: TButton
-        Position.X = 284.000000000000000000
-        Size.Width = 80.000000000000000000
-        Size.Height = 24.000000000000000000
-      end
-      inherited ComboBoxSetCode: TComboBox
-        Position.X = 372.000000000000000000
-        Position.Y = 8.000000000000000000
-        Size.Width = 325.000000000000000000
-      end
-      inherited ComboBoxRarity: TComboBox
-        Position.X = 372.000000000000000000
-        Position.Y = 48.000000000000000000
-      end
-      inherited ComboBoxColors: TComboBox
-        Position.X = 372.000000000000000000
-        Position.Y = 88.000000000000000000
-        Size.Width = 170.000000000000000000
-      end
-      inherited ButtonNextPage: TButton
-        Position.X = 284.000000000000000000
-        Position.Y = 42.000000000000000000
-        Size.Height = 25.000000000000000000
-      end
-      inherited Switch1: TSwitch
-        Position.X = 266.000000000000000000
-        Position.Y = 75.000000000000000000
-      end
-      inherited DisplayUniq: TLabel
-        Position.X = 101.000000000000000000
-        Position.Y = 78.000000000000000000
-        Size.Width = 157.000000000000000000
-        Text = 'Display Unique Art On Search'
-      end
-      inherited ComboBox1: TComboBox
-        Position.X = 88.000000000000000000
-        Position.Y = 48.000000000000000000
-        Size.Width = 170.000000000000000000
-        Size.PlatformDefault = False
-      end
-    end
-    inherited LayoutContent: TLayout
-      Size.Width = 744.000000000000000000
-      Size.Height = 247.000000000000000000
-      inherited ListViewCards: TListView
-        ItemAppearanceClassName = 'TListItemRightDetailAppearance'
-        Size.Width = 393.000000000000000000
-        Size.Height = 247.000000000000000000
-      end
-      inherited SplitterMain: TSplitter
-        Position.X = 393.000000000000000000
-        Size.Height = 247.000000000000000000
-      end
-      inherited WebBrowser1: TWebBrowser
-        Size.Width = 343.000000000000000000
-        Size.Height = 247.000000000000000000
-      end
-    end
-    inherited LayoutButtons: TLayout
-      Position.Y = 420.000000000000000000
-      Size.Width = 724.000000000000000000
-      inherited CountLabel: TLabel
-        Position.X = 604.000000000000000000
-      end
-    end
-  end
   inherited StyleBook1: TStyleBook
     Styles = <
       item
@@ -25841,5 +25765,59 @@ inherited Form1_Windows: TForm1_Windows
       end>
     Left = 610
     Top = 98
+  end
+  inherited LayoutMain: TLayout
+    Size.Width = 820.000000000000000000
+    Size.Height = 524.000000000000000000
+    inherited LayoutControls: TLayout
+      Size.Width = 800.000000000000000000
+      Size.Height = 159.000000000000000000
+      inherited ComboBoxColors: TComboBox
+        Position.Y = 90.000000000000000000
+      end
+      inherited Switch1: TSwitch
+        Size.Width = 40.000000000000000000
+        Size.Height = 20.000000000000000000
+      end
+      inherited DisplayUniq: TLabel
+        Position.X = 151.000000000000000000
+        Size.Width = 121.000000000000000000
+      end
+      inherited ComboBox1: TComboBox
+        Position.X = 359.000000000000000000
+        Position.Y = 18.000000000000000000
+      end
+    end
+    inherited LayoutContent: TLayout
+      Size.Width = 820.000000000000000000
+      Size.Height = 291.000000000000000000
+      inherited ListViewCards: TListView
+        Size.Width = 361.000000000000000000
+        Size.Height = 291.000000000000000000
+      end
+      inherited SplitterMain: TSplitter
+        Position.X = 361.000000000000000000
+        Size.Height = 291.000000000000000000
+      end
+      inherited WebBrowser1: TWebBrowser
+        Size.Width = 451.000000000000000000
+        Size.Height = 291.000000000000000000
+      end
+    end
+    inherited LayoutButtons: TLayout
+      Position.Y = 480.000000000000000000
+      Size.Width = 800.000000000000000000
+      Size.Height = 34.000000000000000000
+      inherited Button4: TButton
+        Size.Height = 34.000000000000000000
+      end
+      inherited Button5: TButton
+        Size.Height = 34.000000000000000000
+      end
+      inherited CountLabel: TLabel
+        Position.X = 680.000000000000000000
+        Size.Height = 24.000000000000000000
+      end
+    end
   end
 end

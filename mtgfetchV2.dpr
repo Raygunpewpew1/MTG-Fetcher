@@ -1,9 +1,5 @@
 program mtgfetchV2;
 
-
-
-
-
 uses
   System.StartUpCopy,
   FMX.Forms,
@@ -17,13 +13,14 @@ uses
   CardDisplayHelpers in 'CardDisplayHelpers.pas',
   WrapperHelper in 'WrapperHelper.pas',
   APIConstants in 'APIConstants.pas',
-  mana in 'mana.pas';
+  Mana in 'Mana.pas';
 
 begin
   GlobalUseSkia := True;
   Application.Initialize;
   Application.CreateForm(TDataModule1, DataModule1);
   Application.CreateForm(TForm1, Form1);
+  {$R *.res}
   Application.Run;
 
 end.

@@ -11,4 +11,9 @@ object DataModule1: TDataModule1
     Left = 424
     Top = 472
   end
+  object FDGUIxWaitCursor1: TFDGUIxWaitCursor
+    Provider = 'FMX'
+    Left = 536
+    Top = 408
+  end
 end

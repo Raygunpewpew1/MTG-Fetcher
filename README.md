@@ -5,7 +5,7 @@ MTG Fetcher is a FireMonkey-based Delphi application designed to streamline Magi
 ---
 
 ## About
-It needs a lot of work!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+**Now Requirs Delphi 12+ as it uses string literals.**
 
 This project was developed using **Delphi Community Edition**, a free version of Embarcadero Delphi intended for individual developers, open-source projects, and small companies. It leverages Delphi’s powerful FireMonkey (FMX) framework to create a cross-platform application with support for Windows and Android. 
 

@@ -1,13 +1,9 @@
-﻿{ I need to move the app data to relative paths/ the images, json data etc.
- https://api.scryfall.com/symbology is what im looking at to fetch symbols
- instead of having them local then save to local/cache for less api requests
- Need to get away from converting png's to Base64
+﻿{
 
- TODO Organize code, UI improvments
- Need to focus on Windows, less time worrying about Android.
+  TODO Organize code, UI improvments
+  Need to focus on Windows, less time worrying about Android.
 
- }
-
+}
 
 unit MainForm;
 
@@ -25,8 +21,7 @@ uses
   System.Hash, SGlobalsZ, ScryfallAPIWrapperV2, System.StrUtils,
   System.TypInfo, Math, System.Threading,
   FMX.Controls.Presentation, FMX.ListView.Types, FMX.ListView.Appearances,
-  FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox,
-  FMX.TabControl;
+  FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox;
 
 type
   TCardDetailsObject = class(TObject)
@@ -41,41 +36,39 @@ type
   end;
 
   TForm1 = class(TForm)
-    Button1: TButton;
+    DelayTimer: TTimer;
+    StyleBook1: TStyleBook;
+    LayoutMain: TLayout;
+    LayoutControls: TLayout;
+    LabelSearch: TLabel;
     Edit1: TEdit;
+    Button1: TButton;
+    ComboBoxSetCode: TComboBox;
+    ComboBoxRarity: TComboBox;
+    ComboBoxColors: TComboBox;
+    ButtonNextPage: TButton;
+    Switch1: TSwitch;
+    DisplayUniq: TLabel;
+    ComboBox1: TComboBox;
+    LayoutContent: TLayout;
+    ListViewCards: TListView;
+    SplitterMain: TSplitter;
+    WebBrowser1: TWebBrowser;
+    LayoutButtons: TLayout;
     Button4: TButton;
     Button5: TButton;
     ShowHighResButton: TButton;
     ProgressBar1: TProgressBar;
-    WebBrowser1: TWebBrowser;
-    DelayTimer: TTimer;
-    ListViewCards: TListView;
-    ComboBoxSetCode: TComboBox;
-    ComboBoxColors: TComboBox;
-    ComboBoxRarity: TComboBox;
-    CountLabel: TLabel;
-    ButtonNextPage: TButton;
-    StyleBook1: TStyleBook;
-    LayoutMain: TLayout; // Main layout
-    LayoutControls: TLayout; // Layout for controls
-    LayoutContent: TLayout; // Layout for ListView and WebBrowser
-    LayoutButtons: TLayout; // Layout for buttons
-    SplitterMain: TSplitter;
-    Switch1: TSwitch;
-    DisplayUniq: TLabel;
-    ComboBox1: TComboBox; // Splitter between ListView and WebBrowser
+    CountLabel: TLabel; // Splitter between ListView and WebBrowser
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure Button4Click(Sender: TObject);
-
     procedure DelayTimerTimer(Sender: TObject);
     procedure ListViewCardsItemClick(const Sender: TObject;
       const AItem: TListViewItem);
-    procedure ListViewCardsButtonClick(const Sender: TObject;
-      const AItem: TListItem; const AObject: TListItemSimpleControl);
     procedure WebBrowser1DidFinishLoad(ASender: TObject);
     procedure ButtonNextPageClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
 
   private
 
@@ -84,8 +77,7 @@ type
     HasMorePages: Boolean;
     SearchTerm: string;
     HttpClient: THTTPClient;
-    FCardDetailsObject: TCardDetailsObject;
-//    CardTitle: string;
+    // FCardDetailsObject: TCardDetailsObject;
     CardDataList: TList<TCardDetails>;
     CardCount: Integer;
     AppClose: Boolean;
@@ -105,10 +97,9 @@ type
     procedure LoadNextPage(const CardName, SetCode, ColorCode,
       RarityCode: string);
     procedure LoadAllCatalogs;
-    // procedure AdjustLayout;
 
   public
-    // Public declarations
+
   end;
 
 var
@@ -120,7 +111,7 @@ implementation
 {$R *.Windows.fmx MSWINDOWS}
 
 uses
-WrapperHelper,MLogic,APIConstants,CardDisplayHelpers,System.NetEncoding;
+  WrapperHelper, MLogic, APIConstants, CardDisplayHelpers, System.NetEncoding;
 
 const
   SAboutBlank = 'about:blank';
@@ -172,20 +163,20 @@ begin
       ComboBox1.ItemIndex := 0;
     end;
 
-    {Other Catalogs to do
-    CatalogCreatureTypes,
-    CatalogPlaneswalkerTypes,
-    CatalogArtifactTypes,
-    CatalogEnchantmentTypes,
-    CatalogLandTypes,
-    CatalogSpellTypes,
-    CatalogPowers,
-    CatalogToughnesses,
-    CatalogLoyalties,
-    CatalogWatermarks,
-    CatalogKeywordAbilities,
-    CatalogKeywordActions,
-    CatalogAbilityWords}
+    { Other Catalogs to do
+      CatalogCreatureTypes,
+      CatalogPlaneswalkerTypes,
+      CatalogArtifactTypes,
+      CatalogEnchantmentTypes,
+      CatalogLandTypes,
+      CatalogSpellTypes,
+      CatalogPowers,
+      CatalogToughnesses,
+      CatalogLoyalties,
+      CatalogWatermarks,
+      CatalogKeywordAbilities,
+      CatalogKeywordActions,
+      CatalogAbilityWords }
 
     // ShowMessage('Keyword Abilities: ' + String.Join(', ', Catalogs[CatalogKeywordAbilities].Data));
   finally
@@ -202,11 +193,10 @@ var
   // CreaTypeStr: string;
 begin
   WebBrowserInitialized := False;
+  WebBrowser1.LoadFromStrings('', '');
 
-  WebBrowser1.URL := SAboutBlank;
   LoadAllCatalogs;
   // PopulateComboBoxFromCatalog(ComboBox1, CatalogLandTypes);
-
   FScryfallAPI := TScryfallAPI.Create;
   HttpClient := THTTPClient.Create;
   CardDataList := TList<TCardDetails>.Create;
@@ -215,9 +205,8 @@ begin
   AppClose := False;
   // DataModule1.SetupDatabaseConnection(GetDatabasePath);
   // CopyDatabaseToInternalStorage;
-  CopyTemplateToInternalStorage;
-  // InitializeManaSymbolMap;
-  FBase64ImageCache := TDictionary<string, string>.Create;
+  // CopyTemplateToInternalStorage;
+
   BrIsLoaded := False;
 
   ListViewCards.OnItemClick := ListViewCardsItemClick;
@@ -225,7 +214,7 @@ begin
   ComboBoxSetCode.Items.Add('All Sets');
 
   try
-    //FScryfallAPI.PreloadAllSets;
+    // FScryfallAPI.PreloadAllSets;
     SetDetailsArray := FScryfallAPI.GetAllSets;
     // Fetch all sets from Scryfall
     for SetDetails in SetDetailsArray do
@@ -240,42 +229,22 @@ begin
     ComboBoxRarity.ItemIndex := 0;
   end;
 
- DelayTimer.Enabled := True;
-  // Form1.StyleBook := HighResForm.HighResImageForm.StyleBook1;
-
-  // AdjustLayout;
+  DelayTimer.Enabled := True;
 
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
   AppClose := True;
-  if Assigned(HttpClient) then
-    FreeAndNil(HttpClient);
-  if Assigned(CardDataList) then
-    FreeAndNil(CardDataList);
-  // FreeAndNil(FManaSymbolMap);
-  FreeAndNil(FBase64ImageCache);
-  FScryfallAPI.Free;
+  FreeAndNil(HttpClient);
+  FreeAndNil(CardDataList);
+  FreeAndNil(FScryfallAPI);
 end;
 
-procedure TForm1.ListViewCardsButtonClick(const Sender: TObject;
-  const AItem: TListItem; const AObject: TListItemSimpleControl);
-
-// var
-// ImageURL: string;
-// CardName: string;
+procedure TForm1.FormShow(Sender: TObject);
 begin
-  // ImageURL := ShowHighResButton.TagString;
-  // CardName := 'Sample Card';
-  //
-  // // Create and display the high-res form
-  // if not Assigned(HighResImageForm) then
-  // HighResImageForm := THighResImageForm.Create(nil);
-  //
-  // Self.Hide; // Hide the current form (optional)
-  // HighResImageForm.ShowImage(ImageURL, CardName);
 
+  WebBrowser1.Navigate('about:blank');
 end;
 
 procedure TForm1.ListViewCardsItemClick(const Sender: TObject;
@@ -294,14 +263,12 @@ begin
 end;
 
 procedure TForm1.DelayTimerTimer(Sender: TObject);
-
 begin
-  if BrIsLoaded or WebBrowserInitialized then
+  if BrIsLoaded and WebBrowserInitialized then
     Exit;
 
-    //DisplayCardInBrowser
-
-TTask.Run(
+  // Start the task to fetch a random card asynchronously
+  TTask.Run(
     procedure
     var
       RandomCard: TCardDetails;
@@ -309,60 +276,31 @@ TTask.Run(
       try
         // Fetch a random card
         RandomCard := FScryfallAPI.GetRandomCard;
-      //  WebBrowserInitialized := true;
-        // Update the UI
-        TThread.Synchronize(nil,
+
+        // Synchronize with the main thread for UI updates
+        TThread.Queue(nil,
           procedure
           begin
-          //  DisplayCardInBrowser(RandomCard, []); // Display in browser / not really needed
+            AddCardToListView(RandomCard); // Add the card to ListView
+            BrIsLoaded := True;
+            DelayTimer.Enabled := False;
 
-            AddCardToListView(RandomCard);       // Add to ListView
-             BrIsLoaded := True;               // Mark as loaded
-            DelayTimer.Enabled := False;         // Disable timer
-             if ListViewCards.Items.Count > 0 then
-             begin
-                ListViewCards.Selected := ListViewCards.Items[0];
-                ShowCardDetails(ListViewCards.Items[0]); // Full view in browsers and sets up possible saving
-             end;
+            // First item is selected and details are displayed
+            if ListViewCards.Items.Count > 0 then
+            begin
+              ListViewCards.Selected := ListViewCards.Items[0];
+              ShowCardDetails(ListViewCards.Items[0]);
+            end;
           end);
       except
         on E: Exception do
-        begin
-          TThread.Synchronize(nil,
+          TThread.Queue(nil,
             procedure
             begin
               ShowMessage('Error fetching random card: ' + E.Message);
             end);
-        end;
       end;
     end).Start;
-
-
-
-//  TTask.Run(
-//    procedure
-//    var
-//      PopularCards: TStringList;
-//      RandomCardName: string;
-//    begin
-//      PopularCards := TStringList.Create;
-//      try
-//        SetupPopularCards(PopularCards);
-//        if PopularCards.Count > 0 then
-//          RandomCardName := PopularCards[Random(PopularCards.Count)];
-//      finally
-//        PopularCards.Free;
-//      end;
-//
-//      TThread.Queue(nil,
-//        procedure
-//        begin
-//          if not RandomCardName.IsEmpty then
-//            DisplayCardArtworks(RandomCardName);
-//          BrIsLoaded := True;
-//          DelayTimer.Enabled := False;
-//        end);
-//    end);
 end;
 
 procedure TForm1.DisplayCardArtworks(const CardName: string);
@@ -391,8 +329,8 @@ begin
     SelectedRareCode := ''
   else
     SelectedRareCode := ComboBoxRarity.Text;
-     if ComboBoxRarity.Text = 'Mythic Rare' then
-       SelectedRareCode := 'Mythic';
+  if ComboBoxRarity.Text = 'Mythic Rare' then
+    SelectedRareCode := 'Mythic';
 
   // Get the selected colors
   if ComboBoxColors.Text = 'All Colors' then
@@ -401,7 +339,7 @@ begin
     SelectedColorCode := ComboBoxColors.Text;
 
   // Clear ListView and internal card list for a new search
-  ListViewCards.Items.Clear;
+  ClearListViewItems(ListViewCards);
   CardDataList.Clear;
 
   // Start loading the first page
@@ -519,12 +457,12 @@ begin
     begin
       CardDetailsObject := TCardDetailsObject(SelectedItem.TagObject);
       SelectedCard := CardDetailsObject.CardDetails;
-      FCardDetailsObject := CardDetailsObject;
+      // FCardDetailsObject := CardDetailsObject;
 
 
-//      ShowHighResButton.Enabled := SelectedCard.ImageUris.Normal <> '';
-//      ShowHighResButton.TagString := SelectedCard.ImageUris.Normal;
-//      CardTitle := SelectedCard.CardName;
+      // ShowHighResButton.Enabled := SelectedCard.ImageUris.Normal <> '';
+      // ShowHighResButton.TagString := SelectedCard.ImageUris.Normal;
+      // CardTitle := SelectedCard.CardName;
 
       // Display card details immediately without set details
       // DisplayCardInBrowser(SelectedCard, []);
@@ -568,54 +506,59 @@ end;
 
 procedure TForm1.WebBrowser1DidFinishLoad(ASender: TObject);
 begin
-  WebBrowser1.EvaluateJavaScript
-    ('document.addEventListener("contextmenu", function (e) { e.preventDefault(); });'
-    + 'function flipCard() {' +
-    '  const card = document.querySelector(".flip-card");' + '  if (card) {' +
-    '    card.classList.toggle("show-back");' + '  }' + '}');
+if SameText(WebBrowser1.URL, 'about:blank') then
+  begin
+    WebBrowserInitialized := True;
+
+  end
+  else
+  begin
+    WebBrowser1.EvaluateJavaScript(JScript);
+  end;
+  //
 end;
 
 procedure TForm1.DisplayCardInBrowser(const CardDetails: TCardDetails;
 const Rulings: TArray<TRuling>);
-var
-  Template: string;
-  Replacements: TDictionary<string, string>;
 begin
-  try
-    // Load the HTML template
-    Template := LoadTemplate(SCard_templateHtml);
+  TTask.Run(
+    procedure
+    var
+      Template: string;
+      Replacements: TDictionary<string, string>;
+    begin
+      try
+        Template := HtmlTemplate; // Load HTML template
+        Replacements := TDictionary<string, string>.Create;
+        try
+          // Prepare all replacements
+          AddCoreReplacements(Replacements, CardDetails);
+          AddImageReplacements(Replacements, CardDetails);
+          AddLegalitiesReplacements(Replacements, CardDetails);
+          AddPricesReplacements(Replacements, CardDetails);
+          AddBadgesReplacements(Replacements, CardDetails);
+          AddKeywordsReplacement(Replacements, CardDetails);
 
+          for var Key in Replacements.Keys do
+            Template := Template.Replace(Key, Replacements[Key]);
+        finally
+          Replacements.Free;
+        end;
 
-    // Initialize the replacements dictionary
-    Replacements := TDictionary<string, string>.Create;
-    try
-      // sections of replacements using helper functions
-      AddCoreReplacements(Replacements, CardDetails); // Basic card details
-      AddImageReplacements(Replacements, CardDetails); // Image and layout logic
-      AddLegalitiesReplacements(Replacements, CardDetails); // Legalities table
-      AddPricesReplacements(Replacements, CardDetails); // Prices section
-      AddBadgesReplacements(Replacements, CardDetails);
-      // FullArt, Promo, Reserved badges
-      AddKeywordsReplacement(Replacements, CardDetails); // Keywords section
-      //Will add more
-
-      // Perform the replacements in the template
-      for var Key in Replacements.Keys do
-        Template := Template.Replace(Key, Replacements[Key]);
-
-      // Display the final HTML in the web browser
-      TThread.Queue(nil,
-        procedure
-        begin
-          WebBrowser1.LoadFromStrings(Template, ''); // Load the processed HTML
-        end);
-    finally
-      Replacements.Free; // Free the replacements dictionary
-    end;
-  except
-    on E: Exception do
-      ShowMessage('Error displaying card: ' + E.Message);
-  end;
+        TThread.Queue(nil,
+          procedure
+          begin
+            WebBrowser1.LoadFromStrings(Template, '');
+          end);
+      except
+        on E: Exception do
+          TThread.Queue(nil,
+            procedure
+            begin
+              ShowMessage('Error displaying card: ' + E.Message);
+            end);
+      end;
+    end);
 end;
 
 procedure TForm1.Button1Click(Sender: TObject);
@@ -628,20 +571,6 @@ begin
     DisplayCardArtworks(SearchTerm);
     LayoutControls.Enabled := False;
   end;
-end;
-
-procedure TForm1.Button4Click(Sender: TObject);
-begin
-  // if Assigned(FCardDetailsObject) then
-  // begin
-  // if DataModule1.CheckCardExists(Trim(FCardDetailsObject.CardDetails.SFID))
-  // then
-  // ShowMessage('Card already exists in the database.')
-  // else
-  // SaveSelectedCardToDatabase;
-  // end
-  // else
-  // ShowMessage('No card is selected.');
 end;
 
 procedure TForm1.ButtonNextPageClick(Sender: TObject);

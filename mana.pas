@@ -1,4 +1,4 @@
-unit mana;
+unit Mana;
 
 interface
 
@@ -103,7 +103,7 @@ begin
         SymbolsJSON := JsonResponse.A[FieldData].Clone as TJsonArray;
       finally
         JsonResponse.Free;
-        LogStuff('Symbols Fetched');
+        LogStuff('Symbols Fetched/Found');
       end;
     end
     else

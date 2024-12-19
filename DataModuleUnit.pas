@@ -3,19 +3,17 @@ unit DataModuleUnit;
 interface
 
 uses
-  System.SysUtils, System.Classes, FireDAC.Comp.Client, FireDAC.Stan.Param,
-    FireDAC.DApt, FireDAC.DatS, Data.DB,
-  SGlobalsZ, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
-    FireDAC.UI.Intf, FireDAC.Phys.Intf,
-  FireDAC.Stan.Def, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
-    MLogic,
-  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.FMXUI.Wait, FireDAC.DApt.Intf,
-    FireDAC.Comp.DataSet, FireDAC.VCLUI.Wait;
+  System.SysUtils, System.Classes, FireDAC.Stan.Intf, FireDAC.Stan.Option,
+  FireDAC.Stan.Error, FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def,
+  FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.Phys, FireDAC.FMXUI.Wait,
+  Data.DB, FireDAC.Comp.Client, FireDAC.Stan.Param, FireDAC.DatS,
+  FireDAC.DApt.Intf, FireDAC.DApt, FireDAC.Comp.DataSet,SGlobalsZ,FireDAC.Comp.UI;
 
 type
   TDataModule1 = class(TDataModule)
     FDConnection1: TFDConnection;
     FDQuery1: TFDQuery;
+    FDGUIxWaitCursor1: TFDGUIxWaitCursor;
 
   private
 
@@ -31,7 +29,7 @@ var
 
 implementation
 uses
-WrapperHelper;
+WrapperHelper, Mlogic;
 
 {%CLASSGROUP 'FMX.Controls.TControl'}
 

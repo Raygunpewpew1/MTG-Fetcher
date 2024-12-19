@@ -5,9 +5,6 @@ interface
 uses
   System.Classes, System.SysUtils, System.Generics.Collections;
 
-var
-  CardTitle: string;
-
 type
   // Prices for different currencies
   TCardPrices = record
@@ -15,6 +12,7 @@ type
     USD_Foil: string;
     EUR: string;
     Tix: string;
+    procedure Clear;
   end;
 
   // Image URIs for different resolutions
@@ -22,10 +20,11 @@ type
     Small: string;
     Normal: string;
     Large: string;
-    BackFace: string;  //added for flip cards
+    BackFace: string;
     PNG: string;
     Border_crop: string;
     Art_crop: string;
+    procedure Clear;
   end;
 
   // Legalities for different formats
@@ -46,9 +45,10 @@ type
     Premodern: string;
     Duel: string;
     Penny: string;
+    procedure Clear;
   end;
 
-  // Card Face for multi-faced cards (e.g., double-sided cards)
+  // Card Face for multi-faced cards
   TCardFace = record
     Name: string;
     FlavorText: string;
@@ -59,76 +59,75 @@ type
     Toughness: string;
     ImageUris: TImageUris;
     Loyalty: string;
+    procedure Clear;
   end;
 
-type
   // Main Card Details structure
   TCardDetails = record
     // Core Identifiers
-    SFID: string;                       // Unique card ID
-    OracleID: string;                   // Oracle ID for card rulings and prints
-    CardName: string;                   // Card name
-    Lang: string;                       // Language of the card
-    ReleasedAt: string;                 // Release date
-    Layout: string;                     // Card layout (e.g., normal, transform)
+    SFID: string;
+    OracleID: string;
+    CardName: string;
+    Lang: string;
+    ReleasedAt: string;
+    Layout: string;
 
     // Visuals and Presentation
-    TypeLine: string;                   // Card type line (e.g., "Instant")
-    ManaCost: string;                   // Mana cost (e.g., "{U}{U}")
-    OracleText: string;                 // Rules text (e.g., "Draw a card.")
-    FlavorText: string;                 // Flavor text (italicized story text)
-    Power: string;                      // Power (for creatures)
-    Toughness: string;                  // Toughness (for creatures)
-    Loyalty: string;                    // Loyalty (for planeswalkers)
-    SetIconURI: string;                 // URI for the set icon SVG
-    Artist: string;                     // Artist name
-    CollectorNumber: string;            // Collector number of the card
-    BorderColor: string;                // Card border color
-    Frame: string;                      // Frame type (e.g., "2015")
-    SecurityStamp: string;              // Security stamp type (e.g., "oval")
-    Keywords: TArray<string>;           // Keywords like "flying", or "firststrike"
+    TypeLine: string;
+    ManaCost: string;
+    OracleText: string;
+    FlavorText: string;
+    Power: string;
+    Toughness: string;
+    Loyalty: string;
+    SetIconURI: string;
+    Artist: string;
+    CollectorNumber: string;
+    BorderColor: string;
+    Frame: string;
+    SecurityStamp: string;
+    Keywords: TArray<string>;
 
     // Legalities and Rules
-    Legalities: TCardLegalities;        // Card legality for formats
-    PrintsSearchUri: string;            // URI for other printings of this card
-    RulingsUri: string;                 // URI for card rulings
+    Legalities: TCardLegalities;
+    PrintsSearchUri: string;
+    RulingsUri: string;
 
     // Pricing Information
-    Prices: TCardPrices;                // Pricing (USD, EUR, Tix, etc.)
+    Prices: TCardPrices;
 
     // Images and Data
-    ImageUris: TImageUris;              // URIs for images
-    ImageData: TBytes;                  // Binary image data (if fetched)
+    ImageUris: TImageUris;
+    ImageData: TBytes;
 
     // Set and Rarity Information
-    SetCode: string;                    // Set code (e.g., "vma")
-    SetName: string;                    // Set name (e.g., "Vintage Masters")
-    Rarity: string;                     // Card rarity (e.g., "rare", "mythic")
+    SetCode: string;
+    SetName: string;
+    Rarity: string;
 
     // Additional Attributes
-    CMC: Double;                        // Converted mana cost
-    Reserved: Boolean;                  // If the card is on the reserved list
-    Foil: Boolean;                      // If the card has a foil version
-    NonFoil: Boolean;                   // If the card has a non-foil version
-    Oversized: Boolean;                 // If the card is oversized
-    Promo: Boolean;                     // If the card is a promo
-    Reprint: Boolean;                   // If the card is a reprint
-    Digital: Boolean;                   // If the card is digital-only
-    FullArt: Boolean;                   // If the card is a full-art card
-    Textless: Boolean;                  // If the card is textless
-    StorySpotlight: Boolean;            // If the card is part of a story spotlight
-    Games: TArray<string>;              // If the card is available in paper,arena etc
+    CMC: Double;
+    Reserved: Boolean;
+    Foil: Boolean;
+    NonFoil: Boolean;
+    Oversized: Boolean;
+    Promo: Boolean;
+    Reprint: Boolean;
+    Digital: Boolean;
+    FullArt: Boolean;
+    Textless: Boolean;
+    StorySpotlight: Boolean;
+    Games: TArray<string>;
 
-    // Additional Card Faces (for transform or modal cards)
-    CardFaces: TArray<TCardFace>;       // Array of card faces (if applicable)
+    // Card Faces
+    CardFaces: TArray<TCardFace>;
 
     // External Links
-    ScryfallURI: string;                // Link to Scryfall page
-    URI: string;                        // Link to the API endpoint
-    RelatedURIs: TDictionary<string, string>;   // Related URIs (e.g., rulings)
-    PurchaseURIs: TDictionary<string, string>;  // Purchase URIs (e.g., TCGPlayer)
+    ScryfallURI: string;
+    URI: string;
+    RelatedURIs: TDictionary<string, string>;
+    PurchaseURIs: TDictionary<string, string>;
 
-    // Methods
     procedure Clear;
   end;
 
@@ -157,6 +156,7 @@ type
     Source: string;
     PublishedAt: string;
     Comment: string;
+    procedure Clear;
   end;
 
   // Bulk Data Details
@@ -165,6 +165,7 @@ type
     DataType: string;
     DownloadURI: string;
     UpdatedAt: string;
+    procedure Clear;
   end;
 
   // Symbol Details
@@ -172,26 +173,27 @@ type
     Symbol: string;
     English: string;
     SVGURI: string;
+    procedure Clear;
   end;
 
+  // Catalog for Scryfall
+  TScryfallCatalog = record
+    Name: string;
+    Data: TArray<string>;
+    TotalItems: Integer;
+    Uri: string;
+    ObjectType: string;
+    procedure Clear;
+  end;
+
+  // Search Result
   TSearchResult = record
     Cards: TArray<TCardDetails>;
     HasMore: Boolean;
     NextPageURL: string;
     TotalCards: Integer;
-  end;
-
-  type
-  TScryfallCatalog = record
-    Name: string;  // Name of the catalog
-    Data: TArray<string>; // Array of creature types
-    TotalItems: Integer;  // Track total items for additional metadata
-    Uri: string;           // Optional: API URI for debugging or reference
-    ObjectType: string;    // Optional: API object type (e.g., "catalog")
     procedure Clear;
   end;
-
-
 
 const
   LegalitiesArray: array [0 .. 15] of string = ('Standard', 'Pioneer', 'Modern',
@@ -200,25 +202,128 @@ const
 
 implementation
 
+{ TCardPrices }
+
+procedure TCardPrices.Clear;
+begin
+  USD := '';
+  USD_Foil := '';
+  EUR := '';
+  Tix := '';
+end;
+
+{ TImageUris }
+
+procedure TImageUris.Clear;
+begin
+  Small := '';
+  Normal := '';
+  Large := '';
+  BackFace := '';
+  PNG := '';
+  Border_crop := '';
+  Art_crop := '';
+end;
+
+{ TCardLegalities }
+
+procedure TCardLegalities.Clear;
+begin
+  Self := Default(TCardLegalities);
+end;
+
+{ TCardFace }
+
+procedure TCardFace.Clear;
+begin
+  Name := '';
+  FlavorText := '';
+  ManaCost := '';
+  TypeLine := '';
+  OracleText := '';
+  Power := '';
+  Toughness := '';
+  Loyalty := '';
+  ImageUris.Clear;
+end;
+
 { TCardDetails }
 
-// Clear method to reset all fields to default values
 procedure TCardDetails.Clear;
 begin
+  SFID := '';
+  OracleID := '';
+  CardName := '';
+  Lang := '';
+  ReleasedAt := '';
+  Layout := '';
+  TypeLine := '';
+  ManaCost := '';
+  OracleText := '';
+  FlavorText := '';
+  Power := '';
+  Toughness := '';
+  Loyalty := '';
+  SetIconURI := '';
+  Artist := '';
+  CollectorNumber := '';
+  BorderColor := '';
+  Frame := '';
+  SecurityStamp := '';
+  SetLength(Keywords, 0);
+  Legalities.Clear;
+  PrintsSearchUri := '';
+  RulingsUri := '';
+  Prices.Clear;
+  ImageUris.Clear;
+  SetLength(Games, 0);
+  SetLength(CardFaces, 0);
+
   if Assigned(RelatedURIs) then
-    RelatedURIs.Free;
+    FreeAndNil(RelatedURIs);
+
   if Assigned(PurchaseURIs) then
-    PurchaseURIs.Free;
-  SetLength(Keywords, 0); // Clear the Keywords array
-  Self := Default(TCardDetails);
+    FreeAndNil(PurchaseURIs);
+
+  SetLength(ImageData, 0);
 end;
 
 { TSetDetails }
 
 procedure TSetDetails.Clear;
 begin
-  Self := Default (TSetDetails);
+  Self := Default(TSetDetails);
 end;
+
+{ TRuling }
+
+procedure TRuling.Clear;
+begin
+  Source := '';
+  PublishedAt := '';
+  Comment := '';
+end;
+
+{ TBulkData }
+
+procedure TBulkData.Clear;
+begin
+  ID := '';
+  DataType := '';
+  DownloadURI := '';
+  UpdatedAt := '';
+end;
+
+{ TSymbol }
+
+procedure TSymbol.Clear;
+begin
+  Symbol := '';
+  English := '';
+  SVGURI := '';
+end;
+
+{ TScryfallCatalog }
 
 procedure TScryfallCatalog.Clear;
 begin
@@ -227,6 +332,16 @@ begin
   ObjectType := '';
   SetLength(Data, 0);
   TotalItems := 0;
+end;
+
+{ TSearchResult }
+
+procedure TSearchResult.Clear;
+begin
+  SetLength(Cards, 0);
+  HasMore := False;
+  NextPageURL := '';
+  TotalCards := 0;
 end;
 
 end.
