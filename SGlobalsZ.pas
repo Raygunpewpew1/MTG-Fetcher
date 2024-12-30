@@ -6,6 +6,11 @@ uses
   System.Classes, System.SysUtils, System.Generics.Collections;
 
 type
+  TRarity = (rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus, rTimeshifted,
+    rMasterpiece, rToken, rDoubleFacedToken, rDraft, rPlaneshifted, rUnique,
+    rBasic, rPromo);
+
+type
   // Prices for different currencies
   TCardPrices = record
     USD: string;
@@ -45,7 +50,12 @@ type
     Premodern: string;
     Duel: string;
     Penny: string;
+    Gladiator: string;
+    PauperCommander: string;
+    Oathbreaker: string;
     procedure Clear;
+    procedure SetStatus(const FormatName, Status: string);
+    function GetStatus(const FormatName: string): string;
   end;
 
   // Card Face for multi-faced cards
@@ -71,9 +81,12 @@ type
     Lang: string;
     ReleasedAt: string;
     Layout: string;
+    ArenaID: Integer;
+    EDHRank: Integer;
 
     // Visuals and Presentation
     TypeLine: string;
+    ColorIdentity: TArray<string>;
     ManaCost: string;
     OracleText: string;
     FlavorText: string;
@@ -103,7 +116,7 @@ type
     // Set and Rarity Information
     SetCode: string;
     SetName: string;
-    Rarity: string;
+    Rarity: TRarity;
 
     // Additional Attributes
     CMC: Double;
@@ -127,6 +140,10 @@ type
     URI: string;
     RelatedURIs: TDictionary<string, string>;
     PurchaseURIs: TDictionary<string, string>;
+    ScryfallCardBackID: string;
+    ScryfallID: string;
+    ScryfallIllustrationID: string;
+    ScryfallOracleID: string;
 
     procedure Clear;
   end;
@@ -181,7 +198,7 @@ type
     Name: string;
     Data: TArray<string>;
     TotalItems: Integer;
-    Uri: string;
+    URI: string;
     ObjectType: string;
     procedure Clear;
   end;
@@ -196,9 +213,29 @@ type
   end;
 
 const
-  LegalitiesArray: array [0 .. 15] of string = ('Standard', 'Pioneer', 'Modern',
-    'Legacy', 'Commander', 'Vintage', 'Pauper', 'Historic', 'Explorer',
-    'Alchemy', 'Brawl', 'Future', 'Oldschool', 'Premodern', 'Duel', 'Penny');
+  RarityToString: array [TRarity] of string = (
+    'common',          // rCommon
+    'uncommon',        // rUncommon
+    'rare',            // rRare
+    'mythic',          // rMythic
+    'special',         // rSpecial
+    'bonus',           // rBonus
+    'timeshifted',     // rTimeshifted
+    'masterpiece',     // rMasterpiece
+    'token',           // rToken
+    'double_faced_token', // rDoubleFacedToken
+    'draft',           // rDraft
+    'planeshifted',    // rPlaneshifted
+    'unique',          // rUnique
+    'basic',           // rBasic
+    'promo'            // rPromo
+  );
+
+const
+  LegalitiesArray: array [0 .. 18] of string = ('standard', 'future',
+    'historic', 'gladiator', 'pioneer', 'explorer', 'modern', 'legacy',
+    'pauper', 'vintage', 'penny', 'commander', 'alchemy', 'brawl',
+    'paupercommander', 'duel', 'oldschool', 'premodern', 'oathbreaker');
 
 implementation
 
@@ -206,93 +243,134 @@ implementation
 
 procedure TCardPrices.Clear;
 begin
-  USD := '';
-  USD_Foil := '';
-  EUR := '';
-  Tix := '';
+  Self := Default (TCardPrices);
 end;
 
 { TImageUris }
 
 procedure TImageUris.Clear;
 begin
-  Small := '';
-  Normal := '';
-  Large := '';
-  BackFace := '';
-  PNG := '';
-  Border_crop := '';
-  Art_crop := '';
+  Self := Default (TImageUris);
 end;
 
 { TCardLegalities }
 
 procedure TCardLegalities.Clear;
 begin
-  Self := Default(TCardLegalities);
+  Self := Default (TCardLegalities);
+end;
+
+procedure TCardLegalities.SetStatus(const FormatName, Status: string);
+begin
+  if FormatName = 'Standard' then
+    Standard := Status
+  else if FormatName = 'Future' then
+    Future := Status
+  else if FormatName = 'Historic' then
+    Historic := Status
+  else if FormatName = 'Gladiator' then
+    Gladiator := Status
+  else if FormatName = 'Pioneer' then
+    Pioneer := Status
+  else if FormatName = 'Explorer' then
+    Explorer := Status
+  else if FormatName = 'Modern' then
+    Modern := Status
+  else if FormatName = 'Legacy' then
+    Legacy := Status
+  else if FormatName = 'Pauper' then
+    Pauper := Status
+  else if FormatName = 'Vintage' then
+    Vintage := Status
+  else if FormatName = 'Penny' then
+    Penny := Status
+  else if FormatName = 'Commander' then
+    Commander := Status
+  else if FormatName = 'Alchemy' then
+    Alchemy := Status
+  else if FormatName = 'Brawl' then
+    Brawl := Status
+  else if FormatName = 'PauperCommander' then
+    PauperCommander := Status
+  else if FormatName = 'Duel' then
+    Duel := Status
+  else if FormatName = 'Oldschool' then
+    Oldschool := Status
+  else if FormatName = 'Premodern' then
+    Premodern := Status
+  else if FormatName = 'Oathbreaker' then
+    Oathbreaker := Status;
+end;
+
+function TCardLegalities.GetStatus(const FormatName: string): string;
+begin
+  if FormatName = 'Standard' then
+    Result := Standard
+  else if FormatName = 'Future' then
+    Result := Future
+  else if FormatName = 'Historic' then
+    Result := Historic
+  else if FormatName = 'Gladiator' then
+    Result := Gladiator
+  else if FormatName = 'Pioneer' then
+    Result := Pioneer
+  else if FormatName = 'Explorer' then
+    Result := Explorer
+  else if FormatName = 'Modern' then
+    Result := Modern
+  else if FormatName = 'Legacy' then
+    Result := Legacy
+  else if FormatName = 'Pauper' then
+    Result := Pauper
+  else if FormatName = 'Vintage' then
+    Result := Vintage
+  else if FormatName = 'Penny' then
+    Result := Penny
+  else if FormatName = 'Commander' then
+    Result := Commander
+  else if FormatName = 'Alchemy' then
+    Result := Alchemy
+  else if FormatName = 'Brawl' then
+    Result := Brawl
+  else if FormatName = 'PauperCommander' then
+    Result := PauperCommander
+  else if FormatName = 'Duel' then
+    Result := Duel
+  else if FormatName = 'Oldschool' then
+    Result := Oldschool
+  else if FormatName = 'Premodern' then
+    Result := Premodern
+  else if FormatName = 'Oathbreaker' then
+    Result := Oathbreaker
+  else
+    Result := '';
 end;
 
 { TCardFace }
 
 procedure TCardFace.Clear;
 begin
-  Name := '';
-  FlavorText := '';
-  ManaCost := '';
-  TypeLine := '';
-  OracleText := '';
-  Power := '';
-  Toughness := '';
-  Loyalty := '';
-  ImageUris.Clear;
+  Self := Default (TCardFace);
 end;
 
 { TCardDetails }
 
 procedure TCardDetails.Clear;
 begin
-  SFID := '';
-  OracleID := '';
-  CardName := '';
-  Lang := '';
-  ReleasedAt := '';
-  Layout := '';
-  TypeLine := '';
-  ManaCost := '';
-  OracleText := '';
-  FlavorText := '';
-  Power := '';
-  Toughness := '';
-  Loyalty := '';
-  SetIconURI := '';
-  Artist := '';
-  CollectorNumber := '';
-  BorderColor := '';
-  Frame := '';
-  SecurityStamp := '';
-  SetLength(Keywords, 0);
-  Legalities.Clear;
-  PrintsSearchUri := '';
-  RulingsUri := '';
-  Prices.Clear;
-  ImageUris.Clear;
-  SetLength(Games, 0);
-  SetLength(CardFaces, 0);
+  Self := Default (TCardDetails);
 
   if Assigned(RelatedURIs) then
     FreeAndNil(RelatedURIs);
 
   if Assigned(PurchaseURIs) then
     FreeAndNil(PurchaseURIs);
-
-  SetLength(ImageData, 0);
 end;
 
 { TSetDetails }
 
 procedure TSetDetails.Clear;
 begin
-  Self := Default(TSetDetails);
+  Self := Default (TSetDetails);
 end;
 
 { TRuling }
@@ -328,7 +406,7 @@ end;
 procedure TScryfallCatalog.Clear;
 begin
   Name := '';
-  Uri := '';
+  URI := '';
   ObjectType := '';
   SetLength(Data, 0);
   TotalItems := 0;

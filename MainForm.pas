@@ -1,11 +1,4 @@
-﻿{
-
-  TODO Organize code, UI improvments
-  Need to focus on Windows, less time worrying about Android.
-
-}
-
-unit MainForm;
+﻿unit MainForm;
 
 interface
 
@@ -14,14 +7,12 @@ uses
   System.Generics.Collections, System.IOUtils, FMX.Types, FMX.Controls,
   FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts,
   FMX.ExtCtrls, FMX.Ani, FMX.Edit, FMX.StdCtrls,
-  FMX.WebBrowser, FireDAC.Stan.Intf, FireDAC.Phys.Intf,
-  FireDAC.Comp.Client,
-  FireDAC.Comp.DataSet, FireDAC.Stan.Param, FireDAC.Phys.SQLite,
-  FireDAC.Phys.SQLiteDef, Data.DB, FMX.Skia, System.Net.HttpClient,
-  System.Hash, SGlobalsZ, ScryfallAPIWrapperV2, System.StrUtils,
+  FMX.WebBrowser, FMX.Skia, System.Net.HttpClient,
+  SGlobalsZ, ScryfallAPIWrapperV2,
   System.TypInfo, Math, System.Threading,
   FMX.Controls.Presentation, FMX.ListView.Types, FMX.ListView.Appearances,
-  FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox;
+  FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, MLogic,
+  System.Net.URLClient, System.Net.HttpClientComponent, MainFormLogicHelpers;
 
 type
   TCardDetailsObject = class(TObject)
@@ -59,7 +50,10 @@ type
     Button5: TButton;
     ShowHighResButton: TButton;
     ProgressBar1: TProgressBar;
-    CountLabel: TLabel; // Splitter between ListView and WebBrowser
+    CountLabel: TLabel;
+    LabelProgress: TLabel;
+    NetHTTPClient1: TNetHTTPClient;
+    Button2: TButton;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -69,6 +63,7 @@ type
     procedure WebBrowser1DidFinishLoad(ASender: TObject);
     procedure ButtonNextPageClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
 
   private
 
@@ -77,10 +72,10 @@ type
     HasMorePages: Boolean;
     SearchTerm: string;
     HttpClient: THTTPClient;
-    // FCardDetailsObject: TCardDetailsObject;
     CardDataList: TList<TCardDetails>;
     CardCount: Integer;
     AppClose: Boolean;
+    SavePathX: string;
     FScryfallAPI: TScryfallAPI; // Instance of TScryfallAPI
 
     BrIsLoaded: Boolean;
@@ -88,7 +83,6 @@ type
 
     procedure ShowCardDetails(Sender: TObject);
 
-    // procedure SaveSelectedCardToDatabase;
 
     procedure DisplayCardInBrowser(const CardDetails: TCardDetails;
       const Rulings: TArray<TRuling>);
@@ -97,6 +91,10 @@ type
     procedure LoadNextPage(const CardName, SetCode, ColorCode,
       RarityCode: string);
     procedure LoadAllCatalogs;
+    procedure DownloadBulkData;
+    procedure OnDownloadProgress(const Sender: TObject;
+      AContentLength, AReadCount: Int64; var Abort: Boolean);
+
 
   public
 
@@ -111,13 +109,10 @@ implementation
 {$R *.Windows.fmx MSWINDOWS}
 
 uses
-  WrapperHelper, MLogic, APIConstants, CardDisplayHelpers, System.NetEncoding;
+  WrapperHelper, APIConstants, CardDisplayHelpers,
+  JsonDataObjects, DataModuleUnit, Logger,Template;
 
-const
-  SAboutBlank = 'about:blank';
-  SCard_templateHtml = 'card_template.html';
-  SCatalogsJson = 'catalogs.json';
-  S = ' - ';
+
   { TCardLayout }
 
 destructor TCardLayout.Destroy;
@@ -136,6 +131,129 @@ end;
 
 { TForm1 }
 
+
+
+procedure TForm1.DownloadBulkData;
+var
+  AppDataPath: string;
+begin
+
+  AppDataPath := TPath.Combine(TPath.GetHomePath, MTGAppFolder);
+  if not TDirectory.Exists(AppDataPath) then
+    TDirectory.CreateDirectory(AppDataPath);
+
+  SavePathX := TPath.Combine(AppDataPath, BulkDataPath);
+
+  if FileExists(SavePathX) then
+  begin
+    LoadBulkData(SavePathX,CardDataList);
+    Exit;
+  end;
+
+  ProgressBar1.Visible := True;
+  LabelProgress.Visible := True;
+  LabelProgress.Text := S_FETCHING_BULK_DATA_METADATA;
+
+  // Execute download in a background thread
+  TTask.Run(
+    procedure
+    var
+      MetadataStream, DataStream: TStringStream;
+      MetadataJson: TJsonObject;
+      DownloadURI: string;
+    begin
+      MetadataStream := TStringStream.Create;
+      DataStream := TStringStream.Create;
+      try
+        try
+
+          TThread.Queue(nil,
+            procedure
+            begin
+              LabelProgress.Text := S_FETCHING_BULK_DATA_METADATA;
+            end);
+
+          HttpClient.CustomHeaders['User-Agent'] := UserAgent;
+          HttpClient.CustomHeaders['Accept'] := AcceptHeader;
+          HttpClient.Get('https://api.scryfall.com/bulk-data', MetadataStream);
+
+          MetadataJson := TJsonObject.Parse(MetadataStream.DataString)
+            as TJsonObject;
+          try
+            if MetadataJson.Contains(S_DATA) then
+            begin
+              for var Obj in MetadataJson.A['data'] do
+              begin
+                if (Obj.S[S_TYPE] = S_ORACLE_CARDS) then
+                begin
+                  DownloadURI := Obj.S[S_DOWNLOAD_URI];
+                  Break;
+                end;
+              end;
+            end;
+
+            if DownloadURI.IsEmpty then
+              raise Exception.Create
+                (S_DOWNLOAD_URI_FOR_DEFAULT_CARDS_NOT_FOUND);
+
+            TThread.Queue(nil,
+              procedure
+              begin
+                LabelProgress.Text := S_DOWNLOADING_BULK_DATA;
+              end);
+
+            HttpClient.OnReceiveData := OnDownloadProgress;
+            HttpClient.Get(DownloadURI, DataStream);
+
+            DataStream.SaveToFile(SavePathX);
+
+            TThread.Queue(nil,
+              procedure
+              begin
+                LabelProgress.Text := S_DOWNLOAD_COMPLETE_FILE_SAVED_TO +
+                  SavePathX;
+                LoadBulkData(SavePathX,CardDataList);
+              end);
+
+          finally
+            MetadataJson.Free;
+          end;
+
+        except
+          on E: Exception do
+            TThread.Queue(nil,
+              procedure
+              begin
+                LabelProgress.Text := S_ERROR_DOWNLOADING_BULK_DATA;
+                ShowMessage(S_ERROR + E.Message);
+              end);
+        end;
+
+      finally
+        MetadataStream.Free;
+        DataStream.Free;
+
+        TThread.Queue(nil,
+          procedure
+          begin
+            ProgressBar1.Visible := False;
+          end);
+      end;
+    end);
+end;
+
+procedure TForm1.OnDownloadProgress(const Sender: TObject;
+AContentLength, AReadCount: Int64; var Abort: Boolean);
+begin
+  if AContentLength > 0 then
+    TThread.Queue(nil,
+      procedure
+      begin
+        ProgressBar1.Max := 100;
+        ProgressBar1.Value := (AReadCount / AContentLength) * 100;
+      end);
+end;
+
 procedure TForm1.LoadAllCatalogs;
 var
   Catalogs: TDictionary<string, TScryfallCatalog>;
@@ -145,10 +263,9 @@ begin
   Catalogs := TDictionary<string, TScryfallCatalog>.Create;
 
   try
-    // Try to load the catalogs from the file
+
     LoadCatalogsFromFile(FileName, Catalogs);
 
-    // If the dictionary is empty (file not found or invalid), fetch from the API
     if Catalogs.Count = 0 then
     begin
       Catalogs := FScryfallAPI.FetchAllCatalogs;
@@ -178,7 +295,6 @@ begin
       CatalogKeywordActions,
       CatalogAbilityWords }
 
-    // ShowMessage('Keyword Abilities: ' + String.Join(', ', Catalogs[CatalogKeywordAbilities].Data));
   finally
     Catalogs.Free;
   end;
@@ -188,39 +304,31 @@ procedure TForm1.FormCreate(Sender: TObject);
 var
   SetDetailsArray: TArray<TSetDetails>;
   SetDetails: TSetDetails;
-
-  // CardTypes: TScryfallCatalog;
-  // CreaTypeStr: string;
 begin
   WebBrowserInitialized := False;
   WebBrowser1.LoadFromStrings('', '');
 
   LoadAllCatalogs;
-  // PopulateComboBoxFromCatalog(ComboBox1, CatalogLandTypes);
   FScryfallAPI := TScryfallAPI.Create;
   HttpClient := THTTPClient.Create;
   CardDataList := TList<TCardDetails>.Create;
-  // DataModule1.CreateCardDetailsTable;
   CardCount := 0;
   AppClose := False;
-  // DataModule1.SetupDatabaseConnection(GetDatabasePath);
-  // CopyDatabaseToInternalStorage;
-  // CopyTemplateToInternalStorage;
+
+  CopyDatabaseToInternalStorage;
 
   BrIsLoaded := False;
 
   ListViewCards.OnItemClick := ListViewCardsItemClick;
 
-  ComboBoxSetCode.Items.Add('All Sets');
+  ComboBoxSetCode.Items.Add(S_ALL_SETS);
 
   try
-    // FScryfallAPI.PreloadAllSets;
     SetDetailsArray := FScryfallAPI.GetAllSets;
-    // Fetch all sets from Scryfall
     for SetDetails in SetDetailsArray do
     begin
       ComboBoxSetCode.Items.Add(SetDetails.Code + S + SetDetails.Name);
-      // Example: "KHM - Kaldheim"
+      //  "KHM - Kaldheim"
     end;
   finally
 
@@ -228,6 +336,8 @@ begin
     ComboBoxColors.ItemIndex := 0;
     ComboBoxRarity.ItemIndex := 0;
   end;
+
+  DownloadBulkData;
 
   DelayTimer.Enabled := True;
 
@@ -244,22 +354,22 @@ end;
 procedure TForm1.FormShow(Sender: TObject);
 begin
 
-  WebBrowser1.Navigate('about:blank');
+  WebBrowser1.Navigate(S_ABOUT_BLANK);
 end;
 
 procedure TForm1.ListViewCardsItemClick(const Sender: TObject;
-  const AItem: TListViewItem);
+const AItem: TListViewItem);
 
 begin
   if Assigned(AItem) and Assigned(AItem.TagObject) and
     (AItem.TagObject is TCardDetailsObject) then
   begin
 
-    // Call ShowCardDetails with the selected card details
     ShowCardDetails(AItem);
+
   end
   else
-    ShowMessage('No card details are available for this item.');
+    ShowMessage(S_NO_CARD_DETAILS_ARE_AVAILABLE_FOR_THIS);
 end;
 
 procedure TForm1.DelayTimerTimer(Sender: TObject);
@@ -267,7 +377,6 @@ begin
   if BrIsLoaded and WebBrowserInitialized then
     Exit;
 
-  // Start the task to fetch a random card asynchronously
   TTask.Run(
     procedure
     var
@@ -277,7 +386,7 @@ begin
         // Fetch a random card
         RandomCard := FScryfallAPI.GetRandomCard;
 
-        // Synchronize with the main thread for UI updates
+        // Synchronize
         TThread.Queue(nil,
           procedure
           begin
@@ -297,7 +406,7 @@ begin
           TThread.Queue(nil,
             procedure
             begin
-              ShowMessage('Error fetching random card: ' + E.Message);
+              ShowMessage(S_ERROR_FETCHING_RANDOM_CARD + E.Message);
             end);
       end;
     end).Start;
@@ -319,30 +428,29 @@ begin
   ProgressBar1.Value := 0;
 
   // Get the selected set code
-  if ComboBoxSetCode.Selected.Text = 'All Sets' then
+  if ComboBoxSetCode.Selected.Text = S_ALL_SETS then
     SelectedSetCode := ''
   else
-    SelectedSetCode := ComboBoxSetCode.Selected.Text.Split([' - '])[0];
+    SelectedSetCode := ComboBoxSetCode.Selected.Text.Split([S])[0];
 
-  // Get the selected rarity
-  if ComboBoxRarity.Text = 'All Rarities' then
+
+  if ComboBoxRarity.Text = S_ALL_RARITIES then
     SelectedRareCode := ''
   else
     SelectedRareCode := ComboBoxRarity.Text;
-  if ComboBoxRarity.Text = 'Mythic Rare' then
-    SelectedRareCode := 'Mythic';
+  if ComboBoxRarity.Text = S_MYTHIC_RARE then
+    SelectedRareCode := S_MYTHIC;
 
-  // Get the selected colors
-  if ComboBoxColors.Text = 'All Colors' then
+
+  if ComboBoxColors.Text = S_ALL_COLORS then
     SelectedColorCode := ''
   else
     SelectedColorCode := ComboBoxColors.Text;
 
-  // Clear ListView and internal card list for a new search
+
   ClearListViewItems(ListViewCards);
   CardDataList.Clear;
 
-  // Start loading the first page
   LoadNextPage(CardName, SelectedSetCode, SelectedColorCode, SelectedRareCode);
 
   // Set up "Next Page" button click event
@@ -372,7 +480,7 @@ begin
             // Handle errors
             if not Success then
             begin
-              ShowMessage('Error searching cards: ' + ErrorMsg);
+              ShowMessage(S_ERROR_SEARCHING_CARDS + ErrorMsg);
               Button1.Enabled := True;
               LayoutControls.Enabled := True;
               Exit;
@@ -388,12 +496,11 @@ begin
                 CardDataList.Add(Cards[CardIndex]); // Store valid card details
                 AddCardToListView(Cards[CardIndex]); // Add to ListView
 
-                // Update the progress bar
                 ProgressBar1.Value := ProgressBar1.Value + 1;
               end
               else
               begin
-                LogStuff(Format('Skipping invalid card at index %d: %s',
+                LogStuff(Format(S_SKIPPING_INVALID_CARD_AT_INDEX_D_S,
                   [CardIndex, Cards[CardIndex].CardName]));
               end;
             end;
@@ -409,7 +516,7 @@ begin
               ShowCardDetails(ListViewCards.Items[0]);
             end;
           finally
-            CountLabel.Text := 'Cards Found: ' +
+            CountLabel.Text := S_CARDS_FOUND +
               ListViewCards.ItemCount.ToString;
           end;
         end);
@@ -426,7 +533,7 @@ begin
   // Skip invalid cards
   if Card.CardName.IsEmpty or Card.SFID.IsEmpty then
   begin
-    LogStuff('Skipping card: missing "name" or "id".');
+    LogStuff(S_SKIPPING_CARD_MISSING_NAME_OR_ID);
     Exit;
   end;
 
@@ -446,7 +553,7 @@ var
   CardDetailsObject: TCardDetailsObject;
   SelectedCard: TCardDetails;
 begin
-  // Ensure the sender is a TListViewItem
+
   if Sender is TListViewItem then
   begin
     SelectedItem := TListViewItem(Sender);
@@ -457,19 +564,10 @@ begin
     begin
       CardDetailsObject := TCardDetailsObject(SelectedItem.TagObject);
       SelectedCard := CardDetailsObject.CardDetails;
-      // FCardDetailsObject := CardDetailsObject;
 
+      LogStuff(SelectedCard.CardName + ' ' + SelectedCard.SetCode);
 
-      // ShowHighResButton.Enabled := SelectedCard.ImageUris.Normal <> '';
-      // ShowHighResButton.TagString := SelectedCard.ImageUris.Normal;
-      // CardTitle := SelectedCard.CardName;
-
-      // Display card details immediately without set details
-      // DisplayCardInBrowser(SelectedCard, []);
-
-      // Fetch set details asynchronously
-      if not SelectedCard.SetCode.IsEmpty and SelectedCard.SetIconURI.IsEmpty
-      then
+      if not SelectedCard.SetCode.IsEmpty then
       begin
         TTask.Run(
           procedure
@@ -506,7 +604,7 @@ end;
 
 procedure TForm1.WebBrowser1DidFinishLoad(ASender: TObject);
 begin
-if SameText(WebBrowser1.URL, 'about:blank') then
+  if SameText(WebBrowser1.URL, S_ABOUT_BLANK) then
   begin
     WebBrowserInitialized := True;
 
@@ -528,6 +626,7 @@ begin
       Replacements: TDictionary<string, string>;
     begin
       try
+        WebBrowser1.LoadFromStrings(SAboutBlank, '');
         Template := HtmlTemplate; // Load HTML template
         Replacements := TDictionary<string, string>.Create;
         try
@@ -549,13 +648,14 @@ begin
           procedure
           begin
             WebBrowser1.LoadFromStrings(Template, '');
+            Template := '';
           end);
       except
         on E: Exception do
           TThread.Queue(nil,
             procedure
             begin
-              ShowMessage('Error displaying card: ' + E.Message);
+              ShowMessage(S_ERROR_DISPLAYING_CARD + E.Message);
             end);
       end;
     end);
@@ -567,10 +667,66 @@ begin
   if Edit1.Text.Trim.IsEmpty <> True then
   begin
     SearchTerm := '';
+
     SearchTerm := Edit1.Text.Trim;
     DisplayCardArtworks(SearchTerm);
     LayoutControls.Enabled := False;
   end;
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+var
+  SelectedSetCode, SelectedColorCode, SearchTerm: string;
+  RarityFilter: TRarity;
+  FilteredCards: TList<TCardDetails>;
+begin
+  if CardDataList.IsEmpty then Exit;
+
+
+  // Get the selected set code
+  if ComboBoxSetCode.Selected.Text = S_ALL_SETS then
+    SelectedSetCode := ''
+  else
+    SelectedSetCode := ComboBoxSetCode.Selected.Text.Split([S])[0];
+
+  // Map rarity to TRarity enum
+  if ComboBoxRarity.Text = S_COMMON then
+    RarityFilter := rCommon
+  else if ComboBoxRarity.Text = S_UNCOMMON then
+    RarityFilter := rUncommon
+  else if ComboBoxRarity.Text = S_RARE then
+    RarityFilter := rRare
+  else if ComboBoxRarity.Text = S_MYTHIC_RARE then
+    RarityFilter := rMythic
+  else if ComboBoxRarity.Text = S_SPECIAL then
+    RarityFilter := rSpecial
+  else
+    RarityFilter := rCommon; // Default if no match
+
+  // Get the selected colors
+  if ComboBoxColors.Text = S_ALL_COLORS then
+    SelectedColorCode := ''
+  else
+    SelectedColorCode := ComboBoxColors.Text.ToLower;
+
+  // Get the search term
+  SearchTerm := Edit1.Text.Trim;
+
+  // Call the SearchCards function
+  FilteredCards := SearchCards(CardDataList, SearchTerm, RarityFilter,
+    ColorNameToCode(SelectedColorCode));
+  ListViewCards.Items.Clear;
+
+  for var Card in FilteredCards do
+  begin
+
+    AddCardToListView(Card);
+
+  end;
+
+  LabelProgress.Text := FilteredCards.Count.ToString;
+  // CheckMemoryUsage;
+  // LogStuff(IntToStr(GetHeapStatus.TotalAllocated div 1024) + ' KB allocated');
 end;
 
 procedure TForm1.ButtonNextPageClick(Sender: TObject);
@@ -581,8 +737,12 @@ begin
     LoadNextPage(SearchTerm, '', '', ''); // Load the next page using filters
   end
   else
-    ShowMessage('No more pages to load.');
+    ShowMessage(S_NO_MORE_PAGES_TO_LOAD);
 end;
+
+//CardDataList
+
+
 
 initialization
 

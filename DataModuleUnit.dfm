@@ -3,17 +3,17 @@ object DataModule1: TDataModule1
   Width = 1000
   PixelsPerInch = 120
   object FDConnection1: TFDConnection
-    Left = 864
-    Top = 520
+    Left = 856
+    Top = 456
   end
   object FDQuery1: TFDQuery
     Connection = FDConnection1
-    Left = 424
-    Top = 472
+    Left = 456
+    Top = 312
   end
   object FDGUIxWaitCursor1: TFDGUIxWaitCursor
     Provider = 'FMX'
     Left = 536
-    Top = 408
+    Top = 584
   end
 end

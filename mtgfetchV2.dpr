@@ -13,7 +13,10 @@ uses
   CardDisplayHelpers in 'CardDisplayHelpers.pas',
   WrapperHelper in 'WrapperHelper.pas',
   APIConstants in 'APIConstants.pas',
-  Mana in 'Mana.pas';
+  Mana in 'Mana.pas',
+  Logger in 'Logger.pas',
+  MainFormLogicHelpers in 'MainFormLogicHelpers.pas',
+  Template in 'Template.pas';
 
 begin
   GlobalUseSkia := True;

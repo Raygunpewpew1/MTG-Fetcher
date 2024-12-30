@@ -4,14 +4,14 @@ interface
 
 uses
   System.Net.HttpClient, System.Classes, JsonDataObjects, System.SysUtils,
-  System.Generics.Collections, System.RegularExpressions, System.IOUtils;
+  System.Generics.Collections, System.IOUtils, Logger,Template;
 
 function ReplaceManaSymbolsWithImages(const OracleText: string): string;
 
 implementation
 
 uses
-  WrapperHelper, System.NetEncoding, APIConstants;
+  System.NetEncoding, APIConstants;
 
 var
   SymbolCache: TDictionary<string, string>;
@@ -78,7 +78,7 @@ begin
     for Pair in SymbolCache do
       CacheJson.S[Pair.Key] := Pair.Value;
 
-    CacheJson.SaveToFile(CacheFilePath, False, TEncoding.UTF8, True);
+    CacheJson.SaveToFile(CacheFilePath, False, TEncoding.UTF8, False);
   finally
     LogStuff('Symbols saved and Cached');
     CacheJson.Free;
@@ -143,8 +143,8 @@ begin
     FetchAllSymbols(SymbolsJSON); // Fetch all symbols from Scryfall
     for I := 0 to SymbolsJSON.Count - 1 do
     begin
-      Symbol := SymbolsJSON.O[I].S[FeildSymbol];
-      SVG_URL := SymbolsJSON.O[I].S[FeildSVGUri];
+      Symbol := SymbolsJSON.O[I].S[FieldSymbol];
+      SVG_URL := SymbolsJSON.O[I].S[FieldSVGUri];
 
       if not SymbolCache.ContainsKey(Symbol) then
       begin

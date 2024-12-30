@@ -13,7 +13,7 @@ The application retrieves MTG card data directly from Scryfall, enabling advance
 - Card image viewing (including support for double-faced cards).
 - Filtering cards by set, rarity, color, and other attributes.
 - Displaying card legalities, power/toughness, mana cost, and prices.
-- A visually rich, responsive UI.
+
 
 ---
 
@@ -29,29 +29,24 @@ The **JsonDataObjects** library is licensed under the MIT License.
 ## Installation
 Installation Instructions
 
+**Now Requirs Delphi 12+ as it uses string literals.**
+
+For Windows, **WebView2Loader.dll** is also needed. You need to use Delphi's GetIt and download the
+EdgeView2 SDK, You may also need to copy the file to the root build directory. 
+
 To set up and run the application on another machine, follow these steps:
 
-1. Build and Run the Application:
+1. Verify Setup:
 
-Open the project in Delphi and build it.
+The application now will download a bulk file from scryfall after running the app for the first time,
+saves the bulk file to \Users\username\AppData\Roaming\MTGCardFetch folder then loads the bulk data into memory.
 
-Run the application once to generate the necessary files and folder structure.
+It also grabs a few json files from scryfall for use in the project,(catalogs.json for instance).
+Havent tested on Android.
 
-This will create a folder in your AppData directory on Windows:
-\Users\username\AppData\Roaming\MTGCardFetch
+2. Run the Application:
 
-
-
-2. Verify Setup:
-
-Ensure that the catalogs.json file is present in the \Users\username\AppData\Roaming\MTGCardFetch folder after running the app for the first time.
-
-Double-check that the card_template.html file is the same directory.
-
-
-3. Run the Application:
-
-The application should now work as intended!
+The application should now work as intended! In theroy!
 
 
 

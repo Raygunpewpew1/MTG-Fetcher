@@ -25776,8 +25776,7 @@ inherited Form1_Windows: TForm1_Windows
         Position.Y = 90.000000000000000000
       end
       inherited Switch1: TSwitch
-        Size.Width = 40.000000000000000000
-        Size.Height = 20.000000000000000000
+        Position.Y = 135.000000000000000000
       end
       inherited DisplayUniq: TLabel
         Position.X = 151.000000000000000000
@@ -25786,6 +25785,13 @@ inherited Form1_Windows: TForm1_Windows
       inherited ComboBox1: TComboBox
         Position.X = 359.000000000000000000
         Position.Y = 18.000000000000000000
+      end
+      inherited LabelProgress: TLabel
+        Position.X = 351.000000000000000000
+        Position.Y = 118.000000000000000000
+        Size.Width = 418.000000000000000000
+        Size.PlatformDefault = False
+        Text = ''
       end
     end
     inherited LayoutContent: TLayout
@@ -25813,6 +25819,12 @@ inherited Form1_Windows: TForm1_Windows
       end
       inherited Button5: TButton
         Size.Height = 34.000000000000000000
+      end
+      inherited ProgressBar1: TProgressBar
+        Size.Width = 460.000000000000000000
+        Size.Height = 34.000000000000000000
+        Size.PlatformDefault = False
+        Visible = True
       end
       inherited CountLabel: TLabel
         Position.X = 680.000000000000000000

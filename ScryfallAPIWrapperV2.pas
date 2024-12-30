@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.Threading, JsonDataObjects, SGlobalsZ,
-  System.Net.HttpClient;
+  System.Net.HttpClient, Logger;
 
 type
   // Custom exception class for Scryfall API errors
@@ -29,6 +29,8 @@ type
       const Query, SetCode, Rarity, Colors: string;
       Fuzzy, Unique: Boolean; Page: Integer
     ): TSearchResult;
+
+    function ParseImageUris(const JsonObj: TJsonObject): TImageUris;
 
   public
     constructor Create;
@@ -54,6 +56,10 @@ type
     function GetCreatureTypes: TScryfallCatalog;
     function GetCatalog(const CatalogName: string): TScryfallCatalog;
     function FetchAllCatalogs: TDictionary<string, TScryfallCatalog>;
+    function GetCardByUUID(const UUID: string): TCardDetails;
+    function GetCardImage(const UUID: string; const ImageType: string = 'normal'): string;
+    function GetCardImageUris(const UUID: string): TImageUris;
+
   end;
 
 implementation
@@ -504,5 +510,92 @@ begin
     raise;
   end;
 end;
+
+function TScryfallAPI.ParseImageUris(const JsonObj: TJsonObject): TImageUris;
+begin
+  Result.Clear;
+  if not Assigned(JsonObj) or not JsonObj.Contains('image_uris') then
+    Exit;
+
+  with JsonObj.O['image_uris'] do
+  begin
+    if Contains('small') then
+      Result.Small := S['small'];
+    if Contains('normal') then
+      Result.Normal := S['normal'];
+    if Contains('large') then
+      Result.Large := S['large'];
+    if Contains('png') then
+      Result.Png := S['png'];
+    if Contains('art_crop') then
+      Result.Art_crop := S['art_crop'];
+    if Contains('border_crop') then
+      Result.Border_crop := S['border_crop'];
+  end;
+end;
+
+function TScryfallAPI.GetCardByUUID(const UUID: string): TCardDetails;
+var
+  Endpoint: string;
+  JsonResponse: TJsonObject;
+begin
+  if UUID.IsEmpty then
+    raise EScryfallAPIError.Create('UUID cannot be empty');
+
+  Endpoint := Format('cards/%s', [UUID]);
+  JsonResponse := ExecuteRequest(Endpoint);
+  try
+    FillCardDetailsFromJson(JsonResponse, Result);
+  finally
+    JsonResponse.Free;
+  end;
+end;
+
+function TScryfallAPI.GetCardImageUris(const UUID: string): TImageUris;
+var
+  JsonResponse: TJsonObject;
+begin
+  Result.Clear;
+  if UUID.IsEmpty then
+    raise EScryfallAPIError.Create('UUID cannot be empty');
+
+  JsonResponse := ExecuteRequest(Format('cards/%s', [UUID]));
+  try
+    Result := ParseImageUris(JsonResponse);
+  finally
+    JsonResponse.Free;
+  end;
+end;
+
+function TScryfallAPI.GetCardImage(const UUID: string; const ImageType: string = 'normal'): string;
+var
+  ImageUris: TImageUris;
+  LowerImageType: string;
+begin
+  Result := '';
+  ImageUris := GetCardImageUris(UUID);
+  LowerImageType := LowerCase(ImageType);
+
+  if LowerImageType = 'small' then
+    Result := ImageUris.Small
+  else if LowerImageType = 'normal' then
+    Result := ImageUris.Normal
+  else if LowerImageType = 'large' then
+    Result := ImageUris.Large
+  else if LowerImageType = 'png' then
+    Result := ImageUris.Png
+  else if LowerImageType = 'art_crop' then
+    Result := ImageUris.Art_crop
+  else if LowerImageType = 'border_crop' then
+    Result := ImageUris.Border_crop
+  else
+    Result := ImageUris.Normal; // Default to normal if invalid type specified
+
+  if Result.IsEmpty then
+    raise EScryfallAPIError.CreateFmt('Image type "%s" not available for card with UUID: %s', [ImageType, UUID]);
+end;
+
+
+
 
 end.

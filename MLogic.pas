@@ -4,30 +4,53 @@ interface
 
 uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
-  System.RegularExpressions, System.Hash, System.Classes,
-  FMX.Dialogs, SGlobalsZ, FMX.Graphics, System.Net.HttpClient, FMX.StdCtrls,
-  System.Threading,FMX.ListView.Appearances,FMX.ListView;
+  System.RegularExpressions, System.Classes, FMX.Dialogs, SGlobalsZ,
+  FMX.Graphics, System.Net.HttpClient, FMX.StdCtrls, FMX.ListView.Appearances,
+  FMX.ListView, JsonDataObjects;
 
 procedure CopyDatabaseToInternalStorage;
-function GetDatabasePath: string;
+
+function GetDatabasePathMTJSON: string;
+
 function GetTemplatePath: string;
+
 procedure CopyTemplateToInternalStorage;
-function LoadTemplate(const FileName: string;
-  const DefaultTemplate: string = ''): string;
+
+function LoadTemplate(const FileName: string; const DefaultTemplate: string = ''): string;
+
 function GetAppDirectory: string;
+
 function ParseTextWithSymbolsManual(const Input: string): TArray<string>;
+
 function GetStatusClass(const LegalityStatus: string): string;
+
 function IsCardValid(const Card: TCardDetails): Boolean;
-procedure SaveCatalogsToFile(const FileName: string;
-  const Catalogs: TDictionary<string, TScryfallCatalog>);
-procedure LoadCatalogsFromFile(const FileName: string;
-  var Catalogs: TDictionary<string, TScryfallCatalog>);
-function GetLegalStatus(const Legalities: TCardLegalities;
-  const FieldName: string): string;
+
+procedure SaveCatalogsToFile(const FileName: string; const Catalogs: TDictionary<string, TScryfallCatalog>);
+
+procedure LoadCatalogsFromFile(const FileName: string; var Catalogs: TDictionary<string, TScryfallCatalog>);
+
+function GetLegalStatus(const Legalities: TCardLegalities; const FieldName: string): string;
+
 procedure ClearListViewItems(ListView: TListView);
-const
-  TemplateFileName = 'card_template.html';
-  DatabaseFileName = 'Collection.db';
+
+function ConvertColorCodeToName(const Code: string): string;
+
+function MatchesColors(const CardColors: string; const SearchColors: string): Boolean;
+
+function GetDatabasePathLocal: string;
+
+function GetJsonPathLocal: string;
+
+function SafeJsonArrayToJSON(const JsonArray: TJsonArray): string;
+
+function SafeJsonValue(JsonObject: TJsonObject; const Key: string): string;
+
+function SafePriceValue(PricesObject: TJsonObject; const Key: string): string;
+
+function GetJSONStringOrDefault(const JSONObject: TJSONObject; const Key: string; const DefaultValue: string = ''): string;
+
+
 
 var
   HttpClient: THTTPClient;
@@ -35,7 +58,7 @@ var
 implementation
 
 uses
-  JsonDataObjects, System.NetEncoding, System.Types, APIConstants;
+  System.Types, APIConstants;
 
 function GetAppDirectory: string;
 begin
@@ -74,10 +97,54 @@ begin
   Result := TPath.Combine(GetAppDirectory, TemplateFileName);
 end;
 
-{ Copy Database to Internal Storage }
-function GetDatabasePath: string;
+function GetDatabasePathMTJSON: string;
+const
+  MTGAppRootFolder = 'MTGCardFetch';
+  MTGAppSubFolder = 'mtgjson';
+  DatabaseFileName = 'AllPrintings.sqlite';
+var
+  AppDataPath: string;
 begin
-  Result := TPath.Combine(GetAppDirectory, DatabaseFileName);
+
+  AppDataPath := TPath.Combine(TPath.GetHomePath, TPath.Combine(MTGAppRootFolder, MTGAppSubFolder));
+
+  if not TDirectory.Exists(AppDataPath) then
+    TDirectory.CreateDirectory(AppDataPath);
+
+  Result := TPath.Combine(AppDataPath, DatabaseFileName);
+end;
+
+function GetDatabasePathLocal: string;
+const
+  MTGAppRootFolder = 'MTGCardFetch';
+  DatabaseFileName = 'Collection.db';
+var
+  AppDataPath: string;
+begin
+
+  AppDataPath := TPath.Combine(TPath.GetHomePath, TPath.Combine(MTGAppRootFolder, DatabaseFileName));
+
+  if not TDirectory.Exists(AppDataPath) then
+    TDirectory.CreateDirectory(AppDataPath);
+
+  Result := AppDataPath;
+//  Result := TPath.Combine(AppDataPath, DatabaseFileName);
+end;
+
+function GetJsonPathLocal: string;
+const
+  MTGAppRootFolder = 'MTGCardFetch';
+  JFileName = 'oracle-cards.json';
+var
+  AppDataPath: string;
+begin
+
+  AppDataPath := TPath.Combine(TPath.GetHomePath, TPath.Combine(MTGAppRootFolder, JFileName));
+
+  if not TDirectory.Exists(AppDataPath) then
+    TDirectory.CreateDirectory(AppDataPath);
+
+  Result := AppDataPath;
 end;
 
 procedure CopyDatabaseToInternalStorage;
@@ -85,8 +152,8 @@ var
   SourcePath, DestinationPath: string;
 begin
   DestinationPath := GetTargetPath(DatabaseFileName);
-  // Use centralized target logic
-  SourcePath := GetSourcePath(DatabaseFileName); // Use centralized source logic
+
+  SourcePath := GetSourcePath(DatabaseFileName);
 
   if not TFile.Exists(DestinationPath) then
   begin
@@ -124,8 +191,7 @@ begin
   end;
 end;
 
-function LoadTemplate(const FileName: string;
-  const DefaultTemplate: string = ''): string;
+function LoadTemplate(const FileName: string; const DefaultTemplate: string = ''): string;
 var
   FullPath: string;
 begin
@@ -143,8 +209,7 @@ begin
 end;
 
 { Save Catalogs to File }
-procedure SaveCatalogsToFile(const FileName: string;
-  const Catalogs: TDictionary<string, TScryfallCatalog>);
+procedure SaveCatalogsToFile(const FileName: string; const Catalogs: TDictionary<string, TScryfallCatalog>);
 var
   JsonCatalogs: TJsonObject;
   CatalogName: string;
@@ -156,8 +221,7 @@ begin
   try
     for CatalogName in Catalogs.Keys do
     begin
-      var
-      Catalog := Catalogs[CatalogName];
+      var Catalog := Catalogs[CatalogName];
       CatalogData := TJsonArray.Create;
       for var Item in Catalog.Data do
         CatalogData.Add(Item);
@@ -165,7 +229,7 @@ begin
       JsonCatalogs.O[CatalogName] := TJsonObject.Create;
       JsonCatalogs.O[CatalogName].S[FieldName] := Catalog.Name;
       JsonCatalogs.O[CatalogName].A[FieldData] := CatalogData;
-      JsonCatalogs.O[CatalogName].I[FeildCount] := Catalog.TotalItems;
+      JsonCatalogs.O[CatalogName].I[FieldCount] := Catalog.TotalItems;
     end;
 
     JsonCatalogs.SaveToFile(FullFilePath, False, TEncoding.UTF8, True);
@@ -175,8 +239,7 @@ begin
 end;
 
 { Load Catalogs from File }
-procedure LoadCatalogsFromFile(const FileName: string;
-  var Catalogs: TDictionary<string, TScryfallCatalog>);
+procedure LoadCatalogsFromFile(const FileName: string; var Catalogs: TDictionary<string, TScryfallCatalog>);
 var
   JsonCatalogs: TJsonObject;
   FullFilePath: string;
@@ -196,17 +259,13 @@ begin
     Catalogs.Clear;
     for var I := 0 to JsonCatalogs.Count - 1 do
     begin
-      var
-      CatalogName := JsonCatalogs.Names[I];
-      var
-      CatalogObj := JsonCatalogs.O[CatalogName];
-      var
-        Catalog: TScryfallCatalog;
+      var CatalogName := JsonCatalogs.Names[I];
+      var CatalogObj := JsonCatalogs.O[CatalogName];
+      var Catalog: TScryfallCatalog;
       Catalog.Name := CatalogObj.S[FieldName];
-      Catalog.TotalItems := CatalogObj.I[FeildCount];
+      Catalog.TotalItems := CatalogObj.I[FieldCount];
 
-      var
-      CatalogDataArray := CatalogObj.A[FieldData];
+      var CatalogDataArray := CatalogObj.A[FieldData];
       SetLength(Catalog.Data, CatalogDataArray.Count);
       for var J := 0 to CatalogDataArray.Count - 1 do
         Catalog.Data[J] := CatalogDataArray.S[J];
@@ -235,7 +294,6 @@ begin
 
   ListView.Items.Clear;
 end;
-
 
 function ParseTextWithSymbolsManual(const Input: string): TArray<string>;
 var
@@ -279,43 +337,155 @@ begin
   Result := not Card.CardName.IsEmpty and not Card.SFID.IsEmpty;
 end;
 
-function GetLegalStatus(const Legalities: TCardLegalities;
-  const FieldName: string): string;
+function GetLegalStatus(const Legalities: TCardLegalities; const FieldName: string): string;
 begin
-  if FieldName = 'Standard' then
+  if FieldName = FieldStandard then
     Result := Legalities.Standard
-  else if FieldName = 'Pioneer' then
-    Result := Legalities.Pioneer
-  else if FieldName = 'Modern' then
-    Result := Legalities.Modern
-  else if FieldName = 'Legacy' then
-    Result := Legalities.Legacy
-  else if FieldName = 'Commander' then
-    Result := Legalities.Commander
-  else if FieldName = 'Vintage' then
-    Result := Legalities.Vintage
-  else if FieldName = 'Pauper' then
-    Result := Legalities.Pauper
-  else if FieldName = 'Historic' then
-    Result := Legalities.Historic
-  else if FieldName = 'Explorer' then
-    Result := Legalities.Explorer
-  else if FieldName = 'Alchemy' then
-    Result := Legalities.Alchemy
-  else if FieldName = 'Brawl' then
-    Result := Legalities.Brawl
-  else if FieldName = 'Future' then
+  else if FieldName = FieldFuture then
     Result := Legalities.Future
-  else if FieldName = 'Oldschool' then
-    Result := Legalities.Oldschool
-  else if FieldName = 'Premodern' then
-    Result := Legalities.Premodern
-  else if FieldName = 'Duel' then
-    Result := Legalities.Duel
-  else if FieldName = 'Penny' then
+  else if FieldName = FieldHistoric then
+    Result := Legalities.Historic
+  else if FieldName = FieldGladiator then
+    Result := Legalities.Gladiator
+  else if FieldName = FieldPioneer then
+    Result := Legalities.Pioneer
+  else if FieldName = FieldExplorer then
+    Result := Legalities.Explorer
+  else if FieldName = FieldModern then
+    Result := Legalities.Modern
+  else if FieldName = FieldLegacy then
+    Result := Legalities.Legacy
+  else if FieldName = FieldPauper then
+    Result := Legalities.Pauper
+  else if FieldName = FieldVintage then
+    Result := Legalities.Vintage
+  else if FieldName = FieldPenny then
     Result := Legalities.Penny
+  else if FieldName = FieldCommander then
+    Result := Legalities.Commander
+  else if FieldName = FieldOathbreaker then
+    Result := Legalities.Oathbreaker
+  else if FieldName = FieldAlchemy then
+    Result := Legalities.Alchemy
+  else if FieldName = FieldBrawl then
+    Result := Legalities.Brawl
+  else if FieldName = FieldPauperCommander then
+    Result := Legalities.PauperCommander
+  else if FieldName = FieldDuel then
+    Result := Legalities.Duel
+  else if FieldName = FieldOldschool then
+    Result := Legalities.Oldschool
+  else if FieldName = FieldPremodern then
+    Result := Legalities.Premodern
   else
     Result := '';
+end;
+
+function ConvertColorCodeToName(const Code: string): string;
+var
+  I: Integer;
+begin
+  for I := Low(ColorMap) to High(ColorMap) do
+    if SameText(Code, ColorMap[I].Code) then
+      Exit(ColorMap[I].Name);
+
+  Result := ''; // Return empty string if no match is found
+end;
+
+function MatchesColors(const CardColors: string; const SearchColors: string): Boolean;
+var
+  CardColorArray, SearchColorArray: TArray<string>;
+  ConvertedCardColors: TArray<string>;
+  SearchColor: string;
+  I: Integer;
+  Found: Boolean;
+begin
+  // Split the input strings into arrays
+  CardColorArray := CardColors.Split([','], TStringSplitOptions.ExcludeEmpty);
+  SearchColorArray := SearchColors.ToLower.Split([',', ' '], TStringSplitOptions.ExcludeEmpty);
+
+  // Convert card color codes to full names
+  SetLength(ConvertedCardColors, Length(CardColorArray));
+  for I := Low(CardColorArray) to High(CardColorArray) do
+    ConvertedCardColors[I] := ConvertColorCodeToName(CardColorArray[I]).ToLower;
+
+  // If no search colors are specified, match all
+  if Length(SearchColorArray) = 0 then
+    Exit(True);
+
+  // Check if all search colors are present in the converted card colors
+  for SearchColor in SearchColorArray do
+  begin
+    Found := False;
+    for I := Low(ConvertedCardColors) to High(ConvertedCardColors) do
+    begin
+      if SameText(SearchColor, ConvertedCardColors[I]) then
+      begin
+        Found := True;
+        Break;
+      end;
+    end;
+
+    if not Found then
+      Exit(False); // If any search color is not found, return False
+  end;
+
+  Result := True; // All search colors matched
+end;
+
+function SafeJsonArrayToJSON(const JsonArray: TJsonArray): string;
+begin
+  if Assigned(JsonArray) then
+    Result := JsonArray.ToJSON
+  else
+    Result := '[]'; // Default to empty JSON array
+end;
+
+function SafeJsonValue(JsonObject: TJsonObject; const Key: string): string;
+begin
+  if JsonObject.Contains(Key) then
+  begin
+    case JsonObject.Types[Key] of
+      jdtString:
+        Result := JsonObject.S[Key];
+      jdtInt:
+        Result := IntToStr(JsonObject.I[Key]);
+      jdtLong:
+        Result := IntToStr(JsonObject.L[Key]);
+      jdtULong:
+        Result := UIntToStr(JsonObject.U[Key]);                // Unsigned long integer value
+      jdtFloat:
+        Result := FloatToStr(JsonObject.F[Key]);               // Float value
+      jdtDateTime, jdtUtcDateTime:
+        Result := DateTimeToStr(JsonObject.D[Key]);            // DateTime value
+      jdtBool:
+        Result := BoolToStr(JsonObject.B[Key], True);          // Boolean value
+      jdtArray:
+        Result := JsonObject.A[Key].ToJSON;                    // Array as JSON string
+      jdtObject:
+        Result := JsonObject.O[Key].ToJSON;                    // Object as JSON string
+    else
+      Result := '';
+    end;
+  end
+  else
+    Result := ''; // Return empty string if key doesn't exist
+end;
+
+function SafePriceValue(PricesObject: TJsonObject; const Key: string): string;
+begin
+  if Assigned(PricesObject) and PricesObject.Contains(Key) and not PricesObject.Values[Key].IsNull then
+    Result := PricesObject.S[Key]
+  else
+    Result := '0.00'; // Default to '0.00' if the price is null or not there
+end;
+
+function GetJSONStringOrDefault(const JSONObject: TJSONObject; const Key: string; const DefaultValue: string = ''): string;
+begin
+  if JSONObject.Contains(Key) and not JSONObject.Values[Key].IsNull then
+    Result := JSONObject.S[Key]
+  else
+    Result := DefaultValue;
 end;
 
 initialization
@@ -323,3 +493,4 @@ initialization
 finalization
 
 end.
+
