@@ -44,6 +44,8 @@ saves the bulk file to \Users\username\AppData\Roaming\MTGCardFetch folder then 
 It also grabs a few json files from scryfall for use in the project,(catalogs.json for instance).
 Havent tested on Android.
 
+card_template.html is included for referance though it has changed inside delphi.
+
 2. Run the Application:
 
 The application should now work as intended! In theroy!
