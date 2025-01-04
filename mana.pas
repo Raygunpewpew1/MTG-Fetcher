@@ -10,7 +10,7 @@ uses
   System.Generics.Collections,
   System.IOUtils,
   Logger,
-  Template; // Contains SVG_TEMPLATE, presumably
+  Template;
 
 /// <summary>
 ///   Replaces mana symbols in the given Oracle text with inlined SVG images.
@@ -244,9 +244,8 @@ initialization
   LoadCacheFromFile;
 
 finalization
-  // Save the cache once again on shutdown (if you only want to save on changes,
-  // you might conditionally check if anything changed).
-  SaveCacheToFile;
+
+ // SaveCacheToFile;
   SymbolCache.Free;
 
 end.

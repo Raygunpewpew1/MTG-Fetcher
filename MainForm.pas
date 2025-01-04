@@ -76,6 +76,7 @@ type
     CurrentPage: Integer;
     HasMorePages: Boolean;
     SearchTerm: string;
+    FCurrentAutocompleteTask: ITask;
     HttpClient: THTTPClient;
     CardDataList: TList<TCardDetails>;
     CardCount: Integer;
@@ -229,69 +230,59 @@ procedure TForm1.TimerDebounceTimer(Sender: TObject);
 var
   PartialQuery: string;
 begin
-  // Stop the timer to prevent repeated triggers
   TimerDebounce.Enabled := False;
-
   PartialQuery := ComboBoxEditSearch.Text.Trim;
 
-  // Only proceed if the query meets minimum length
   if Length(PartialQuery) < 2 then
   begin
-    // Clear existing suggestions
-    ComboBoxEditSearch.Items.Clear;
+    TThread.Queue(nil,
+      procedure
+      begin
+        ComboBoxEditSearch.Items.Clear;
+      end
+    );
     Exit;
   end;
 
-  // Run the autocomplete in a background task
-  TTask.Run(
+
+  if Assigned(FCurrentAutocompleteTask) and (FCurrentAutocompleteTask.Status = TTaskStatus.Running) then
+    FCurrentAutocompleteTask.Cancel;
+
+
+  FCurrentAutocompleteTask := TTask.Run(
     procedure
     var
       Suggestions: TArray<string>;
     begin
       try
-        // Fetch autocomplete suggestions using the API wrapper
         Suggestions := FScryfallAPI.AutocompleteCards(PartialQuery);
 
-        // Update the UI on the main thread
+        // Skip if the task was canceled
+        if TTask.CurrentTask.Status = TTaskStatus.Canceled then Exit;
+
         TThread.Queue(nil,
           procedure
           begin
-            if Length(Suggestions) > 0 then
-            begin
-              ComboBoxEditSearch.Items.BeginUpdate;
-              try
-                ComboBoxEditSearch.Items.Clear;
-                ComboBoxEditSearch.Items.AddStrings(Suggestions);
-              finally
-                ComboBoxEditSearch.Items.EndUpdate;
-              end;
-
-              // Show the dropdown with suggestions
-              ComboBoxEditSearch.DropDown;
-            end
-            else
-            begin
-              // No suggestions found; clear items
+            ComboBoxEditSearch.Items.BeginUpdate;
+            try
               ComboBoxEditSearch.Items.Clear;
+              ComboBoxEditSearch.Items.AddStrings(Suggestions);
+            finally
+              ComboBoxEditSearch.Items.EndUpdate;
             end;
+
+            if Length(Suggestions) > 0 then
+              ComboBoxEditSearch.DropDown
+            else
+              ComboBoxEditSearch.Items.Clear;
           end
         );
       except
         on E: Exception do
-        begin
           LogStuff('Autocomplete error: ' + E.Message);
-          TThread.Queue(nil,
-            procedure
-            begin
-              // Hide suggestions on error
-              ComboBoxEditSearch.Items.Clear;
-            end
-          );
-        end;
       end;
     end
   );
-
 end;
 
 procedure TForm1.WebBrowser1DidFinishLoad(ASender: TObject);

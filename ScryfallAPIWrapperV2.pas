@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.Threading, JsonDataObjects, SGlobalsZ,
-  System.Net.HttpClient, Logger,System.SyncObjs;
+  System.Net.HttpClient,Logger,System.SyncObjs;
 
 type
   EScryfallAPIError = class(Exception);
@@ -22,7 +22,7 @@ type
     // Single THTTPClient for all requests (thread-synchronized).
     FHttpClient: THTTPClient;
 
-    // Optional in-memory cache for autocomplete results.
+    // In-memory cache for autocomplete results.
     FAutocompleteCache: TDictionary<string, TArray<string>>;
 
     function ExecuteRequest(const Endpoint: string): TJsonObject;

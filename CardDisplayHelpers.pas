@@ -169,7 +169,7 @@ begin
   AddReplacement(Replacements, '{{Artist}}', EncodeHTML(CardDetails.Artist));
   AddReplacement(Replacements, '{{CollectorNumber}}',
     EncodeHTML(CardDetails.CollectorNumber));
-  AddReplacement(Replacements, '{{Frame}}', EncodeHTML(CardDetails.Frame));
+  AddReplacement(Replacements, '{{Arena Id}}', EncodeHTML(CardDetails.ArenaID.ToString));
   AddReplacement(Replacements, '{{BorderColor}}',
     EncodeHTML(CardDetails.BorderColor));
   AddReplacement(Replacements, '{{ReleasedAt}}', EncodeHTML(CardDetails.ReleasedAt));
@@ -383,10 +383,10 @@ procedure AddKeywordsReplacement(Replacements: TDictionary<string, string>;
 var
   KeywordsList: string;
 begin
-  // Convert array of keywords to a comma-separated string
+
   KeywordsList := String.Join(', ', CardDetails.Keywords);
 
-  // Instead of writing if/else, call AddOrHide:
+
   AddOrHide(Replacements, '{{Keywords}}', '{{KeywordsClass}}', KeywordsList);
 end;
 

@@ -580,7 +580,7 @@ HtmlTemplate: string = '''
       <div class="additional-details">
         <p><strong>Collector Number:</strong> {{CollectorNumber}}</p>
         <p><strong>Release Date:</strong> {{ReleasedAt}}</p>
-        <p><strong>Frame:</strong> {{Frame}}</p>
+        <p><strong>Arena ID:</strong> {{Arena Id}}</p>
         <p><strong>Border Color:</strong> {{BorderColor}}</p>
         <p><strong>Story Spotlight:</strong> {{StorySpotlight}}</p>
       </div>
