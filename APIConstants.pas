@@ -19,6 +19,8 @@ const
   BulkDataURL = 'https://api.scryfall.com/bulk-data/oracle-cards';
   BulkDataPath = 'oracle-cards.json';
   MaxAutocompleteCacheEntries = 1000;
+  MaxLogFileSize = 5 * 1024 * 1024;
+  TrimmedLogLines = 1000;
 
   // Endpoints
   EndpointCards = 'cards/';

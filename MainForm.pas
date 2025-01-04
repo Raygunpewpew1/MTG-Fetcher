@@ -72,6 +72,7 @@ type
 
   private
     WebBrowserInitialized: Boolean;
+    FIsProgrammaticChange: Boolean;
     CurrentPage: Integer;
     HasMorePages: Boolean;
     SearchTerm: string;
@@ -128,6 +129,7 @@ var
   SetDetails: TSetDetails;
 begin
   WebBrowserInitialized := False;
+  FIsProgrammaticChange := False;
   WebBrowser1.LoadFromStrings('', '');
   LoadAllCatalogs;
   FScryfallAPI := TScryfallAPI.Create;
@@ -616,12 +618,26 @@ procedure TForm1.ComboBoxEditSearchItemClick(const Sender: TObject; const AItem:
 begin
   if Assigned(AItem) then
   begin
-    ComboBoxEditSearch.Text := AItem.Text;
+    FIsProgrammaticChange := True;
+    try
+      ComboBoxEditSearch.Text := AItem.Text;
+      LogStuff(Format('User selected suggestion: "%s"', [AItem.Text]));
+    finally
+      FIsProgrammaticChange := False;
+    end;
+  end
+  else
+  begin
+    LogStuff('Selected item is not assigned (nil).');
   end;
 end;
 
 procedure TForm1.ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
 begin
+  if FIsProgrammaticChange then
+    Exit;
+
+
   case Key of
     vkDown:
       begin
