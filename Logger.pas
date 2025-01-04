@@ -1,8 +1,9 @@
 ﻿unit Logger;
 
 interface
+
 uses
-System.SyncObjs, System.Classes, System.IOUtils, System.SysUtils;
+  APIConstants, System.Classes, System.IOUtils, System.SyncObjs, System.SysUtils;
 
 procedure LogStuff(const Msg: string);
 
@@ -10,37 +11,50 @@ implementation
 
 var
   LogCriticalSection: TCriticalSection;
+  LogFilePath: string;
+
+procedure EnsureLogDirectory;
+var
+  LogInit: string;
+begin
+{$IF DEFINED(ANDROID)}
+LogFilePath := TPath.Combine(TPath.GetHomePath, 'mtgfetch.log');
+{$ELSEIF DEFINED(MSWINDOWS)}
+LogInit := TPath.Combine(TPath.GetHomePath, MTGAppFolder);
+if not TDirectory.Exists(LogInit) then
+  TDirectory.CreateDirectory(LogInit);
+LogFilePath := TPath.Combine(LogInit, 'mtgfetch.log');
+{$ENDIF}
+end;
 
 procedure LogStuff(const Msg: string);
 var
-  LogFilePath: string;
   LogFile: TStreamWriter;
 begin
-  LogCriticalSection.Enter;
-  try
+  if Assigned(LogCriticalSection) then
+  begin
+    LogCriticalSection.Enter;
     try
-      {$IF DEFINED(ANDROID)}
-      LogFilePath := TPath.Combine(TPath.GetSharedDownloadsPath, 'application_log.txt');
-      {$ELSEIF DEFINED(MSWINDOWS)}
-      LogFilePath := TPath.Combine(TPath.GetAppPath, 'application_log.txt');
-      {$ENDIF}
-
-      LogFile := TStreamWriter.Create(LogFilePath, True, TEncoding.UTF8);
       try
-        LogFile.WriteLine(Format('[%s] %s', [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), Msg]));
-      finally
-        LogFile.Free;
+        LogFile := TStreamWriter.Create(LogFilePath, True, TEncoding.UTF8);
+        try
+          LogFile.WriteLine(Format('[%s] [Thread %d] %s',
+            [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), TThread.CurrentThread.ThreadID, Msg]));
+        finally
+          LogFile.Free;
+        end;
+      except
+        // Silent failure
       end;
-    except
-      // If logging fails, do nothing to avoid crashing the app.
+    finally
+      LogCriticalSection.Leave;
     end;
-  finally
-    LogCriticalSection.Leave;
   end;
 end;
 
 initialization
   LogCriticalSection := TCriticalSection.Create;
+  EnsureLogDirectory;
 
 finalization
   LogCriticalSection.Free;

@@ -77,3 +77,4 @@ deployedassets.txt
 *.deployproj
 mtgfetchV2.deployproj
 /mtgfetchV2.Artwork
+Neslib.Json/

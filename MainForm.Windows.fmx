@@ -25787,8 +25787,8 @@ inherited Form1_Windows: TForm1_Windows
         Position.Y = 18.000000000000000000
       end
       inherited LabelProgress: TLabel
-        Position.X = 351.000000000000000000
-        Position.Y = 118.000000000000000000
+        Position.X = 359.000000000000000000
+        Position.Y = 134.000000000000000000
         Size.Width = 418.000000000000000000
         Size.PlatformDefault = False
         Text = ''

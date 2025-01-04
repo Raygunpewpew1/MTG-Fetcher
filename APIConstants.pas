@@ -18,6 +18,7 @@ const
   SPageStr = '&page=%d';
   BulkDataURL = 'https://api.scryfall.com/bulk-data/oracle-cards';
   BulkDataPath = 'oracle-cards.json';
+  MaxAutocompleteCacheEntries = 1000;
 
   // Endpoints
   EndpointCards = 'cards/';

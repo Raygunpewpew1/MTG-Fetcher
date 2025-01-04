@@ -38,8 +38,8 @@ To set up and run the application on another machine, follow these steps:
 
 1. Verify Setup:
 
-The application now will download a bulk file from scryfall after running the app for the first time,
-saves the bulk file to \Users\username\AppData\Roaming\MTGCardFetch folder then loads the bulk data into memory.
+~~The application now will download a bulk file from scryfall after running the app for the first time,
+saves the bulk file to \Users\username\AppData\Roaming\MTGCardFetch folder then loads the bulk data into memory.~~
 
 It also grabs a few json files from scryfall for use in the project,(catalogs.json for instance).
 Havent tested on Android.

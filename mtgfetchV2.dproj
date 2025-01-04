@@ -269,6 +269,7 @@
         <DCCReference Include="Logger.pas"/>
         <DCCReference Include="MainFormLogicHelpers.pas"/>
         <DCCReference Include="Template.pas"/>
+        <DCCReference Include="BulkData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

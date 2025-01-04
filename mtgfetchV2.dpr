@@ -16,7 +16,8 @@ uses
   Mana in 'Mana.pas',
   Logger in 'Logger.pas',
   MainFormLogicHelpers in 'MainFormLogicHelpers.pas',
-  Template in 'Template.pas';
+  Template in 'Template.pas',
+  BulkData in 'BulkData.pas';
 
 begin
   GlobalUseSkia := True;
