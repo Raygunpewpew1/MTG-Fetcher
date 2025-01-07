@@ -24,7 +24,7 @@ begin
   Application.Initialize;
   Application.CreateForm(TDataModule1, DataModule1);
   Application.CreateForm(TForm1, Form1);
-  {$R *.res}
+ { R *.res}
   Application.Run;
 
 end.

@@ -56,7 +56,7 @@ HtmlTemplate: string = '''
 
     .flip-card:hover, .single-card:hover {
       transform: scale(1.1);
-      box-shadow: 0 8px 16px rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
     }
 
     .flip-indicator {
@@ -207,15 +207,11 @@ HtmlTemplate: string = '''
       line-height: 1.5;
       color: #fff;
       background: linear-gradient(90deg, #444, #222);
-      border: 3px solid #ffd700;
+      border: 2px solid #FFD700;
       border-radius: 8px;
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .oracle-text:hover {
-     transform: scale(1.05);
-     box-shadow: 0 8px 16px rgba(255, 255, 255, 0.3);
-   }
 
     .flavor-text {
       margin-top: 10px;
@@ -234,9 +230,9 @@ HtmlTemplate: string = '''
       font-size: 16px;
       color: #fff;
       background: linear-gradient(90deg, #444, #222);
-      border: 3px solid #ffd700;
+      border: 2px solid #FFD700;
       border-radius: 8px;
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
     }
 
     .power-toughness .label {
@@ -409,13 +405,17 @@ HtmlTemplate: string = '''
 
    .card-face-block:hover {
      transform: scale(1.05);
-     box-shadow: 0 8px 16px rgba(255, 255, 255, 0.3);
+     box-shadow: 0 0 6px rgba(255, 215, 0, 0.6);
    }
 
    .card-face-block p {
      margin: 5px 0;
      font-size: 14px;
      line-height: 1.4;
+   }
+
+   .games {
+   text-align: center;
    }
 
    .card-face-block strong {
@@ -535,8 +535,8 @@ HtmlTemplate: string = '''
           <span>{{SetName}}</span>
         </div>
       </div>
-      <div class="games {{GamesClass}}">
-      <strong><center>Available in:</strong> {{Games}}.</center>
+       <div class="games {{GamesClass}}">
+       <strong>Available in:</strong> <span class="games-list">{{Games}}</span>
       </div>
       <div class="oracle-text">{{OracleText}}</div>
       <div class="flavor-text">{{FlavorText}}</div>

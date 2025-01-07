@@ -29,7 +29,6 @@ type
 
   TForm1 = class(TForm)
     DelayTimer: TTimer;
-    StyleBook1: TStyleBook;
     LayoutMain: TLayout;
     LayoutControls: TLayout;
     LabelSearch: TLabel;
@@ -56,6 +55,7 @@ type
     Button2: TButton;
     TimerDebounce: TTimer;
     ComboBoxEditSearch: TComboEdit;
+    StyleBook1: TStyleBook;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -601,8 +601,8 @@ end;
 
 procedure TForm1.ComboBoxEditSearchChange(Sender: TObject);
 begin
-  TimerDebounce.Enabled := False;
-  TimerDebounce.Enabled := True;
+//  TimerDebounce.Enabled := False;
+//  TimerDebounce.Enabled := True;
 end;
 
 procedure TForm1.ComboBoxEditSearchItemClick(const Sender: TObject; const AItem: TListBoxItem);

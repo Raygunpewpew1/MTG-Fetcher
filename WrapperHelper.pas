@@ -27,41 +27,32 @@ uses
 
 function ConstructSearchUrl(const Query, SetCode, Rarity, Colors: string;
   Fuzzy, Unique: Boolean; Page: Integer): string;
+const
+  SearchParams: array [0..3] of string = ('SetCode', 'Rarity', 'Colors', 'Unique');
 var
-  EncodedQuery, EncSetCode, EncRarity, EncColors: string;
-  BaseUrl: string;
+  Params: TStringBuilder;
 begin
-  // If we want a fuzzy search, bail out early
   if Fuzzy then
     Exit(Format(FuzzySStr, [EndpointNamed, TNetEncoding.URL.Encode(Query)]));
 
-  // Cache pre-encoded strings (faster than repeated calls)
-  EncodedQuery := TNetEncoding.URL.Encode(Query.ToLower);
-  EncSetCode := TNetEncoding.URL.Encode(SetCode.ToLower);
-  EncRarity := TNetEncoding.URL.Encode(Rarity.ToLower);
-  EncColors := TNetEncoding.URL.Encode(Colors.ToLower);
-
-  // Start building the base URL
-  BaseUrl := Format(StandardSStr, [EndpointSearch, EncodedQuery]);
-
-  if not SetCode.IsEmpty then
-    BaseUrl := BaseUrl + BySetCode + EncSetCode;
-  if not Rarity.IsEmpty then
-    BaseUrl := BaseUrl + ByRarity + EncRarity;
-  if not Colors.IsEmpty then
-    BaseUrl := BaseUrl + ByColor + EncColors;
-  if Unique then
-    BaseUrl := BaseUrl + ShowUQ;
-
-  Result := BaseUrl + Format(SPageStr, [Page]);
+  Params := TStringBuilder.Create;
+  try
+    Params.Append(Format(StandardSStr, [EndpointSearch, TNetEncoding.URL.Encode(Query.ToLower)]));
+    if not SetCode.IsEmpty then Params.Append(BySetCode + TNetEncoding.URL.Encode(SetCode.ToLower));
+    if not Rarity.IsEmpty then Params.Append(ByRarity + TNetEncoding.URL.Encode(Rarity.ToLower));
+    if not Colors.IsEmpty then Params.Append(ByColor + TNetEncoding.URL.Encode(Colors.ToLower));
+    if Unique then Params.Append(ShowUQ);
+    Result := Params.ToString + Format(SPageStr, [Page]);
+  finally
+    Params.Free;
+  end;
 end;
 
 function GetSafeStringField(const Obj: TJsonObject; const FieldName: string): string;
 begin
+  Result := '';
   if Obj.Contains(FieldName) and (Obj.Types[FieldName] = jdtString) then
-    Result := Obj.S[FieldName]
-  else
-    Result := '';
+    Exit(Obj.S[FieldName]);
 end;
 
 {$IF DEFINED(MSWINDOWS)}
