@@ -178,6 +178,7 @@ procedure TCardDisplayManager.AddCardToListView(const Card: TCardDetails);
 var
   ListViewItem: TListViewItem;
   CardDetailsObj: TCardDetailsObject;
+  RareStr: string;
 begin
   if not Assigned(FListView) or Card.CardName.IsEmpty or Card.SFID.IsEmpty then
   begin
@@ -188,10 +189,12 @@ begin
   // Create the object
   CardDetailsObj := TCardDetailsObject.Create(Card);
  // LogStuff('Created TagObject of class: ' + CardDetailsObj.ClassName);
+  RareStr := RarityToString[Card.Rarity];
+  RareStr := RareStr.Substring(0,1).ToUpper + RareStr.Substring(1);
 
   ListViewItem := FListView.Items.Add;
   ListViewItem.Text := Card.CardName;
-  ListViewItem.Detail := Card.SetCode.ToUpper;
+  ListViewItem.Detail := RareStr;
   ListViewItem.TagObject := CardDetailsObj;
 
   // Verify

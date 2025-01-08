@@ -104,7 +104,7 @@ begin
   WebBrowser1.LoadFromStrings('', '');
 
   FScryfallAPI := TScryfallAPI.Create;
-  LogStuff('api created');
+
 
   FCardDisplayManager := TCardDisplayManager.Create(ListViewCards, WebBrowser1,
     FScryfallAPI);

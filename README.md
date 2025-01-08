@@ -1,89 +1,96 @@
 # MTG Fetcher
 
-MTG Fetcher is a FireMonkey-based Delphi application designed to streamline Magic: The Gathering (MTG) card browsing and information retrieval using the Scryfall API. It provides a user-friendly interface for searching, viewing, and filtering card details, such as card images, legalities, prices, and more.
+**MTG Fetcher** is a Delphi-based application designed to fetch and display Magic: The Gathering card information using the [Scryfall API](https://scryfall.com/docs/api). Whether you're a Magic: The Gathering enthusiast, deck builder, or developer, this tool provides an efficient way to search for cards, view details, and manage your collection.
 
 ---
 
-## About
-**Now Requirs Delphi 12+ as it uses string literals.**
+## Features
 
-This project was developed using **Delphi Community Edition**, a free version of Embarcadero Delphi intended for individual developers, open-source projects, and small companies. It leverages Delphi’s powerful FireMonkey (FMX) framework to create a cross-platform application with support for Windows and Android. 
+- **Card Search**:
+  - Search cards by name, set, rarity, or color.
+  - Supports advanced filtering for detailed results.
 
-The application retrieves MTG card data directly from Scryfall, enabling advanced features such as:
-- Card image viewing (including support for double-faced cards).
-- Filtering cards by set, rarity, color, and other attributes.
-- Displaying card legalities, power/toughness, mana cost, and prices.
+- **Card Display**:
+  - View card details, including high-resolution images, mana cost, and set information.
+  - Features a layout for displaying card collections.
 
+- **User-Friendly Interface**:
+  - Designed with a clean and responsive UI using FireMonkey for scalability.
 
----
-
-## Dependencies
-
-This project uses the following third-party library:
-- **JsonDataObjects**: A fast and lightweight JSON parser for Delphi. See the official repository here: [JsonDataObjects on GitHub](https://github.com/ahausladen/JsonDataObjects).
-
-The **JsonDataObjects** library is licensed under the MIT License.
+- **Expandable**:
+  - Built as a hobby project with opportunities for community collaboration and improvements.
 
 ---
 
-## Installation
-Installation Instructions
+## Screenshots
 
-**Now Requirs Delphi 12+ as it uses string literals.**
+Soon...maybe
 
-For Windows, **WebView2Loader.dll** is also needed. You need to use Delphi's GetIt and download the
-EdgeView2 SDK, You may also need to copy the file to the root build directory. 
+---
 
-To set up and run the application on another machine, follow these steps:
+## Getting Started
 
-1. Verify Setup:
+### Prerequisites
+To run or contribute to MTG Fetcher, you’ll need:
+- **Delphi 12+** (Community Edition or higher).
+- A basic understanding of Delphi programming (optional for non-developers).
+- Internet connection for API requests.
 
-~~The application now will download a bulk file from scryfall after running the app for the first time,
-saves the bulk file to \Users\username\AppData\Roaming\MTGCardFetch folder then loads the bulk data into memory.~~
+### Setup Instructions
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/Raygunpewpew1/MTG-Fetcher.git
+   ```
+2. **Install Required Libraries**:
+   - Make sure you have the `JsonDataObjects` library installed in your Delphi IDE.
 
-It also grabs a few json files from scryfall for use in the project,(catalogs.json for instance).
-Havent tested on Android.
+3. **Configure the Project**:
+   - Open the project in Delphi.
+   - Ensure all necessary paths and libraries are correctly set up.
 
-card_template.html is included for referance though it has changed inside delphi.
+4. **Run the Application**:
+   - Compile and execute the project on Windows.
 
-2. Run the Application:
+---
 
-The application should now work as intended! In theroy!
+## How to Use
 
+1. Launch the app and enter your search query (e.g., card name, set code).
+2. Apply filters for rarity, color, or other attributes to refine results.
+3. View the results in a list format or a visually appealing card layout.
 
+---
 
+## Contributing
 
+Contributions are welcome! Here’s how you can help:
 
-### Requirements
-1. Delphi Community Edition (or any other edition) is required to build this application.
-   - Download it here: [Delphi Community Edition](https://www.embarcadero.com/products/delphi/starter).
-2. JsonDataObjects must be included in your Delphi environment.
+- **Report Issues**: Found a bug? Let us know by opening an issue.
+- **Suggest Features**: Have an idea to improve the app? Submit a feature request.
+- **Code Contributions**: Fork the repository, make your changes, and submit a pull request.
+- **Help with Documentation**: Improve setup instructions, add examples, or clarify usage.
 
-### Steps
-1. Clone this repository to your local machine.
-2. Open the project in Delphi.
-3. Compile and run the application on your desired platform (Windows or Android).
+### Looking for Help With:
+- Improving the user interface (e.g., better card layouts, animations).
+- Adding new features like deck building or offline caching.
+- Optimizing performance and API integration.
+- Database integration for saving the card collection.
+
+---
+
+## Acknowledgments
+
+- Card data and images are fetched using the [Scryfall API](https://scryfall.com/docs/api).
+- Magic: The Gathering is a trademark of **Wizards of the Coast**. This project is not affiliated with or endorsed by Wizards of the Coast.
 
 ---
 
 ## License
 
-All images are copyright Wizards of the Coast ([http://magicthegathering.com](http://magicthegathering.com))
-
-This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
-
-**Note:** This project was created using Delphi Community Edition, which is free for certain use cases, including open-source projects and individual developers. Ensure your use of Delphi complies with the Community Edition license terms.
-
-The **JsonDataObjects** library, used in this project, is also licensed under the MIT License. You can find details in its respective repository.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ---
-  
-This project is powered by the Scryfall API but is not produced or endorsed by Scryfall.  
-For more information, visit: https://scryfall.com/
 
+## Contact
 
-## Acknowledgments
-
-- **Scryfall**: This project uses the Scryfall API to retrieve MTG card data. [Scryfall API documentation](https://scryfall.com/docs/api).
-- **JsonDataObjects**: For providing a robust JSON-handling library for Delphi.
-- **Delphi Community Edition**: For offering a powerful, accessible development tool for individual developers and small teams.
+Have questions or suggestions? Feel free to reach out or open an issue. Every bit of help is appreciated!

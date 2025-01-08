@@ -11,6 +11,7 @@ inherited Form1_Windows: TForm1_Windows
     Size.Height = 624.000000000000000000
     inherited LayoutControls: TLayout
       Size.Width = 856.000000000000000000
+      Size.Height = 135.000000000000000000
       inherited Button1: TButton
         Position.Y = 18.000000000000000000
       end
@@ -23,10 +24,12 @@ inherited Form1_Windows: TForm1_Windows
         Size.Height = 30.000000000000000000
       end
       inherited Switch1: TSwitch
-        Position.X = 137.000000000000000000
+        Position.X = 585.000000000000000000
+        Position.Y = 8.000000000000000000
       end
       inherited DisplayUniq: TLabel
-        Position.X = 8.000000000000000000
+        Position.X = 464.000000000000000000
+        Position.Y = 8.000000000000000000
         Size.Width = 121.000000000000000000
         Size.Height = 20.000000000000000000
       end
@@ -45,18 +48,18 @@ inherited Form1_Windows: TForm1_Windows
     end
     inherited LayoutContent: TLayout
       Size.Width = 876.000000000000000000
-      Size.Height = 354.000000000000000000
+      Size.Height = 399.000000000000000000
       inherited ListViewCards: TListView
         Size.Width = 393.000000000000000000
-        Size.Height = 354.000000000000000000
+        Size.Height = 399.000000000000000000
       end
       inherited SplitterMain: TSplitter
         Position.X = 393.000000000000000000
-        Size.Height = 354.000000000000000000
+        Size.Height = 399.000000000000000000
       end
       inherited WebBrowser1: TWebBrowser
         Size.Width = 475.000000000000000000
-        Size.Height = 354.000000000000000000
+        Size.Height = 399.000000000000000000
       end
     end
     inherited LayoutButtons: TLayout
@@ -70,9 +73,5 @@ inherited Form1_Windows: TForm1_Windows
   inherited TimerDebounce: TTimer
     Left = 690
     Top = 42
-  end
-  inherited StyleBook1: TStyleBook [3]
-  end
-  inherited NetHTTPClient1: TNetHTTPClient [4]
   end
 end

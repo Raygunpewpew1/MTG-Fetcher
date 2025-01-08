@@ -268,11 +268,6 @@ object Form1: TForm1
     Left = 386
     Top = 18
   end
-  object NetHTTPClient1: TNetHTTPClient
-    UserAgent = 'MTGCardFetch/1.0'
-    Left = 456
-    Top = 424
-  end
   object StyleBook1: TStyleBook
     Styles = <
       item
@@ -26036,5 +26031,10 @@ object Form1: TForm1
       end>
     Left = 58
     Top = 10
+  end
+  object NetHTTPClient1: TNetHTTPClient
+    UserAgent = 'MTGCardFetch/1.0'
+    Left = 456
+    Top = 424
   end
 end
