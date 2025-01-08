@@ -2,31 +2,60 @@ inherited Form1_Windows: TForm1_Windows
   ClientHeight = 624
   ClientWidth = 876
   DesignerMasterStyle = 0
+  inherited DelayTimer: TTimer
+    Left = 800
+    Top = 24
+  end
   inherited LayoutMain: TLayout
     Size.Width = 876.000000000000000000
     Size.Height = 624.000000000000000000
     inherited LayoutControls: TLayout
       Size.Width = 856.000000000000000000
+      inherited Button1: TButton
+        Position.Y = 18.000000000000000000
+      end
+      inherited ComboBoxColors: TComboBox
+        Position.Y = 90.000000000000000000
+      end
+      inherited ButtonNextPage: TButton
+        Position.X = 348.000000000000000000
+        Position.Y = 18.000000000000000000
+        Size.Height = 30.000000000000000000
+      end
+      inherited Switch1: TSwitch
+        Position.X = 137.000000000000000000
+      end
       inherited DisplayUniq: TLabel
-        Position.X = 127.000000000000000000
-        Size.Width = 185.000000000000000000
+        Position.X = 8.000000000000000000
+        Size.Width = 121.000000000000000000
+        Size.Height = 20.000000000000000000
+      end
+      inherited ComboBox1: TComboBox
+        Position.X = 340.000000000000000000
+        Position.Y = 50.000000000000000000
+      end
+      inherited LabelProgress: TLabel
+        Position.X = 416.000000000000000000
+      end
+      inherited Button2: TButton
+        Position.X = 768.000000000000000000
+        Position.Y = 121.000000000000000000
+        Visible = False
       end
     end
     inherited LayoutContent: TLayout
       Size.Width = 876.000000000000000000
       Size.Height = 354.000000000000000000
       inherited ListViewCards: TListView
-        Size.Width = 342.000000000000000000
+        Size.Width = 393.000000000000000000
         Size.Height = 354.000000000000000000
-        StyleLookup = 'listviewstyle'
       end
       inherited SplitterMain: TSplitter
-        Position.X = 342.000000000000000000
-        Size.Width = 3.000000000000000000
+        Position.X = 393.000000000000000000
         Size.Height = 354.000000000000000000
       end
       inherited WebBrowser1: TWebBrowser
-        Size.Width = 527.000000000000000000
+        Size.Width = 475.000000000000000000
         Size.Height = 354.000000000000000000
       end
     end
@@ -37,5 +66,13 @@ inherited Form1_Windows: TForm1_Windows
         Position.X = 736.000000000000000000
       end
     end
+  end
+  inherited TimerDebounce: TTimer
+    Left = 690
+    Top = 42
+  end
+  inherited StyleBook1: TStyleBook [3]
+  end
+  inherited NetHTTPClient1: TNetHTTPClient [4]
   end
 end

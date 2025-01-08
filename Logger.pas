@@ -3,7 +3,8 @@
 interface
 
 uses
-  APIConstants, System.Classes, System.IOUtils, System.SyncObjs, System.SysUtils;
+  APIConstants, System.Classes, System.IOUtils, System.SyncObjs,
+  System.SysUtils;
 
 procedure LogStuff(const Msg: string);
 
@@ -13,143 +14,89 @@ var
   LogCriticalSection: TCriticalSection;
   LogFilePath: string;
 
+const
+  MaxLogFileSize = 1024 * 1024; // Example: 1 MB
+  TrimmedLogLines = 1000; // Number of lines to keep after trimming
 
 procedure EnsureLogDirectory;
-var
-  LogInit: string;
 begin
 {$IF DEFINED(ANDROID)}
-  LogFilePath := TPath.Combine(TPath.GetHomePath, 'mtgfetch.log');
+  // Use TPath.GetDocumentsPath for internal storage
+  LogFilePath := TPath.Combine(TPath.TPath.GetDocumentsPath, 'mtgfetch.txt');
 {$ELSEIF DEFINED(MSWINDOWS)}
-  LogInit := TPath.Combine(TPath.GetHomePath, MTGAppFolder);
-  if not TDirectory.Exists(LogInit) then
-    TDirectory.CreateDirectory(LogInit);
-  LogFilePath := TPath.Combine(LogInit, 'mtgfetch.log');
+  LogFilePath := TPath.Combine(TPath.GetHomePath, MTGAppFolder);
+  if not TDirectory.Exists(LogFilePath) then
+    TDirectory.CreateDirectory(LogFilePath);
+  LogFilePath := TPath.Combine(LogFilePath, 'mtgfetch.log');
 {$ELSE}
-  // Default log path for other platforms
-  LogFilePath := 'mtgfetch.log';
+  LogFilePath := 'mtgfetch.log'; // Default for other platforms
 {$ENDIF}
+  // Create the log file if it doesn't exist
+  if not TFile.Exists(LogFilePath) then
+  begin
+    try
+      TFile.WriteAllText(LogFilePath, '', TEncoding.UTF8);
+    except
+      on E: Exception do
+        Writeln('Failed to create log file: ' + E.Message);
+    end;
+  end;
 end;
-
 
 procedure TrimLogFile;
 var
   AllLines: TArray<string>;
   TrimmedLines: TArray<string>;
-  LogFile: TStringList;
-  TotalLines, StartLine: Integer;
 begin
   try
     if not TFile.Exists(LogFilePath) then
       Exit;
 
-
+    // Read all lines from the file
     AllLines := TFile.ReadAllLines(LogFilePath, TEncoding.UTF8);
 
-    TotalLines := Length(AllLines);
-    if TotalLines <= TrimmedLogLines then
-      Exit;
+    if Length(AllLines) > TrimmedLogLines then
+    begin
+      // Keep only the last `TrimmedLogLines`
+      TrimmedLines := Copy(AllLines, Length(AllLines) - TrimmedLogLines,
+        TrimmedLogLines);
 
-    // Determine the starting line to retain
-    StartLine := TotalLines - TrimmedLogLines;
-    if StartLine < 0 then
-      StartLine := 0;
-
-    // Extract the lines to retain
-    TrimmedLines := Copy(AllLines, StartLine, TrimmedLogLines);
-
-    // Write the trimmed lines back to the log file
-    LogFile := TStringList.Create;
-    try
-      LogFile.AddStrings(TrimmedLines);
-      LogFile.SaveToFile(LogFilePath, TEncoding.UTF8);
-    finally
-      LogFile.Free;
+      // Write the trimmed lines back to the file
+      TFile.WriteAllLines(LogFilePath, TrimmedLines, TEncoding.UTF8);
     end;
   except
     on E: Exception do
-    begin
-      // If trimming fails, silently ignore to prevent application crash
-    end;
-  end;
-end;
-
-procedure RotateLogFile;
-var
-  NewLogFilePath: string;
-begin
-  try
-    if TFile.Exists(LogFilePath) then
-    begin
-      NewLogFilePath := Format('%s_%s.log', [ChangeFileExt(LogFilePath, ''), FormatDateTime('yyyymmdd_hhnnss', Now)]);
-      TFile.Move(LogFilePath, NewLogFilePath);
-    end;
-  except
-    on E: Exception do
-    begin
-      // Handle errors during log rotation
-    end;
+      Writeln('Error trimming log file: ' + E.Message);
+    // Log the error to console
   end;
 end;
 
 procedure LogStuff(const Msg: string);
 var
-  LogFile: TStringList;
   LogEntry: string;
-  IsTrimming: Boolean;
 begin
   if not Assigned(LogCriticalSection) then
-    Exit; // Logger not initialized
+    Exit;
 
   LogCriticalSection.Enter;
   try
     try
-      // Determine if this is a trimming log to prevent recursion
-      IsTrimming := Pos('Trimming the log file', Msg) > 0;
+      // Format the log entry
+      LogEntry := Format('[%s] [Thread %d] %s',
+        [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now),
+        TThread.CurrentThread.ThreadID, Msg]);
 
-      // Check if the log file exists and exceeds the maximum size, but skip if already trimming
-      if not IsTrimming and TFile.Exists(LogFilePath) then
-      begin
-        if TFile.GetSize(LogFilePath) > MaxLogFileSize then
-        begin
-          // Log the trimming action without triggering further trimming
-          LogFile := TStringList.Create;
-          try
-            LogEntry := Format('[%s] [Thread %d] %s',
-              [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), TThread.CurrentThread.ThreadID, 'Log file size exceeded. Trimming the log file.']);
+      // Check log file size and trim if necessary
+      if TFile.Exists(LogFilePath) and
+        (TFile.GetSize(LogFilePath) > MaxLogFileSize) then
+        TrimLogFile;
 
-            // Append the trimming log entry
-            LogFile.LoadFromFile(LogFilePath, TEncoding.UTF8);
-            LogFile.Add(LogEntry);
-            LogFile.SaveToFile(LogFilePath, TEncoding.UTF8);
-
-            // Perform the trimming
-            TrimLogFile;
-          finally
-            LogFile.Free;
-          end;
-        end;
-      end;
-
-
-      LogFile := TStringList.Create;
-      try
-
-        LogEntry := Format('[%s] [Thread %d] %s',
-          [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), TThread.CurrentThread.ThreadID, Msg]);
-
-        // Append the log entry
-        LogFile.LoadFromFile(LogFilePath, TEncoding.UTF8);
-        LogFile.Add(LogEntry);
-        LogFile.SaveToFile(LogFilePath, TEncoding.UTF8);
-      finally
-        LogFile.Free;
-      end;
+      // Append the log entry
+      TFile.AppendAllText(LogFilePath, LogEntry + sLineBreak, TEncoding.UTF8);
     except
       on E: Exception do
-      begin
-        // Silent failure or implement alternative logging (e.g., fallback to console)
-      end;
+        Writeln('Error writing to log file: ' + E.Message);
+      // Optional: log to console
     end;
   finally
     LogCriticalSection.Leave;
@@ -157,10 +104,12 @@ begin
 end;
 
 initialization
-  LogCriticalSection := TCriticalSection.Create;
-  EnsureLogDirectory;
+
+LogCriticalSection := TCriticalSection.Create;
+EnsureLogDirectory;
 
 finalization
-  LogCriticalSection.Free;
+
+LogCriticalSection.Free;
 
 end.

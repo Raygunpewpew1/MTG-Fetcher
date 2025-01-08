@@ -38,6 +38,7 @@ begin
   Params := TStringBuilder.Create;
   try
     Params.Append(Format(StandardSStr, [EndpointSearch, TNetEncoding.URL.Encode(Query.ToLower)]));
+
     if not SetCode.IsEmpty then Params.Append(BySetCode + TNetEncoding.URL.Encode(SetCode.ToLower));
     if not Rarity.IsEmpty then Params.Append(ByRarity + TNetEncoding.URL.Encode(Rarity.ToLower));
     if not Colors.IsEmpty then Params.Append(ByColor + TNetEncoding.URL.Encode(Colors.ToLower));
@@ -46,13 +47,22 @@ begin
   finally
     Params.Free;
   end;
+
+  LogStuff(Result);
+
 end;
 
 function GetSafeStringField(const Obj: TJsonObject; const FieldName: string): string;
 begin
+  if Obj.Contains(FieldName) then
+  begin
+    if Obj.Types[FieldName] = jdtString then
+      Exit(Obj.S[FieldName])
+    else
+      Exit('');
+  end;
+
   Result := '';
-  if Obj.Contains(FieldName) and (Obj.Types[FieldName] = jdtString) then
-    Exit(Obj.S[FieldName]);
 end;
 
 {$IF DEFINED(MSWINDOWS)}
@@ -149,16 +159,17 @@ procedure ParsePrices(const JsonObj: TJsonObject; out Prices: TCardPrices);
 var
   PricesObj: TJsonObject;
 begin
+  Prices.Clear;
+
   if JsonObj.Contains(FieldPrices) and (JsonObj.Types[FieldPrices] = jdtObject) then
   begin
     PricesObj := JsonObj.O[FieldPrices];
-    Prices.USD      := GetSafeStringField(PricesObj, FieldUsd);
-    Prices.USD_Foil := GetSafeStringField(PricesObj, FieldUsdFoil);
-    Prices.EUR      := GetSafeStringField(PricesObj, FieldEur);
-    Prices.Tix      := GetSafeStringField(PricesObj, FieldTix);
-  end
-  else
-    Prices := Default(TCardPrices);
+
+    Prices.USD := StrToCurrDef(GetSafeStringField(PricesObj, FieldUsd), 0);
+    Prices.USD_Foil := StrToCurrDef(GetSafeStringField(PricesObj, FieldUsdFoil), 0);
+    Prices.EUR := StrToCurrDef(GetSafeStringField(PricesObj, FieldEur), 0);
+    Prices.Tix := StrToCurrDef(GetSafeStringField(PricesObj, FieldTix), 0);
+  end;
 end;
 
 procedure ParseCardFaces(const JsonObj: TJsonObject; out CardFaces: TArray<TCardFace>);

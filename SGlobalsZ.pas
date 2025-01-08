@@ -5,20 +5,23 @@ interface
 uses
   System.Classes, System.SysUtils, System.Generics.Collections;
 
+
+
+
 type
-  TRarity = (rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus, rTimeshifted,
+  TRarity = (rAll, rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus, rTimeshifted,
     rMasterpiece, rToken, rDoubleFacedToken, rDraft, rPlaneshifted, rUnique,
     rBasic, rPromo);
 
 type
   // Prices for different currencies
-  TCardPrices = record
-    USD: string;
-    USD_Foil: string;
-    EUR: string;
-    Tix: string;
-    procedure Clear;
-  end;
+TCardPrices = record
+  USD: Currency;
+  USD_Foil: Currency;
+  EUR: Currency;
+  Tix: Currency;
+  procedure Clear;
+end;
 
   // Image URIs for different resolutions
   TImageUris = record
@@ -214,6 +217,7 @@ type
 
 const
   RarityToString: array [TRarity] of string = (
+    '',                // rAll
     'common',          // rCommon
     'uncommon',        // rUncommon
     'rare',            // rRare
@@ -243,7 +247,10 @@ implementation
 
 procedure TCardPrices.Clear;
 begin
-  Self := Default (TCardPrices);
+  USD := 0;
+  USD_Foil := 0;
+  EUR := 0;
+  Tix := 0;
 end;
 
 { TImageUris }

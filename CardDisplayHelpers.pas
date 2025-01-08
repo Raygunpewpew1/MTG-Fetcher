@@ -350,10 +350,10 @@ end;
 procedure AddPricesReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
 begin
-  AddReplacement(Replacements, '{{USD}}', CardDetails.Prices.USD);
-  AddReplacement(Replacements, '{{USD_Foil}}', CardDetails.Prices.USD_Foil);
-  AddReplacement(Replacements, '{{EUR}}', CardDetails.Prices.EUR);
-  AddReplacement(Replacements, '{{Tix}}', CardDetails.Prices.Tix);
+  AddReplacement(Replacements, '{{USD}}', CardDetails.Prices.USD.ToString());
+  AddReplacement(Replacements, '{{USD_Foil}}', CardDetails.Prices.USD_Foil.ToString);
+  AddReplacement(Replacements, '{{EUR}}', CardDetails.Prices.EUR.ToString);
+  AddReplacement(Replacements, '{{Tix}}', CardDetails.Prices.Tix.ToString);
 end;
 
 procedure AddBadgesReplacements(Replacements: TDictionary<string, string>;

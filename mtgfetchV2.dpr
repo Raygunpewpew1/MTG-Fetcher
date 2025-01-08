@@ -15,16 +15,15 @@ uses
   APIConstants in 'APIConstants.pas',
   Mana in 'Mana.pas',
   Logger in 'Logger.pas',
-  MainFormLogicHelpers in 'MainFormLogicHelpers.pas',
   Template in 'Template.pas',
-  BulkData in 'BulkData.pas';
+  CardDisplayManager in 'CardDisplayManager.pas',
+  CardFilters in 'CardFilters.pas';
 
+{$R *.res}
 begin
   GlobalUseSkia := True;
   Application.Initialize;
   Application.CreateForm(TDataModule1, DataModule1);
   Application.CreateForm(TForm1, Form1);
- { R *.res}
   Application.Run;
-
 end.
