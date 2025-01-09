@@ -3,14 +3,8 @@ unit Mana;
 interface
 
 uses
-  System.Net.HttpClient,
-  System.Classes,
-  JsonDataObjects,
-  System.SysUtils,
-  System.Generics.Collections,
-  System.IOUtils,
-  Logger,
-  Template;
+  System.Net.HttpClient, System.Classes, JsonDataObjects, System.SysUtils,
+  System.Generics.Collections, System.IOUtils, Logger, Template, MLogic;
 
 /// <summary>
 ///   Replaces mana symbols in the given Oracle text with inlined SVG images.
@@ -20,30 +14,12 @@ function ReplaceManaSymbolsWithImages(const OracleText: string): string;
 implementation
 
 uses
-  System.NetEncoding,
-  APIConstants; // Contains EndPointSymbology, FieldData, FieldSymbol, etc.
+  System.NetEncoding, APIConstants;
 
 var
   SymbolCache: TDictionary<string, string>;
   CacheFilePath: string;
 
-/// <summary>
-///   Builds the path to the SymbolCache.json file in the user’s application folder.
-/// </summary>
-function GetCacheFilePath: string;
-var
-  CacheFolder: string;
-begin
-  // Combine app data path and MTGAppFolder
-  CacheFolder := TPath.Combine(TPath.GetHomePath, MTGAppFolder);
-
-  // Ensure the directory exists
-  if not TDirectory.Exists(CacheFolder) then
-    TDirectory.CreateDirectory(CacheFolder);
-
-  // Combine with the cache file name
-  Result := TPath.Combine(CacheFolder, 'SymbolCache.json');
-end;
 
 /// <summary>
 ///   Loads the symbol cache from SymbolCache.json if it exists.
@@ -74,7 +50,7 @@ begin
       begin
         LogStuff('Error loading mana symbol cache: ' + E.Message);
         LogStuff('Deleting file: ' + CacheFilePath);
-        SymbolCache.Clear;      // Clear any partial cache
+        SymbolCache.Clear; // Clear any partial cache
         TFile.Delete(CacheFilePath); // Remove corrupt file
       end;
     end;
@@ -197,7 +173,6 @@ begin
         end
         else
         begin
-          // Could log or handle the inability to fetch a particular symbol
           LogStuff(Format('No SVG content retrieved for symbol [%s] from [%s]', [Symbol, SVGUrl]));
         end;
       end;
@@ -240,12 +215,11 @@ end;
 
 initialization
   SymbolCache := TDictionary<string, string>.Create;
-  CacheFilePath := GetCacheFilePath;
+  CacheFilePath := GetCacheFilePath(SymbolCacheFile);
   LoadCacheFromFile;
 
 finalization
-
- // SaveCacheToFile;
+  SaveCacheToFile;
   SymbolCache.Free;
 
 end.

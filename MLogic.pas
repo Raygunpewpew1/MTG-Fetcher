@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
   System.RegularExpressions, System.Classes, FMX.Dialogs, SGlobalsZ,
   FMX.Graphics, System.Net.HttpClient, FMX.StdCtrls, FMX.ListView.Appearances,
-  FMX.ListView, JsonDataObjects;
+  FMX.ListView, JsonDataObjects,Logger;
 
 procedure CopyDatabaseToInternalStorage;
 
@@ -14,9 +14,9 @@ function GetDatabasePathMTJSON: string;
 
 function GetTemplatePath: string;
 
-procedure CopyTemplateToInternalStorage;
+//procedure CopyTemplateToInternalStorage;
 
-function LoadTemplate(const FileName: string; const DefaultTemplate: string = ''): string;
+//function LoadTemplate(const FileName: string; const DefaultTemplate: string = ''): string;
 
 function GetAppDirectory: string;
 
@@ -50,7 +50,7 @@ function SafePriceValue(PricesObject: TJsonObject; const Key: string): string;
 
 function GetJSONStringOrDefault(const JSONObject: TJSONObject; const Key: string; const DefaultValue: string = ''): string;
 
-
+function GetCacheFilePath(const FileName: string): string;
 
 var
   HttpClient: THTTPClient;
@@ -169,44 +169,44 @@ begin
   end;
 end;
 
-{ Copy Template to Internal Storage }
-procedure CopyTemplateToInternalStorage;
-var
-  SourcePath, DestinationPath: string;
-begin
-  DestinationPath := GetTargetPath(TemplateFileName);
-  SourcePath := GetSourcePath(TemplateFileName);
-
-  if not TFile.Exists(DestinationPath) then
-  begin
-    try
-      if TFile.Exists(SourcePath) then
-        TFile.Copy(SourcePath, DestinationPath)
-      else
-        raise Exception.CreateFmt('Template file not found: %s', [SourcePath]);
-    except
-      on E: Exception do
-        ShowMessage('Error copying template: ' + E.Message);
-    end;
-  end;
-end;
-
-function LoadTemplate(const FileName: string; const DefaultTemplate: string = ''): string;
-var
-  FullPath: string;
-begin
-  // Ensure the template exists in the target directory
-  CopyTemplateToInternalStorage;
-
-  // Use centralized target path logic
-  FullPath := GetTargetPath(FileName);
-  if TFile.Exists(FullPath) then
-    Result := TFile.ReadAllText(FullPath, TEncoding.UTF8)
-  else if not DefaultTemplate.IsEmpty then
-    Result := DefaultTemplate
-  else
-    raise Exception.CreateFmt('Template file not found: %s', [FullPath]);
-end;
+//{ Copy Template to Internal Storage }
+//procedure CopyTemplateToInternalStorage;
+//var
+//  SourcePath, DestinationPath: string;
+//begin
+//  DestinationPath := GetTargetPath(TemplateFileName);
+//  SourcePath := GetSourcePath(TemplateFileName);
+//
+//  if not TFile.Exists(DestinationPath) then
+//  begin
+//    try
+//      if TFile.Exists(SourcePath) then
+//        TFile.Copy(SourcePath, DestinationPath)
+//      else
+//        raise Exception.CreateFmt('Template file not found: %s', [SourcePath]);
+//    except
+//      on E: Exception do
+//        ShowMessage('Error copying template: ' + E.Message);
+//    end;
+//  end;
+//end;
+//
+//function LoadTemplate(const FileName: string; const DefaultTemplate: string = ''): string;
+//var
+//  FullPath: string;
+//begin
+//  // Ensure the template exists in the target directory
+//  CopyTemplateToInternalStorage;
+//
+//  // Use centralized target path logic
+//  FullPath := GetTargetPath(FileName);
+//  if TFile.Exists(FullPath) then
+//    Result := TFile.ReadAllText(FullPath, TEncoding.UTF8)
+//  else if not DefaultTemplate.IsEmpty then
+//    Result := DefaultTemplate
+//  else
+//    raise Exception.CreateFmt('Template file not found: %s', [FullPath]);
+//end;
 
 { Save Catalogs to File }
 procedure SaveCatalogsToFile(const FileName: string; const Catalogs: TDictionary<string, TScryfallCatalog>);
@@ -486,6 +486,25 @@ begin
     Result := JSONObject.S[Key]
   else
     Result := DefaultValue;
+end;
+
+function GetCacheFilePath(const FileName: string): string;
+var
+  CacheFolder: string;
+begin
+  try
+    CacheFolder := TPath.Combine(TPath.GetHomePath, MTGAppFolder);
+    if not TDirectory.Exists(CacheFolder) then
+      TDirectory.CreateDirectory(CacheFolder);
+
+    Result := TPath.Combine(CacheFolder, FileName);
+  except
+    on E: Exception do
+    begin
+      LogStuff('Error creating cache folder: ' + E.Message);
+      Result := '';
+    end;
+  end;
 end;
 
 initialization

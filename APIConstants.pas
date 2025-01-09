@@ -21,6 +21,9 @@ const
   MaxAutocompleteCacheEntries = 1000;
   MaxLogFileSize = 5 * 1024 * 1024;
   TrimmedLogLines = 1000;
+  SetIconCacheFile = 'SetIconCache.json';
+  SymbolCacheFile = 'SymbolCache.json';
+  SetCacheFile = 'Sets.json';
 
   // Endpoints
   EndpointCards = 'cards/';
@@ -66,6 +69,7 @@ const
   FieldOracleText = 'oracle_text';
   FieldKeywords = 'keywords';
   FieldSet = 'set';
+  FieldSets = 'sets';
   FieldSetName = 'set_name';
   FieldRarity = 'rarity';
   FieldPower = 'power';

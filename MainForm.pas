@@ -13,7 +13,8 @@ uses
   FMX.Controls.Presentation, FMX.ListView.Types, FMX.ListView.Appearances,
   FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, MLogic,
   System.Net.HttpClientComponent,
-  FMX.ComboEdit, CardDisplayManager, System.Net.URLClient, CardFilters;
+  FMX.ComboEdit, CardDisplayManager, System.Net.URLClient, CardFilters,
+  System.IOUtils;
 
 type
 
@@ -31,6 +32,7 @@ type
     ComboBoxSetCode: TComboBox;
     ComboBoxRarity: TComboBox;
     ComboBoxColors: TComboBox;
+    ComboBoxAbility: TComboBox;
     ButtonNextPage: TButton;
     Switch1: TSwitch;
     DisplayUniq: TLabel;
@@ -40,6 +42,7 @@ type
     LayoutButtons: TLayout;
     ProgressBar1: TProgressBar;
     LabelProgress: TLabel;
+    CountLabel: TLabel;
     NetHTTPClient1: TNetHTTPClient;
     TimerDebounce: TTimer;
     ComboBoxEditSearch: TComboEdit;
@@ -58,12 +61,12 @@ type
       const AItem: TListBoxItem);
     procedure ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word;
       var KeyChar: WideChar; Shift: TShiftState);
-
+ 
   private
     WebBrowserInitialized: Boolean;
     FIsProgrammaticChange: Boolean;
 
-    SearchTerm: string;
+    // SearchTerm: string;
     FCurrentAutocompleteTask: ITask;
     HttpClient: THTTPClient;
 
@@ -86,7 +89,7 @@ implementation
 {$R *.Windows.fmx MSWINDOWS}
 
 uses
-  APIConstants, JsonDataObjects, Logger, Template;
+  APIConstants, JsonDataObjects, Logger, Template, CardDisplayHelpers;
 
 destructor TCardLayout.Destroy;
 begin
@@ -97,14 +100,15 @@ end;
 procedure TForm1.FormCreate(Sender: TObject);
 var
   SetDetailsArray: TArray<TSetDetails>;
-  SetDetails: TSetDetails;
+  ComboBoxMap: TDictionary<string, TComboBox>;
+  CacheFileName: string;
 begin
   WebBrowserInitialized := False;
   FIsProgrammaticChange := False;
   WebBrowser1.LoadFromStrings('', '');
+  ComboBoxMap := TDictionary<string, TComboBox>.Create;
 
   FScryfallAPI := TScryfallAPI.Create;
-
 
   FCardDisplayManager := TCardDisplayManager.Create(ListViewCards, WebBrowser1,
     FScryfallAPI);
@@ -113,8 +117,14 @@ begin
     begin
       ProgressBar1.Value := Progress;
     end;
+  //ComboBoxSetCode
 
-  //FCardDisplayManager.LoadAllCatalogs(ComboBoxSetCode);
+  try
+    ComboBoxMap.Add(CatalogKeywordAbilities, ComboBoxAbility);
+    FCardDisplayManager.LoadAllCatalogs(ComboBoxMap);
+  finally
+    ComboBoxMap.Free;
+  end;
 
   HttpClient := THTTPClient.Create;
 
@@ -124,16 +134,42 @@ begin
   ListViewCards.OnItemClick := ListViewCardsItemClick;
   ComboBoxSetCode.Items.Add(S_ALL_SETS);
 
-  try
-    SetDetailsArray := FScryfallAPI.GetAllSets;
-    for SetDetails in SetDetailsArray do
-    begin
-      ComboBoxSetCode.Items.Add(SetDetails.Code + S + SetDetails.Name);
+  CacheFileName := GetCacheFilePath(SetCacheFile);
+
+  if TFile.Exists(CacheFileName) then
+  begin
+
+    LogStuff('Loading set details from cache...');
+    SetDetailsArray := LoadSetDetailsFromJson(CacheFileName);
+  end
+  else
+  begin
+
+    LogStuff('Fetching set details from Scryfall...');
+    try
+      SetDetailsArray := FScryfallAPI.GetAllSets;
+
+      // Save to cache
+      SaveSetDetailsToJson(CacheFileName, SetDetailsArray);
+    except
+      on E: Exception do
+      begin
+        LogStuff('Error fetching set details: ' + E.Message);
+        Exit;
+      end;
     end;
+  end;
+
+
+  try
+
+  for var SetDetails in SetDetailsArray do
+    ComboBoxSetCode.Items.Add(SetDetails.Code + ' - ' + SetDetails.Name);
+
   finally
-    ComboBoxSetCode.ItemIndex := 0;
-    ComboBoxColors.ItemIndex := 0;
-    ComboBoxRarity.ItemIndex := 0;
+   ComboBoxSetCode.ItemIndex := 0;
+   ComboBoxColors.ItemIndex := 0;
+   ComboBoxRarity.ItemIndex := 0;
   end;
 
   DelayTimer.Enabled := True;
@@ -143,7 +179,7 @@ procedure TForm1.OnSearchComplete(Success: Boolean);
 begin
   Button1.Enabled := True;
   ButtonNextPage.Enabled := FCardDisplayManager.HasMorePages;
-  //CountLabel.Text := S_CARDS_FOUND + ListViewCards.ItemCount.ToString;
+  CountLabel.Text := S_CARDS_FOUND + ListViewCards.ItemCount.ToString;
 
   if not Success then
     ShowMessage('Search failed. Please try again.')
@@ -176,9 +212,9 @@ begin
     Exit;
   end;
 
-//  LogStuff('TagObject class: ' + AItem.TagObject.ClassName);
-//  LogStuff('Is TCardDetailsObject: ' +
-//    BoolToStr(AItem.TagObject is TCardDetailsObject, True));
+  // LogStuff('TagObject class: ' + AItem.TagObject.ClassName);
+  // LogStuff('Is TCardDetailsObject: ' +
+  // BoolToStr(AItem.TagObject is TCardDetailsObject, True));
 
   if AItem.TagObject is TCardDetailsObject then
   begin
@@ -401,6 +437,8 @@ begin
       end;
   end;
 end;
+
+
 
 initialization
 

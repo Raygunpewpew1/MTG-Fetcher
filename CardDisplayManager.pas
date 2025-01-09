@@ -47,7 +47,7 @@ type
     procedure ShowCardDetails(const CardDetails: TCardDetails);
     procedure DisplayCardInBrowser(const CardDetails: TCardDetails; const Rulings: TArray<TRuling>);
     procedure AddCardToListView(const Card: TCardDetails);
-    procedure LoadAllCatalogs(const ComboBox: TComboBox);
+    procedure LoadAllCatalogs(const ComboBoxes: TDictionary<string, TComboBox>);
 
     property OnProgressUpdate: TProc<Integer> read FOnProgressUpdate write FOnProgressUpdate;
     property CurrentPage: Integer read FCurrentPage;
@@ -210,6 +210,9 @@ begin
   UpdatedCard := CardDetails;  // Create a copy
   UpdatedCard.SetName := SetDetails.Name;
   UpdatedCard.SetIconURI := SetDetails.IconSVGURI;
+    UpdatedCard.SetIconURI := Format('data:image/svg+xml;base64,%s', [
+    GetSetIconAsBase64(SetDetails.IconSVGURI, SetDetails.Code)
+  ]);
   DisplayCardInBrowser(UpdatedCard, []);
 end;
 
@@ -281,14 +284,12 @@ begin
     end);
 end;
 
-procedure TCardDisplayManager.LoadAllCatalogs(const ComboBox: TComboBox);
+procedure TCardDisplayManager.LoadAllCatalogs(const ComboBoxes: TDictionary<string, TComboBox>);
 var
   Catalogs: TDictionary<string, TScryfallCatalog>;
   FileName: string;
+  CatalogName: string;
 begin
-  if not Assigned(ComboBox) then
-    Exit;
-
   FileName := SCatalogsJson;
   Catalogs := TDictionary<string, TScryfallCatalog>.Create;
 
@@ -301,11 +302,14 @@ begin
       SaveCatalogsToFile(FileName, Catalogs);
     end;
 
-    if Catalogs.ContainsKey(CatalogKeywordAbilities) then
+    for CatalogName in ComboBoxes.Keys do
     begin
-      ComboBox.Items.Clear;
-      ComboBox.Items.AddStrings(Catalogs[CatalogKeywordAbilities].Data);
-      ComboBox.ItemIndex := 0;
+      if Catalogs.ContainsKey(CatalogName) then
+      begin
+        ComboBoxes[CatalogName].Items.Clear;
+        ComboBoxes[CatalogName].Items.AddStrings(Catalogs[CatalogName].Data);
+        ComboBoxes[CatalogName].ItemIndex := 0;
+      end;
     end;
   finally
     Catalogs.Free;

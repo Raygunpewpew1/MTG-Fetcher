@@ -121,7 +121,7 @@ object Form1: TForm1
         Text = 'Unique Art On Search'
         TabOrder = 7
       end
-      object ComboBox1: TComboBox
+      object ComboBoxAbility: TComboBox
         Position.X = 104.000000000000000000
         Position.Y = 150.000000000000000000
         Size.Width = 148.000000000000000000
@@ -230,17 +230,6 @@ object Form1: TForm1
         TabOrder = 8
         Text = 'Collection'
         TextSettings.Trimming = None
-      end
-      object ShowHighResButton: TButton
-        Align = Left
-        Margins.Right = 5.000000000000000000
-        Size.Width = 120.000000000000000000
-        Size.Height = 22.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 9
-        Text = 'Show Large'
-        TextSettings.Trimming = None
-        Visible = False
       end
       object ProgressBar1: TProgressBar
         Align = Client
