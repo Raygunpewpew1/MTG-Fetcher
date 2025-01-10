@@ -13,7 +13,7 @@ HtmlTemplate: string = '''
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   font-family: Beleren, Arial, sans-serif;
-  background-color: rgb(38, 67, 97);
+  background-color: rgb(32, 38, 47);
   color: white;
   height: 100%;
   margin: 0;
