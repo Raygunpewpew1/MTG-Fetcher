@@ -254,7 +254,7 @@
         <DCCReference Include="MainForm.pas">
             <Form>Form1</Form>
         </DCCReference>
-        <DCCReference Include="ScryfallAPIWrapperV2.pas"/>
+        <DCCReference Include="ScryfallData.pas"/>
         <DCCReference Include="SGlobalsZ.pas"/>
         <DCCReference Include="DataModuleUnit.pas">
             <Form>DataModule1</Form>
@@ -265,7 +265,7 @@
         <DCCReference Include="CardDisplayHelpers.pas"/>
         <DCCReference Include="WrapperHelper.pas"/>
         <DCCReference Include="APIConstants.pas"/>
-        <DCCReference Include="Mana.pas"/>
+        <DCCReference Include="mana.pas"/>
         <DCCReference Include="Logger.pas"/>
         <DCCReference Include="Template.pas"/>
         <DCCReference Include="CardDisplayManager.pas"/>

@@ -1,4 +1,4 @@
-unit ScryfallAPIWrapperV2;
+unit ScryfallData;
 
 interface
 
@@ -6,7 +6,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.Threading, JsonDataObjects, SGlobalsZ,
-  System.Net.HttpClient,Logger,System.SyncObjs;
+  System.Net.HttpClient,Logger,System.SyncObjs, MLogic, system.IOUtils;
 
 type
   EScryfallAPIError = class(Exception);
@@ -17,7 +17,7 @@ type
   TScryfallAPI = class
   private
     FCache: TDictionary<string, TJsonObject>;
-    FSetDetailsCache: TDictionary<string, TSetDetails>;
+//    FSetDetailsCache: TDictionary<string, TSetDetails>;
     FCacheLock: TCriticalSection;
 
     // Single THTTPClient for all requests (thread-synchronized).
@@ -38,12 +38,14 @@ type
     /// </summary>
     function FetchAutocompleteSuggestions(const PartialQuery: string)
       : TArray<string>;
+    function FetchAllSetsFromAPI: TArray<TSetDetails>;
 
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure PreloadAllSets;
+
+
     function GetSetByCode(const SetCode: string): TSetDetails;
     function GetCardByName(const CardName: string; Fuzzy: Boolean = False)
       : TCardDetails;
@@ -55,7 +57,6 @@ type
     procedure SearchAllCardsAsync(const Query, SetCode, Rarity, Colors: string;
       Fuzzy, Unique: Boolean; Page: Integer; Callback: TOnSearchComplete);
     function GetRandomCard: TCardDetails;
-    function GetCreatureTypes: TScryfallCatalog;
     function GetCatalog(const CatalogName: string): TScryfallCatalog;
     function FetchAllCatalogs: TDictionary<string, TScryfallCatalog>;
     function GetCardByUUID(const UUID: string): TCardDetails;
@@ -76,7 +77,7 @@ type
 implementation
 
 uses
-  WrapperHelper, APIConstants, System.NetEncoding;
+  WrapperHelper, APIConstants, System.NetEncoding, CardDisplayHelpers;
 
 { TScryfallAPI }
 
@@ -85,7 +86,7 @@ begin
   inherited Create;
   FCache := TDictionary<string, TJsonObject>.Create;
   FCacheLock := TCriticalSection.Create;
-  FSetDetailsCache := TDictionary<string, TSetDetails>.Create;
+ // FSetDetailsCache := TDictionary<string, TSetDetails>.Create;
 
   // Create the single THTTPClient instance once
   FHttpClient := THTTPClient.Create;
@@ -111,7 +112,7 @@ begin
   FCacheLock.Free;  // Free the critical section
   FHttpClient.Free;
   FCache.Free;
-  FSetDetailsCache.Free;
+//  FSetDetailsCache.Free;
 
   inherited Destroy;
 end;
@@ -119,24 +120,22 @@ end;
 function TScryfallAPI.ExecuteRequest(const Endpoint: string): TJsonObject;
 const
   MaxRetries = 3;
-  RetryDelayMs = 500;
+  RetryDelayMs = 500; // 500ms delay between retries
 var
   ResponseStream: TStringStream;
-  Response: string;
   StatusCode, RetryCount: Integer;
   URL: string;
 begin
-  Result := nil;
+
   URL := BaseUrl + Endpoint;
   ResponseStream := TStringStream.Create;
   try
     for RetryCount := 1 to MaxRetries do
     begin
       ResponseStream.Clear;
-      LogStuff(Format('ExecuteRequest -> URL: %s (attempt %d)',
-        [URL, RetryCount]));
+      LogStuff(Format('ExecuteRequest -> URL: %s (attempt %d)', [URL, RetryCount]));
 
-      // Because we share one THTTPClient, we lock around its usage
+      // Lock HTTP client for thread safety
       TMonitor.Enter(FHttpClient);
       try
         StatusCode := FHttpClient.Get(URL, ResponseStream).StatusCode;
@@ -144,40 +143,47 @@ begin
         TMonitor.Exit(FHttpClient);
       end;
 
-      if StatusCode = 200 then
-      begin
-        // Success: parse JSON
-        Response := ResponseStream.DataString;
-        try
-          Result := TJsonObject.Parse(Response) as TJsonObject;
-          Exit; // returns the parsed JSON
-        except
-          on E: Exception do
-            raise EScryfallAPIError.CreateFmt('Error parsing JSON: %s',
-              [E.Message]);
-        end;
-      end
-      else if StatusCode = 404 then
-      begin
-        // Not found
-        raise EScryfallAPIError.Create(ErrorCardNotFound);
-      end
-      else
-      begin
-        // Some other status code
-        LogStuff(Format('API returned status %d. Retrying...', [StatusCode]));
-        if RetryCount = MaxRetries then
-          raise EScryfallAPIError.CreateFmt(ErrorRequestFailed,
-            [StatusCode, URL]);
-        Sleep(RetryDelayMs);
+      // Handle response based on status code
+      case StatusCode of
+        200:
+          begin
+            // Success: Parse JSON and return
+            try
+              Result := TJsonObject.Parse(ResponseStream.DataString) as TJsonObject;
+              Exit; // Exit immediately if successful
+            except
+              on E: Exception do
+                raise EScryfallAPIError.CreateFmt('Error parsing JSON: %s', [E.Message]);
+            end;
+          end;
+        429:
+          begin
+            // Too Many Requests: Log and retry after delay
+            LogStuff(Format('Rate limited (429). Retrying in %d ms...', [RetryDelayMs]));
+          end;
+        500..599:
+          begin
+            // Server error: Log and retry
+            LogStuff(Format('Server error (%d). Retrying in %d ms...', [StatusCode, RetryDelayMs]));
+          end;
+        else
+          begin
+            // For other status codes, raise an error without retrying
+            raise EScryfallAPIError.CreateFmt('Request failed: %d %s', [StatusCode, URL]);
+          end;
       end;
+
+      // Delay before retrying
+      if RetryCount < MaxRetries then
+        Sleep(RetryDelayMs);
     end;
 
+    // If all retries fail, raise an error
+    raise EScryfallAPIError.CreateFmt('Max retries reached for URL: %s', [URL]);
   finally
     ResponseStream.Free;
   end;
 end;
-
 // ------------------------------------
 // Autocomplete Implementation
 // ------------------------------------
@@ -457,7 +463,7 @@ begin
   end;
 end;
 
-function TScryfallAPI.GetAllSets: TArray<TSetDetails>;
+function TScryfallAPI.FetchAllSetsFromAPI: TArray<TSetDetails>;
 var
   JsonResponse: TJsonObject;
   SetsArray: TJsonArray;
@@ -469,67 +475,69 @@ begin
     begin
       SetsArray := JsonResponse.A[FieldData];
       SetLength(Result, SetsArray.Count);
-
       for i := 0 to SetsArray.Count - 1 do
         FillSetDetailsFromJson(SetsArray.O[i], Result[i]);
     end
     else
-      SetLength(Result, 0);
+      raise EScryfallAPIError.Create('API response is missing set data.');
   finally
     JsonResponse.Free;
   end;
 end;
 
+function TScryfallAPI.GetAllSets: TArray<TSetDetails>;
+var
+  CacheFile: string;
+begin
+  CacheFile := GetCacheFilePath(SetCacheFile);
+  if TFile.Exists(CacheFile) then
+  begin
+    LogStuff('Loading all sets from local cache.');
+    Exit(LoadSetDetailsFromJson(CacheFile));
+  end;
+
+  LogStuff('Fetching all sets from Scryfall API.');
+  Result := FetchAllSetsFromAPI;
+  SaveSetDetailsToJson(CacheFile, Result); // Cache results for future use
+end;
+
 function TScryfallAPI.GetSetByCode(const SetCode: string): TSetDetails;
 var
-  Endpoint: string;
+  CachedSets: TArray<TSetDetails>;
   JsonResponse: TJsonObject;
+  Endpoint: string;
 begin
-  if FSetDetailsCache.TryGetValue(SetCode, Result) then
+  // Try loading from the local JSON cache
+  CachedSets := LoadSetDetailsFromJson(GetCacheFilePath(SetCacheFile));
+  for var SetDetails in CachedSets do
   begin
-    LogStuff(Format(LogCacheHit, [SetCode]));
-    Exit;
-  end;
-
-  TMonitor.Enter(FSetDetailsCache);
-  try
-    if FSetDetailsCache.TryGetValue(SetCode, Result) then
+    if SetDetails.Code = SetCode then
     begin
-      LogStuff(Format(LogCacheHitDoubleCheck, [SetCode]));
-      Exit;
+      LogStuff(Format('Set details for "%s" loaded from cache.', [SetCode]));
+      Exit(SetDetails);
     end;
+  end;
 
-    Endpoint := Format('%s%s',
-      [EndpointSets, TNetEncoding.URL.Encode(SetCode)]);
-    LogStuff(Format(LogFetchingSetCode, [SetCode]));
+  // Fetch from the Scryfall API if not found in the cache
+  Endpoint := Format('%s%s', [EndpointSets, TNetEncoding.URL.Encode(SetCode)]);
+  JsonResponse := ExecuteRequest(Endpoint);
+  try
+    if Assigned(JsonResponse) then
+    begin
+      FillSetDetailsFromJson(JsonResponse, Result);
+      LogStuff(Format('Set details for "%s" fetched from API.', [SetCode]));
 
-    JsonResponse := ExecuteRequest(Endpoint);
-    try
-      if Assigned(JsonResponse) then
-      begin
-        FillSetDetailsFromJson(JsonResponse, Result);
-        FSetDetailsCache.Add(SetCode, Result);
-        LogStuff(Format(LogSetCodeAddedToCache, [SetCode]));
-      end
-      else
-        raise EScryfallAPIError.CreateFmt(ErrorNoDataForSetCode, [SetCode]);
-    finally
-      JsonResponse.Free;
-    end;
+      // Save the fetched details to the cache
+      SaveSetDetailsToJson(GetCacheFilePath(SetCacheFile), [Result]);
+    end
+    else
+      raise EScryfallAPIError.CreateFmt('No data found for set code "%s".', [SetCode]);
   finally
-    TMonitor.Exit(FSetDetailsCache);
+    JsonResponse.Free; // Ensure JsonResponse is freed
   end;
 end;
 
-procedure TScryfallAPI.PreloadAllSets;
-var
-  AllSets: TArray<TSetDetails>;
-  S: TSetDetails;
-begin
-  AllSets := GetAllSets;
-  for S in AllSets do
-    FSetDetailsCache.AddOrSetValue(S.Code, S);
-end;
+
 
 function TScryfallAPI.GetCardByName(const CardName: string; Fuzzy: Boolean)
   : TCardDetails;
@@ -552,35 +560,7 @@ begin
   end;
 end;
 
-function TScryfallAPI.GetCreatureTypes: TScryfallCatalog;
-var
-  JsonResponse: TJsonObject;
-  CatalogArray: TJsonArray;
-  i: Integer;
-begin
-  Result.Clear;
 
-  JsonResponse := ExecuteRequest(EndPointCreatureTypes);
-  try
-    if JsonResponse.Contains(FieldData) and
-      (JsonResponse.Types[FieldData] = jdtArray) then
-    begin
-      CatalogArray := JsonResponse.A[FieldData];
-      SetLength(Result.Data, CatalogArray.Count);
-
-      for i := 0 to CatalogArray.Count - 1 do
-        if CatalogArray.Types[i] = jdtString then
-          Result.Data[i] := CatalogArray.S[i];
-
-      Result.TotalItems := Length(Result.Data);
-    end
-    else
-      raise EScryfallAPIError.Create
-        ('Invalid response: "data" field not found.');
-  finally
-    JsonResponse.Free;
-  end;
-end;
 
 function TScryfallAPI.GetCatalog(const CatalogName: string): TScryfallCatalog;
 var
@@ -623,7 +603,7 @@ begin
     CatalogPlaneswalkerTypes, CatalogArtifactTypes, CatalogEnchantmentTypes,
     CatalogLandTypes, CatalogSpellTypes, CatalogPowers, CatalogToughnesses,
     CatalogLoyalties, CatalogWatermarks, CatalogKeywordAbilities,
-    CatalogKeywordActions, CatalogAbilityWords);
+    CatalogKeywordActions, CatalogAbilityWords, CatalogWordBank);
 
   CatalogDict := TDictionary<string, TScryfallCatalog>.Create;
   try

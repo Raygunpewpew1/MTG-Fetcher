@@ -3,7 +3,7 @@ unit CardFilters;
 interface
 
 uses
-  System.SysUtils, System.Generics.Collections, ScryfallAPIWrapperV2, SGlobalsZ;
+  System.SysUtils, System.Generics.Collections, ScryfallData, SGlobalsZ;
 
 type
   TCurrencyType = (ctUSD, ctUSDFoil, ctEUR, ctTIX);

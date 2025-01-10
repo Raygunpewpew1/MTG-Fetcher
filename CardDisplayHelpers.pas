@@ -119,15 +119,15 @@ begin
 
       if not Face.FlavorText.Trim.IsEmpty then
         ExtraHtml := ExtraHtml +
-          Format('<p><strong>Flavor Text:</strong> %s</p>',
+          Format('<p></strong> %s</p>',
           [EncodeHTML(Face.FlavorText)]);
 
       // Combine all the details into a single face block
       FaceBuilder.AppendFormat('<div class="card-face-block">' + // Face block
-        '<p><strong>Face Name:</strong> %s</p>' +
+        '<p><strong></strong> %s</p>' +
         '<p><strong>Mana Cost:</strong> %s</p>' +
-        '<p><strong>Type Line:</strong> %s</p>' +
-        '<p><strong>Oracle Text:</strong> %s</p>' + '%s' + // ExtraHtml
+        '<p><strong></strong> %s</p>' +
+        '<p><strong></strong> %s</p>' + '%s' + // ExtraHtml
         '</div>', [EncodeHTML(Face.Name),
         ReplaceManaSymbolsWithImages(Face.ManaCost), EncodeHTML(EncodeTypeLine),
         ProcessOracleText(Face.OracleText), ExtraHtml]);
@@ -536,18 +536,20 @@ end;
 /// </summary>
 function GetSetIconAsBase64(const IconURL, SetCode: string): string;
 begin
+  // Check if the icon is already cached in memory
   if SetIconCache.ContainsKey(SetCode) then
   begin
     Result := SetIconCache[SetCode];
-    LogStuff('Set icon loaded from memory cache for set code: ' + SetCode);
+   // LogStuff('Set icon loaded from memory cache for set code: ' + SetCode);
     Exit;
   end;
 
+  // If not cached, fetch the SVG and convert to Base64
   Result := FetchSVGAsBase64(IconURL);
   if not Result.IsEmpty then
   begin
     SetIconCache.AddOrSetValue(SetCode, Result);
-    SaveSetIconCacheToFile; // Save updated cache
+    SaveSetIconCacheToFile; // Save the updated cache to disk
   end;
 end;
 

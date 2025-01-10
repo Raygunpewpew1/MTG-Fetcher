@@ -7,6 +7,7 @@ const
   BaseUrl = 'https://api.scryfall.com/';
   UserAgent = 'MTGCardFetch/1.0';
   AcceptHeader = 'application/json';
+
   // misc
   MTGAppFolder = 'MTGCardFetch';
   FuzzySStr = '%s?fuzzy=%s';
@@ -32,7 +33,7 @@ const
   EndpointSets = 'sets/';
   EndpointBulkData = 'bulk-data';
   EndpointRandomCard = '/cards/random';
-  EndPointCreatureTypes = 'catalog/creature-types';
+//  EndPointCreatureTypes = 'catalog/creature-types';
   EndPointSymbology = 'https://api.scryfall.com/symbology';
   // dont use this in the wrapper
 
@@ -165,6 +166,8 @@ const
   CatalogKeywordAbilities = 'keyword-abilities';
   CatalogKeywordActions = 'keyword-actions';
   CatalogAbilityWords = 'ability-words';
+  CatalogWordBank = 'word-bank';
+  CatalogCardNames = 'card-names';
   ColorMap: array[0..4] of record
   Code: string;
   Name: string;

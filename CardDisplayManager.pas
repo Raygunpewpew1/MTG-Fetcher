@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   FMX.ListView.Types, FMX.ListView.Appearances,
   FMX.ListView.Adapters.Base, FMX.ListView, FMX.WebBrowser,
-  ScryfallAPIWrapperV2, System.Threading, FMX.Dialogs, FMX.ListBox,
+  ScryfallData, System.Threading, FMX.Dialogs, FMX.ListBox,
   CardDisplayHelpers, Template, Logger, SGlobalsZ, MLogic, APIConstants, CardFilters;
 
 type
@@ -202,28 +202,48 @@ begin
 end;
 
 
-procedure TCardDisplayManager.HandleSetDetails(const CardDetails: TCardDetails;
-  const SetDetails: TSetDetails);
-var
-  UpdatedCard: TCardDetails;
+procedure TCardDisplayManager.HandleSetDetails(const CardDetails: TCardDetails; const SetDetails: TSetDetails);
 begin
-  UpdatedCard := CardDetails;  // Create a copy
+  var UpdatedCard := CardDetails;  // Create a copy of the card details
   UpdatedCard.SetName := SetDetails.Name;
-  UpdatedCard.SetIconURI := SetDetails.IconSVGURI;
-    UpdatedCard.SetIconURI := Format('data:image/svg+xml;base64,%s', [
+
+  // Use GetSetIconAsBase64 to retrieve or fetch the icon
+  UpdatedCard.SetIconURI := Format('data:image/svg+xml;base64,%s', [
     GetSetIconAsBase64(SetDetails.IconSVGURI, SetDetails.Code)
   ]);
+
   DisplayCardInBrowser(UpdatedCard, []);
 end;
 
 procedure TCardDisplayManager.ShowCardDetails(const CardDetails: TCardDetails);
+var
+  SetDetails: TSetDetails;
 begin
   if not CardDetails.SetCode.IsEmpty then
   begin
+    // Check local cache first
+    var CachedSets := LoadSetDetailsFromJson(GetCacheFilePath(SetCacheFile));
+    var FoundInCache := False;
+
+    for var CachedSet in CachedSets do
+    begin
+      if CachedSet.Code = CardDetails.SetCode then
+      begin
+        SetDetails := CachedSet;
+        FoundInCache := True;
+        Break;
+      end;
+    end;
+
+    if FoundInCache then
+    begin
+      HandleSetDetails(CardDetails, SetDetails);
+      Exit;
+    end;
+
+    // Fetch from API if not found in cache
     TTask.Run(
       procedure
-      var
-        SetDetails: TSetDetails;
       begin
         try
           SetDetails := FScryfallAPI.GetSetByCode(CardDetails.SetCode);
@@ -309,6 +329,10 @@ begin
         ComboBoxes[CatalogName].Items.Clear;
         ComboBoxes[CatalogName].Items.AddStrings(Catalogs[CatalogName].Data);
         ComboBoxes[CatalogName].ItemIndex := 0;
+      end
+      else
+      begin
+        LogStuff(Format('Catalog "%s" is missing from the fetched data.', [CatalogName]));
       end;
     end;
   finally

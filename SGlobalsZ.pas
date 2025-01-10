@@ -5,23 +5,20 @@ interface
 uses
   System.Classes, System.SysUtils, System.Generics.Collections;
 
-
-
-
 type
-  TRarity = (rAll, rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus, rTimeshifted,
-    rMasterpiece, rToken, rDoubleFacedToken, rDraft, rPlaneshifted, rUnique,
-    rBasic, rPromo);
+  TRarity = (rAll, rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus,
+    rTimeshifted, rMasterpiece, rToken, rDoubleFacedToken, rDraft,
+    rPlaneshifted, rUnique, rBasic, rPromo);
 
 type
   // Prices for different currencies
-TCardPrices = record
-  USD: Currency;
-  USD_Foil: Currency;
-  EUR: Currency;
-  Tix: Currency;
-  procedure Clear;
-end;
+  TCardPrices = record
+    USD: Currency;
+    USD_Foil: Currency;
+    EUR: Currency;
+    Tix: Currency;
+    procedure Clear;
+  end;
 
   // Image URIs for different resolutions
   TImageUris = record
@@ -216,30 +213,31 @@ end;
   end;
 
 const
-  RarityToString: array [TRarity] of string = (
-    '',                // rAll
-    'common',          // rCommon
-    'uncommon',        // rUncommon
-    'rare',            // rRare
-    'mythic',          // rMythic
-    'special',         // rSpecial
-    'bonus',           // rBonus
-    'timeshifted',     // rTimeshifted
-    'masterpiece',     // rMasterpiece
-    'token',           // rToken
+  RarityToString: array [TRarity] of string = ('', // rAll
+    'common', // rCommon
+    'uncommon', // rUncommon
+    'rare', // rRare
+    'mythic', // rMythic
+    'special', // rSpecial
+    'bonus', // rBonus
+    'timeshifted', // rTimeshifted
+    'masterpiece', // rMasterpiece
+    'token', // rToken
     'double_faced_token', // rDoubleFacedToken
-    'draft',           // rDraft
-    'planeshifted',    // rPlaneshifted
-    'unique',          // rUnique
-    'basic',           // rBasic
-    'promo'            // rPromo
-  );
+    'draft', // rDraft
+    'planeshifted', // rPlaneshifted
+    'unique', // rUnique
+    'basic', // rBasic
+    'promo' // rPromo
+    );
 
 const
   LegalitiesArray: array [0 .. 18] of string = ('standard', 'future',
     'historic', 'gladiator', 'pioneer', 'explorer', 'modern', 'legacy',
     'pauper', 'vintage', 'penny', 'commander', 'alchemy', 'brawl',
     'paupercommander', 'duel', 'oldschool', 'premodern', 'oathbreaker');
+
+ var   AppClose: Boolean;
 
 implementation
 

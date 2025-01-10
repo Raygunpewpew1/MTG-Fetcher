@@ -109,7 +109,7 @@ HtmlTemplate: string = '''
   }
 
   .mana-cost {
-  background: rgba(0, 0, 0, 0.85);
+  background-color: rgb(38, 67, 97);
   color: #fff;
   padding: 5px 10px;
   font-size: 16px;
@@ -334,7 +334,7 @@ HtmlTemplate: string = '''
   {{FlipIndicator}}
   {{CardImages}}
 
-  <div class="mana-cost">{{ManaCost}}</div>
+
   <div class="card-details">
     <div class="type-set-row">
       <div class="type-line">{{TypeLine}}</div>
@@ -343,14 +343,17 @@ HtmlTemplate: string = '''
         <span>{{SetName}}</span>
       </div>
     </div>
-
+   <div class="mana-cost">Mana Cost: {{ManaCost}}</div>
     <div class="games {{GamesClass}}">
       <strong>Available in:</strong> {{Games}}
     </div>
+    <div class="rarity {{RarityClass}}">{{Rarity}}</div>
+
 
     <div class="oracle-text">{{OracleText}}</div>
-    <div class="flavor-text">{{FlavorText}}</div>
+
     {{PowerToughness}}
+    <div class="flavor-text">{{FlavorText}}</div>
 
     <div class="card-badges">
       {{FullArt}}{{Promo}}{{Reserved}}
@@ -360,7 +363,7 @@ HtmlTemplate: string = '''
       <strong>Keywords:</strong> {{Keywords}}
     </div>
 
-    <div class="rarity {{RarityClass}}">{{Rarity}}</div>
+
 
     <div class="legalities">
       <h2>Legalities</h2>

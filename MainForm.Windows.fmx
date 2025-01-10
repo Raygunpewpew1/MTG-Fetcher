@@ -54,15 +54,11 @@ inherited Form1_Windows: TForm1_Windows
       Size.Width = 876.000000000000000000
       Size.Height = 399.000000000000000000
       inherited ListViewCards: TListView
-        Size.Width = 393.000000000000000000
-        Size.Height = 399.000000000000000000
-      end
-      inherited SplitterMain: TSplitter
-        Position.X = 393.000000000000000000
+        Size.Width = 262.000000000000000000
         Size.Height = 399.000000000000000000
       end
       inherited WebBrowser1: TWebBrowser
-        Size.Width = 475.000000000000000000
+        Size.Width = 610.000000000000000000
         Size.Height = 399.000000000000000000
       end
     end

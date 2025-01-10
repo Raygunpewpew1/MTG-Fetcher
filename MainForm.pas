@@ -8,7 +8,7 @@ uses
   FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts,
   FMX.ExtCtrls, FMX.Ani, FMX.Edit, FMX.StdCtrls,
   FMX.WebBrowser, FMX.Skia, System.Net.HttpClient,
-  SGlobalsZ, ScryfallAPIWrapperV2,
+  SGlobalsZ, ScryfallData,
   System.TypInfo, Math, System.Threading,
   FMX.Controls.Presentation, FMX.ListView.Types, FMX.ListView.Appearances,
   FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, MLogic,
@@ -37,7 +37,6 @@ type
     Switch1: TSwitch;
     DisplayUniq: TLabel;
     ListViewCards: TListView;
-    SplitterMain: TSplitter;
     WebBrowser1: TWebBrowser;
     LayoutButtons: TLayout;
     ProgressBar1: TProgressBar;
@@ -68,9 +67,9 @@ type
 
     // SearchTerm: string;
     FCurrentAutocompleteTask: ITask;
-    HttpClient: THTTPClient;
+   // HttpClient: THTTPClient;
 
-    AppClose: Boolean;
+
     FCardDisplayManager: TCardDisplayManager;
     FScryfallAPI: TScryfallAPI;
     BrIsLoaded: Boolean;
@@ -105,7 +104,7 @@ var
 begin
   WebBrowserInitialized := False;
   FIsProgrammaticChange := False;
-  WebBrowser1.LoadFromStrings('', '');
+  WebBrowser1.LoadFromStrings(HtmlTemplate, '');
   ComboBoxMap := TDictionary<string, TComboBox>.Create;
 
   FScryfallAPI := TScryfallAPI.Create;
@@ -126,7 +125,7 @@ begin
     ComboBoxMap.Free;
   end;
 
-  HttpClient := THTTPClient.Create;
+ // HttpClient := THTTPClient.Create;
 
   AppClose := False;
 
@@ -190,7 +189,7 @@ end;
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
   AppClose := True;
-  FreeAndNil(HttpClient);
+  //FreeAndNil(HttpClient);
 
   FreeAndNil(FScryfallAPI);
   FreeAndNil(FCardDisplayManager);

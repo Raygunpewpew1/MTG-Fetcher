@@ -178,21 +178,10 @@ object Form1: TForm1
         TabOrder = 6
         SearchVisible = True
       end
-      object SplitterMain: TSplitter
-        Touch.InteractiveGestures = [Zoom]
-        Align = Left
-        Cursor = crHSplit
-        MinSize = 20.000000000000000000
-        Position.X = 160.000000000000000000
-        Size.Width = 4.000000000000000000
-        Size.Height = 370.000000000000000000
-        Size.PlatformDefault = False
-        StyleLookup = 'splitterstyle'
-      end
       object WebBrowser1: TWebBrowser
         EnableCaching = False
         Align = Client
-        Size.Width = 292.000000000000000000
+        Size.Width = 296.000000000000000000
         Size.Height = 370.000000000000000000
         Size.PlatformDefault = False
         Margins.Left = 4.000000000000000000
