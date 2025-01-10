@@ -25,6 +25,7 @@
 ## Screenshots
 
 ![Screenshot of the application](Screenshots/Screenshot2025-01-09072036.png)
+![Screenshot of the application](Screenshots/Screenshot2025-01-09072225.png)
 
 ---
 
