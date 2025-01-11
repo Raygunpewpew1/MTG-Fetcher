@@ -1,4 +1,7 @@
 unit ScryfallChunkedReader;
+// TScryfallStreamReader: Efficiently reads Scryfall bulk JSON files incrementally.
+// Ideal for handling large files without loading them entirely into memory.
+// Potential uses: Offline card search, batch processing, or database population.
 
 interface
 

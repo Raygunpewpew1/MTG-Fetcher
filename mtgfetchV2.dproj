@@ -271,6 +271,7 @@
         <DCCReference Include="CardDisplayManager.pas"/>
         <DCCReference Include="ScryfallTypes.pas"/>
         <DCCReference Include="ScryfallQueryBuilder.pas"/>
+        <DCCReference Include="ScryfallChunkedReader.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
