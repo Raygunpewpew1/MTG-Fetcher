@@ -1,4 +1,4 @@
-unit ScryfallData;
+﻿unit ScryfallData;
 
 interface
 
@@ -6,7 +6,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.Threading, JsonDataObjects, SGlobalsZ,
-  System.Net.HttpClient,Logger,System.SyncObjs, MLogic, system.IOUtils;
+  System.Net.HttpClient,Logger,System.SyncObjs, MLogic, system.IOUtils,ScryfallTypes, ScryfallQueryBuilder;
 
 type
   EScryfallAPIError = class(Exception);
@@ -40,6 +40,11 @@ type
       : TArray<string>;
     function FetchAllSetsFromAPI: TArray<TSetDetails>;
 
+    function ExecuteQuery(const Query: TScryfallQuery): TSearchResult;
+    function GetCachedResult(const CacheKey: string; out JsonResponse: TJsonObject): Boolean;
+    procedure CacheResult(const CacheKey: string; const JsonResponse: TJsonObject);
+
+
   public
     constructor Create;
     destructor Destroy; override;
@@ -54,8 +59,9 @@ type
     function GetAllSets: TArray<TSetDetails>;
     function SearchAllCards(const Query, SetCode, Rarity, Colors: string;
       Fuzzy, Unique: Boolean): TArray<TCardDetails>;
+    procedure SearchAllCardsAsync(const Query: TScryfallQuery; const OnComplete: TOnSearchComplete); overload;
     procedure SearchAllCardsAsync(const Query, SetCode, Rarity, Colors: string;
-      Fuzzy, Unique: Boolean; Page: Integer; Callback: TOnSearchComplete);
+      Fuzzy, Unique: Boolean; Page: Integer; Callback: TOnSearchComplete); overload;
     function GetRandomCard: TCardDetails;
     function GetCatalog(const CatalogName: string): TScryfallCatalog;
     function FetchAllCatalogs: TDictionary<string, TScryfallCatalog>;
@@ -64,7 +70,9 @@ type
       const ImageType: string = 'normal'): string;
     function GetCardImageUris(const UUID: string): TImageUris;
     function GetCardByArenaID(const UArenaID: Integer): TCardDetails;
-
+    function SearchWithQuery(Query: TScryfallQuery): TArray<TCardDetails>;
+    procedure SearchWithQueryAsync(Query: TScryfallQuery; const OnComplete: TOnSearchComplete);
+    function CreateQuery: TScryfallQuery;
     /// <summary>
     /// Returns the autocomplete suggestions for a partial query, using
     /// an internal TDictionary-based cache to avoid redundant calls.
@@ -117,6 +125,128 @@ begin
   inherited Destroy;
 end;
 
+function TScryfallAPI.CreateQuery: TScryfallQuery;
+begin
+  Result := TScryfallQuery.Create;
+end;
+
+function TScryfallAPI.ExecuteQuery(const Query: TScryfallQuery): TSearchResult;
+var
+  CacheKey: string;
+  JsonResponse: TJsonObject;
+  URL: string;
+begin
+  CacheKey := Query.ToCacheKey;
+
+  // Check cache first
+  if GetCachedResult(CacheKey, JsonResponse) then
+  begin
+    LogStuff('Cache hit for query: ' + Query.BuildQuery);
+    Result := ParseSearchResult(JsonResponse);
+    Exit;
+  end;
+
+  // Ensure BaseUrl is not duplicated
+  if BaseUrl.EndsWith('/') then
+    URL := BaseUrl + 'cards/search?q=' + Query.BuildQuery
+  else
+    URL := BaseUrl + '/cards/search?q=' + Query.BuildQuery;
+
+  LogStuff('Executing query: ' + URL);
+
+  JsonResponse := ExecuteRequest(URL);
+  try
+    Result := ParseSearchResult(JsonResponse);
+
+    // Cache the result
+    CacheResult(CacheKey, JsonResponse.Clone as TJsonObject);
+  finally
+    JsonResponse.Free;
+  end;
+end;
+
+function TScryfallAPI.GetCachedResult(const CacheKey: string; out JsonResponse: TJsonObject): Boolean;
+begin
+  FCacheLock.Enter;
+  try
+    Result := FCache.TryGetValue(CacheKey, JsonResponse);
+  finally
+    FCacheLock.Leave;
+  end;
+end;
+
+procedure TScryfallAPI.CacheResult(const CacheKey: string; const JsonResponse: TJsonObject);
+begin
+  FCacheLock.Enter;
+  try
+    // Add to cache, potentially removing oldest entry if cache is full
+    if FCache.Count >= MaxCacheSize then
+    begin
+      var FirstKey := '';
+      for var Key in FCache.Keys do
+      begin
+        FirstKey := Key;
+        Break;
+      end;
+      if FirstKey <> '' then
+      begin
+        FCache[FirstKey].Free;
+        FCache.Remove(FirstKey);
+      end;
+    end;
+
+    FCache.AddOrSetValue(CacheKey, JsonResponse);
+  finally
+    FCacheLock.Leave;
+  end;
+end;
+
+function TScryfallAPI.SearchWithQuery(Query: TScryfallQuery): TArray<TCardDetails>;
+var
+  SearchResult: TSearchResult;
+begin
+  SearchResult := ExecuteQuery(Query);
+  Result := SearchResult.Cards;
+end;
+
+procedure TScryfallAPI.SearchWithQueryAsync(Query: TScryfallQuery; const OnComplete: TOnSearchComplete);
+begin
+  TTask.Run(
+    procedure
+    var
+      SearchResult: TSearchResult;
+      Success: Boolean;
+      ErrorMsg: string;
+    begin
+      try
+        SearchResult := ExecuteQuery(Query);
+        Success := True;
+        ErrorMsg := '';
+      except
+        on E: Exception do
+        begin
+          Success := False;
+          ErrorMsg := E.Message;
+          SearchResult.Cards := nil;
+          SearchResult.HasMore := False;
+          LogStuff('Query execution error: ' + E.Message);
+        end;
+      end;
+
+      TThread.Queue(nil,
+        procedure
+        begin
+          OnComplete(Success, SearchResult.Cards, SearchResult.HasMore, ErrorMsg);
+        end);
+    end);
+end;
+
+procedure TScryfallAPI.SearchAllCardsAsync(const Query: TScryfallQuery;
+  const OnComplete: TOnSearchComplete);
+begin
+  SearchWithQueryAsync(Query, OnComplete);
+end;
+
 function TScryfallAPI.ExecuteRequest(const Endpoint: string): TJsonObject;
 const
   MaxRetries = 3;
@@ -126,8 +256,14 @@ var
   StatusCode, RetryCount: Integer;
   URL: string;
 begin
+  // Ensure Endpoint is not a full URL
+  if Endpoint.StartsWith('http') then
+    URL := Endpoint
+  else if BaseUrl.EndsWith('/') then
+    URL := BaseUrl + Endpoint
+  else
+    URL := BaseUrl + '/' + Endpoint;
 
-  URL := BaseUrl + Endpoint;
   ResponseStream := TStringStream.Create;
   try
     for RetryCount := 1 to MaxRetries do
@@ -396,38 +532,27 @@ begin
   end;
 end;
 
-procedure TScryfallAPI.SearchAllCardsAsync(const Query, SetCode, Rarity,
-  Colors: string; Fuzzy, Unique: Boolean; Page: Integer;
-  Callback: TOnSearchComplete);
+procedure TScryfallAPI.SearchAllCardsAsync(const Query, SetCode, Rarity, Colors: string;
+  Fuzzy, Unique: Boolean; Page: Integer; Callback: TOnSearchComplete);
+var
+  QueryBuilder: TScryfallQuery;
 begin
-  TTask.Run(
-    procedure
-    var
-      SearchResult: TSearchResult;
-      ErrorMsg: string;
-      Success: Boolean;
-    begin
-      try
-        SearchResult := InternalSearchCards(Query, SetCode, Rarity, Colors,
-          Fuzzy, Unique, Page);
-        Success := True;
-        ErrorMsg := '';
-      except
-        on E: Exception do
-        begin
-          Success := False;
-          ErrorMsg := E.Message;
-          SearchResult.Cards := nil;
-          SearchResult.HasMore := False;
-        end;
-      end;
+  QueryBuilder := CreateQuery;
+  try
+    QueryBuilder.WithName(Query, Fuzzy)
+                .WithSet(SetCode)
+                .WithRarity(StringToRarity(Rarity))
+                .WithColors(Colors)
+                .SetPage(Page);
 
-      TThread.Synchronize(nil,
-        procedure
-        begin
-          Callback(Success, SearchResult.Cards, SearchResult.HasMore, ErrorMsg);
-        end);
-    end);
+    if Unique then
+      QueryBuilder.Unique('prints');
+
+    SearchWithQueryAsync(QueryBuilder, Callback);
+  except
+    QueryBuilder.Free;
+    raise;
+  end;
 end;
 
 function TScryfallAPI.SearchCards(const Query, SetCode, Rarity, Colors: string;

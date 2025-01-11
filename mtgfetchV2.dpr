@@ -13,11 +13,12 @@ uses
   CardDisplayHelpers in 'CardDisplayHelpers.pas',
   WrapperHelper in 'WrapperHelper.pas',
   APIConstants in 'APIConstants.pas',
-  Mana in 'mana.pas',
+  mana in 'mana.pas',
   Logger in 'Logger.pas',
   Template in 'Template.pas',
   CardDisplayManager in 'CardDisplayManager.pas',
-  CardFilters in 'CardFilters.pas';
+  ScryfallTypes in 'ScryfallTypes.pas',
+  ScryfallQueryBuilder in 'ScryfallQueryBuilder.pas';
 
 {$R *.res}
 begin

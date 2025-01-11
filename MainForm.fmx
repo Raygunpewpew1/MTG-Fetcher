@@ -1,6 +1,7 @@
 object Form1: TForm1
   Left = 0
   Top = 0
+  BorderStyle = Single
   Caption = 'MTGCardFetch'
   ClientHeight = 640
   ClientWidth = 460
@@ -9,7 +10,7 @@ object Form1: TForm1
   StyleBook = StyleBook1
   FormFactor.Width = 320
   FormFactor.Height = 480
-  FormFactor.Devices = [Desktop, iPhone, iPad]
+  FormFactor.Devices = [Desktop]
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
@@ -95,8 +96,8 @@ object Form1: TForm1
         Enabled = False
         Position.X = 8.000000000000000000
         Position.Y = 130.000000000000000000
-        Size.Width = 96.000000000000000000
-        Size.Height = 25.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 32.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 5
         Text = 'Next Page'
@@ -179,7 +180,6 @@ object Form1: TForm1
         SearchVisible = True
       end
       object WebBrowser1: TWebBrowser
-        EnableCaching = False
         Align = Client
         Size.Width = 296.000000000000000000
         Size.Height = 370.000000000000000000
@@ -23752,10 +23752,5 @@ object Form1: TForm1
       end>
     Left = 58
     Top = 10
-  end
-  object NetHTTPClient1: TNetHTTPClient
-    UserAgent = 'MTGCardFetch/1.0'
-    Left = 456
-    Top = 424
   end
 end

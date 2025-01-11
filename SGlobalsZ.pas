@@ -1,4 +1,4 @@
-unit SGlobalsZ;
+﻿unit SGlobalsZ;
 
 interface
 

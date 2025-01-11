@@ -1,4 +1,4 @@
-unit Mana;
+﻿unit Mana;
 
 interface
 

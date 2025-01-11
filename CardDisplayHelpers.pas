@@ -1,4 +1,4 @@
-unit CardDisplayHelpers;
+﻿unit CardDisplayHelpers;
 
 interface
 
@@ -296,38 +296,41 @@ end;
 
 function StringToRarity(const RarityStr: string): TRarity;
 begin
-  if RarityStr = 'common' then
+  if RarityStr.IsEmpty then
+    Exit(rAll); // Default to 'all' or an appropriate fallback
+
+  if SameText(RarityStr, 'common') then
     Result := rCommon
-  else if RarityStr = 'uncommon' then
+  else if SameText(RarityStr, 'uncommon') then
     Result := rUncommon
-  else if RarityStr = 'rare' then
+  else if SameText(RarityStr, 'rare') then
     Result := rRare
-  else if RarityStr = 'mythic' then
+  else if SameText(RarityStr, 'mythic') then
     Result := rMythic
-  else if RarityStr = 'special' then
+  else if SameText(RarityStr, 'special') then
     Result := rSpecial
-  else if RarityStr = 'bonus' then
+  else if SameText(RarityStr, 'bonus') then
     Result := rBonus
-  else if RarityStr = 'timeshifted' then
+  else if SameText(RarityStr, 'timeshifted') then
     Result := rTimeshifted
-  else if RarityStr = 'masterpiece' then
+  else if SameText(RarityStr, 'masterpiece') then
     Result := rMasterpiece
-  else if RarityStr = 'token' then
+  else if SameText(RarityStr, 'token') then
     Result := rToken
-  else if RarityStr = 'double_faced_token' then
+  else if SameText(RarityStr, 'double_faced_token') then
     Result := rDoubleFacedToken
-  else if RarityStr = 'draft' then
+  else if SameText(RarityStr, 'draft') then
     Result := rDraft
-  else if RarityStr = 'planeshifted' then
+  else if SameText(RarityStr, 'planeshifted') then
     Result := rPlaneshifted
-  else if RarityStr = 'unique' then
+  else if SameText(RarityStr, 'unique') then
     Result := rUnique
-  else if RarityStr = 'basic' then
+  else if SameText(RarityStr, 'basic') then
     Result := rBasic
-  else if RarityStr = 'promo' then
+  else if SameText(RarityStr, 'promo') then
     Result := rPromo
   else
-    raise Exception.Create('Unknown rarity: ' + RarityStr);
+    Exit(rAll); // Default fallback for unknown strings
 end;
 
 function GetStatusClass(const LegalityStatus: string): string;
@@ -430,7 +433,10 @@ end;
 
 function GetRarityClass(Rarity: TRarity): string;
 begin
-  Result := RarityToString[Rarity];
+  if Rarity in [Low(TRarity)..High(TRarity)] then
+    Result := RarityToString[Rarity]
+  else
+    Result := 'unknown';
 end;
 
 

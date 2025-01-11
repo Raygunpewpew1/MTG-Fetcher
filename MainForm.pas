@@ -7,14 +7,14 @@ uses
   System.Generics.Collections, FMX.Types, FMX.Controls,
   FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts,
   FMX.ExtCtrls, FMX.Ani, FMX.Edit, FMX.StdCtrls,
-  FMX.WebBrowser, FMX.Skia, System.Net.HttpClient,
+  FMX.WebBrowser, FMX.Skia,
   SGlobalsZ, ScryfallData,
   System.TypInfo, Math, System.Threading,
   FMX.Controls.Presentation, FMX.ListView.Types, FMX.ListView.Appearances,
   FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, MLogic,
-  System.Net.HttpClientComponent,
-  FMX.ComboEdit, CardDisplayManager, System.Net.URLClient, CardFilters,
-  System.IOUtils;
+
+  FMX.ComboEdit, CardDisplayManager, ScryfallQueryBuilder,
+  System.IOUtils,System.StrUtils;
 
 type
 
@@ -42,7 +42,7 @@ type
     ProgressBar1: TProgressBar;
     LabelProgress: TLabel;
     CountLabel: TLabel;
-    NetHTTPClient1: TNetHTTPClient;
+    // NetHTTPClient1: TNetHTTPClient;
     TimerDebounce: TTimer;
     ComboBoxEditSearch: TComboEdit;
     StyleBook1: TStyleBook;
@@ -60,15 +60,15 @@ type
       const AItem: TListBoxItem);
     procedure ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word;
       var KeyChar: WideChar; Shift: TShiftState);
- 
+    procedure ComboBoxEditSearchChange(Sender: TObject);
+
   private
     WebBrowserInitialized: Boolean;
     FIsProgrammaticChange: Boolean;
 
     // SearchTerm: string;
     FCurrentAutocompleteTask: ITask;
-   // HttpClient: THTTPClient;
-
+    // HttpClient: THTTPClient;
 
     FCardDisplayManager: TCardDisplayManager;
     FScryfallAPI: TScryfallAPI;
@@ -104,7 +104,7 @@ var
 begin
   WebBrowserInitialized := False;
   FIsProgrammaticChange := False;
-  WebBrowser1.LoadFromStrings(HtmlTemplate, '');
+  WebBrowser1.LoadFromStrings(S_ABOUT_BLANK, '');
   ComboBoxMap := TDictionary<string, TComboBox>.Create;
 
   FScryfallAPI := TScryfallAPI.Create;
@@ -116,7 +116,7 @@ begin
     begin
       ProgressBar1.Value := Progress;
     end;
-  //ComboBoxSetCode
+  // ComboBoxSetCode
 
   try
     ComboBoxMap.Add(CatalogKeywordAbilities, ComboBoxAbility);
@@ -125,7 +125,7 @@ begin
     ComboBoxMap.Free;
   end;
 
- // HttpClient := THTTPClient.Create;
+  // HttpClient := THTTPClient.Create;
 
   AppClose := False;
 
@@ -159,19 +159,18 @@ begin
     end;
   end;
 
-
   try
 
-  for var SetDetails in SetDetailsArray do
-    ComboBoxSetCode.Items.Add(SetDetails.Code + ' - ' + SetDetails.Name);
+    for var SetDetails in SetDetailsArray do
+      ComboBoxSetCode.Items.Add(SetDetails.Code + ' - ' + SetDetails.Name);
 
   finally
-   ComboBoxSetCode.ItemIndex := 0;
-   ComboBoxColors.ItemIndex := 0;
-   ComboBoxRarity.ItemIndex := 0;
+    ComboBoxSetCode.ItemIndex := 0;
+    ComboBoxColors.ItemIndex := 0;
+    ComboBoxRarity.ItemIndex := 0;
   end;
 
-  DelayTimer.Enabled := True;
+ // DelayTimer.Enabled := True;
 end;
 
 procedure TForm1.OnSearchComplete(Success: Boolean);
@@ -188,11 +187,9 @@ end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
-  AppClose := True;
-  //FreeAndNil(HttpClient);
-
-  FreeAndNil(FScryfallAPI);
+ // ListViewCards.OnItemClick := nil;
   FreeAndNil(FCardDisplayManager);
+  FreeAndNil(FScryfallAPI);
 end;
 
 procedure TForm1.FormShow(Sender: TObject);
@@ -332,10 +329,11 @@ end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 var
-  Builder: TCardFilterBuilder;
+  Query: TScryfallQuery;
   SelectedRarity: TRarity;
   SelectedSetCode: string;
   SelectedColors: string;
+  UniqueMode: string;
 begin
   if ComboBoxEditSearch.Text.IsEmpty then
     Exit;
@@ -361,7 +359,7 @@ begin
       raise Exception.Create('Invalid rarity selected.');
   end;
 
-  Builder := TCardFilterBuilder.Create;
+  Query := TScryfallQuery.Create;
   try
     // Handle the set code logic separately
     if (ComboBoxSetCode.Selected <> nil) and
@@ -375,17 +373,25 @@ begin
     else
       SelectedColors := ComboBoxColors.Text;
 
-    Builder.WithSearchTerm(ComboBoxEditSearch.Text).WithSet(SelectedSetCode)
-      .WithRarity(SelectedRarity).WithColors(SelectedColors)
-      .ShowUniqueOnly(Switch1.IsChecked);
+    // Determine the Unique mode using IfThen
+    UniqueMode := System.StrUtils.IfThen(Switch1.IsChecked, 'prints', '');
 
-    FCardDisplayManager.ApplyFilter(Builder.Build, OnSearchComplete);
+    // Build the query
+    Query.WithName(ComboBoxEditSearch.Text)
+         .WithSet(SelectedSetCode)
+         .WithRarity(SelectedRarity)
+         .WithColors(SelectedColors)
+         .Unique(UniqueMode)  // Use UniqueMode determined by IfThen
+         .OrderBy('name');
+
+    // Call your FCardDisplayManager.ExecuteQuery method
+     FCardDisplayManager.ExecuteQuery(Query, OnSearchComplete);
+
   finally
-    Builder.Free;
-
+    Query.Free;
   end;
-  LayoutControls.Enabled := True;
 
+  LayoutControls.Enabled := True;
 end;
 
 procedure TForm1.ButtonNextPageClick(Sender: TObject);
@@ -395,6 +401,12 @@ begin
 
   ButtonNextPage.Enabled := False;
   FCardDisplayManager.LoadNextPage(OnSearchComplete);
+end;
+
+procedure TForm1.ComboBoxEditSearchChange(Sender: TObject);
+begin
+  // TimerDebounce.Enabled := False;
+  // TimerDebounce.Enabled := True;
 end;
 
 procedure TForm1.ComboBoxEditSearchItemClick(const Sender: TObject;
@@ -436,8 +448,6 @@ begin
       end;
   end;
 end;
-
-
 
 initialization
 

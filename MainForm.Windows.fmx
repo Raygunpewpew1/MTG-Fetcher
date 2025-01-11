@@ -19,18 +19,16 @@ inherited Form1_Windows: TForm1_Windows
         Position.Y = 90.000000000000000000
       end
       inherited ButtonNextPage: TButton
-        Position.X = 348.000000000000000000
-        Position.Y = 8.000000000000000000
-        Size.Width = 85.000000000000000000
-        Size.Height = 34.000000000000000000
+        Position.X = 340.000000000000000000
+        Position.Y = 10.000000000000000000
       end
       inherited Switch1: TSwitch
-        Position.X = 585.000000000000000000
-        Position.Y = 8.000000000000000000
+        Position.X = 469.000000000000000000
+        Position.Y = 90.000000000000000000
       end
       inherited DisplayUniq: TLabel
-        Position.X = 464.000000000000000000
-        Position.Y = 8.000000000000000000
+        Position.X = 340.000000000000000000
+        Position.Y = 90.000000000000000000
         Size.Width = 121.000000000000000000
         Size.Height = 20.000000000000000000
       end
@@ -40,6 +38,7 @@ inherited Form1_Windows: TForm1_Windows
       end
       inherited LabelProgress: TLabel
         Position.X = 416.000000000000000000
+        Visible = False
       end
       inherited Button2: TButton
         Position.X = 768.000000000000000000
@@ -48,6 +47,7 @@ inherited Form1_Windows: TForm1_Windows
       end
       inherited ComboBoxEditSearch: TComboEdit
         Position.Y = 10.000000000000000000
+        OnChange = ComboBoxEditSearchChange
       end
     end
     inherited LayoutContent: TLayout
