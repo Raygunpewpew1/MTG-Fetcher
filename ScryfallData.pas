@@ -342,9 +342,9 @@ begin
   JsonResponse := ExecuteRequest(URL);
   try
     // Check if 'data' exists and is an array
-    if JsonResponse.Contains('data') then
+    if JsonResponse.Contains(FieldData) then
     begin
-      DataArray := JsonResponse.A['data'];
+      DataArray := JsonResponse.A[FieldData];
       if Assigned(DataArray) then
       begin
         SetLength(Result, DataArray.Count);
@@ -698,21 +698,21 @@ begin
 
   JsonResponse := ExecuteRequest(Format('catalog/%s', [CatalogName]));
   try
-    if JsonResponse.Contains('data') and (JsonResponse.Types['data'] = jdtArray)
+    if JsonResponse.Contains(FieldData) and (JsonResponse.Types[FieldData] = jdtArray)
     then
     begin
-      DataArray := JsonResponse.A['data'];
+      DataArray := JsonResponse.A[FieldData];
       SetLength(Result.Data, DataArray.Count);
       for i := 0 to DataArray.Count - 1 do
         Result.Data[i] := DataArray.S[i];
     end;
 
-    if JsonResponse.Contains('total_items') then
-      Result.TotalItems := JsonResponse.i['total_items'];
-    if JsonResponse.Contains('uri') then
-      Result.Uri := JsonResponse.S['uri'];
-    if JsonResponse.Contains('object') then
-      Result.ObjectType := JsonResponse.S['object'];
+    if JsonResponse.Contains(FieldCount) then
+      Result.TotalItems := JsonResponse.i[FieldCount];
+    if JsonResponse.Contains(FieldUri) then
+      Result.Uri := JsonResponse.S[FieldUri];
+    if JsonResponse.Contains(FieldObject) then
+      Result.ObjectType := JsonResponse.S[FieldObject];
   finally
     JsonResponse.Free;
   end;
@@ -745,23 +745,23 @@ end;
 function TScryfallAPI.ParseImageUris(const JsonObj: TJsonObject): TImageUris;
 begin
   Result.Clear;
-  if (JsonObj = nil) or not JsonObj.Contains('image_uris') then
+  if (JsonObj = nil) or not JsonObj.Contains(FieldImageUris) then
     Exit;
 
-  with JsonObj.O['image_uris'] do
+  with JsonObj.O[FieldImageUris] do
   begin
-    if Contains('small') then
-      Result.Small := S['small'];
-    if Contains('normal') then
-      Result.Normal := S['normal'];
-    if Contains('large') then
-      Result.Large := S['large'];
-    if Contains('png') then
-      Result.Png := S['png'];
-    if Contains('art_crop') then
-      Result.Art_crop := S['art_crop'];
-    if Contains('border_crop') then
-      Result.Border_crop := S['border_crop'];
+    if Contains(FieldSmall) then
+      Result.Small := S[FieldSmall];
+    if Contains(FieldNormal) then
+      Result.Normal := S[FieldNormal];
+    if Contains(FieldLarge) then
+      Result.Large := S[FieldLarge];
+    if Contains(FieldPng) then
+      Result.Png := S[FieldPng];
+    if Contains(FieldBorderCrop) then
+      Result.Art_crop := S[FieldBorderCrop];
+    if Contains(FieldArtCrop) then
+      Result.Border_crop := S[FieldArtCrop];
   end;
 end;
 
@@ -825,17 +825,17 @@ begin
   ImageUris := GetCardImageUris(UUID);
   LowerImageType := LowerCase(ImageType);
 
-  if LowerImageType = 'small' then
+  if LowerImageType = FieldSmall then
     Result := ImageUris.Small
-  else if LowerImageType = 'normal' then
+  else if LowerImageType = FieldNormal then
     Result := ImageUris.Normal
-  else if LowerImageType = 'large' then
+  else if LowerImageType = FieldLarge then
     Result := ImageUris.Large
-  else if LowerImageType = 'png' then
+  else if LowerImageType = FieldPng then
     Result := ImageUris.Png
-  else if LowerImageType = 'art_crop' then
+  else if LowerImageType = FieldArtCrop then
     Result := ImageUris.Art_crop
-  else if LowerImageType = 'border_crop' then
+  else if LowerImageType = FieldBorderCrop then
     Result := ImageUris.Border_crop
   else
     Result := ImageUris.Normal; // default fallback

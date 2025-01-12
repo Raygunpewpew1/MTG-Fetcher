@@ -56,6 +56,7 @@ const
   FieldEDHRank = 'edhrec_rank';
   FieldArena = 'arena_id';
   FieldData = 'data';
+  FieldObject = 'object';
   FieldHasMore = 'has_more';
   FieldNextPage = 'next_page';
   FieldTotalCards = 'total_cards';

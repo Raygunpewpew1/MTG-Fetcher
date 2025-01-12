@@ -170,7 +170,7 @@ begin
     ComboBoxRarity.ItemIndex := 0;
   end;
 
- // DelayTimer.Enabled := True;
+ DelayTimer.Enabled := True;
 end;
 
 procedure TForm1.OnSearchComplete(Success: Boolean);

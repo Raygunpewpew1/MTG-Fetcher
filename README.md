@@ -2,6 +2,8 @@
 
 **MTG Fetcher** is a Delphi-based application designed to fetch and display Magic: The Gathering card information using the [Scryfall API](https://scryfall.com/docs/api). Whether you're a Magic: The Gathering enthusiast, deck builder, or developer, this tool provides an efficient way to search for cards, view details, and manage your collection.
 
+👋 Hey! If you find this project interesting or have ideas, let me know by opening an issue or starting a discussion. I'd love to hear from you!
+
 ---
 
 ## Features
