@@ -65,6 +65,9 @@ inherited Form1_Windows: TForm1_Windows
     inherited LayoutButtons: TLayout
       Position.Y = 564.000000000000000000
       Size.Width = 856.000000000000000000
+      inherited Button4: TButton
+        OnClick = Button4Click
+      end
       inherited CountLabel: TLabel
         Position.X = 736.000000000000000000
       end

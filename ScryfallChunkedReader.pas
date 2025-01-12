@@ -1,76 +1,54 @@
-unit ScryfallChunkedReader;
-// TScryfallStreamReader: Efficiently reads Scryfall bulk JSON files incrementally.
-// Ideal for handling large files without loading them entirely into memory.
-// Potential uses: Offline card search, batch processing, or database population.
+﻿unit ScryfallChunkedReader;
 
 interface
 
 uses
-  System.Classes, System.SysUtils, JsonDataObjects,
-  System.Generics.Collections, System.Diagnostics,Logger;
+  System.Classes, System.SysUtils, System.JSON, System.Diagnostics, Logger, Math;
 
 type
   TScryfallStreamReader = class
   private
     FStream: TStream;
+    FReader: TStreamReader;
     FBuffer: TStringBuilder;
-    FBracketCount: Integer;
-    FInString: Boolean;
-    FEscapeNext: Boolean;
     FChunkSize: Integer;
-    FTempBuffer: TBytes;
-
-    // Progress tracking
-    FCurrentPosition: Int64;
     FTotalSize: Int64;
+    FCurrentPosition: Int64;
     FOnProgress: TProc<Int64, Int64>;
 
-    function ReadUntilCompleteObject: string;
     procedure ReportProgress;
+    function ReadUntilCompleteObject: string;
   public
     constructor Create(AStream: TStream; AChunkSize: Integer = 8192);
     destructor Destroy; override;
 
-    // Returns nil when no more cards are available
-    function ReadNextCard: TJsonObject;
+    function ReadNextCard: TJSONObject;
 
     property OnProgress: TProc<Int64, Int64> read FOnProgress write FOnProgress;
     property CurrentPosition: Int64 read FCurrentPosition;
     property TotalSize: Int64 read FTotalSize;
   end;
 
+procedure ProcessScryfallBulkFile(const FileName: string);
+
 implementation
 
+{ TScryfallStreamReader }
+
 constructor TScryfallStreamReader.Create(AStream: TStream; AChunkSize: Integer);
-var
-  FirstChar: AnsiChar;
 begin
   inherited Create;
   FStream := AStream;
-  FChunkSize := AChunkSize;
-  SetLength(FTempBuffer, FChunkSize);
+  FReader := TStreamReader.Create(FStream, TEncoding.UTF8, True, AChunkSize);
   FBuffer := TStringBuilder.Create;
-  FBracketCount := 0;
-  FInString := False;
-  FEscapeNext := False;
+  FChunkSize := AChunkSize;
   FTotalSize := FStream.Size;
   FCurrentPosition := 0;
-
-  // Skip the initial '[' character of the JSON array, ensuring the stream has data
-  if FStream.Size > 0 then
-  begin
-    if FStream.Read(FirstChar, 1) <> 1 then
-      raise Exception.Create('Failed to read from stream.');
-    if FirstChar <> '[' then
-      raise Exception.Create('Stream does not start with a JSON array.');
-    Inc(FCurrentPosition);
-  end
-  else
-    raise Exception.Create('Stream is empty.');
 end;
 
 destructor TScryfallStreamReader.Destroy;
 begin
+  FReader.Free;
   FBuffer.Free;
   inherited;
 end;
@@ -83,147 +61,182 @@ end;
 
 function TScryfallStreamReader.ReadUntilCompleteObject: string;
 var
-  BytesRead: Integer;
+  Line: string;
+  BracketCount: Integer;
+  InString: Boolean;
+  EscapeNext: Boolean;
   I: Integer;
   CurrentChar: Char;
 begin
   Result := '';
+  BracketCount := 0;
+  InString := False;
+  EscapeNext := False;
   FBuffer.Clear;
 
-  while FCurrentPosition < FTotalSize do
+  while not FReader.EndOfStream do
   begin
-    BytesRead := FStream.Read(FTempBuffer[0], FChunkSize);
-    if BytesRead <= 0 then
-      Break;
+    Line := FReader.ReadLine;
+    FCurrentPosition := FStream.Position;
+    ReportProgress;
 
-    Inc(FCurrentPosition, BytesRead);
-
-    for I := 0 to BytesRead - 1 do
+    for I := 1 to Line.Length do
     begin
-      CurrentChar := Char(FTempBuffer[I]);
+      CurrentChar := Line[I];
 
-      // Handle string escape sequences
-      if FEscapeNext then
+      if EscapeNext then
       begin
-        FEscapeNext := False;
-        FBuffer.Append(CurrentChar);
-        Continue;
-      end;
-
-      case CurrentChar of
-        '\':
-          if FInString then
-            FEscapeNext := True;
-
-        '"':
-          if not FEscapeNext then
-            FInString := not FInString;
-
-        '{':
-          if not FInString then
-            Inc(FBracketCount);
-
-        '}':
-          if not FInString then
-          begin
-            Dec(FBracketCount);
-            if FBracketCount = 0 then
+        EscapeNext := False;
+      end
+      else
+      begin
+        case CurrentChar of
+          '"': InString := not InString;
+          '\': if InString then EscapeNext := True;
+          '{': if not InString then Inc(BracketCount);
+          '}':
+            if not InString then
             begin
-              FBuffer.Append(CurrentChar);
-              Result := FBuffer.ToString;
-              Exit;
+              Dec(BracketCount);
+              if BracketCount = 0 then
+              begin
+                FBuffer.Append(CurrentChar);
+                Exit(FBuffer.ToString);
+              end;
             end;
-          end;
+        end;
       end;
 
       FBuffer.Append(CurrentChar);
     end;
-
-    ReportProgress;
   end;
 
-  if FBracketCount <> 0 then
+  if BracketCount <> 0 then
     raise Exception.Create('Incomplete JSON object in stream.');
 end;
 
-function TScryfallStreamReader.ReadNextCard: TJsonObject;
+function TScryfallStreamReader.ReadNextCard: TJSONObject;
 var
   JsonStr: string;
+  JsonValue: TJSONValue;
+  JsonArray: TJSONArray;
+  JsonObject: TJSONObject;
 begin
   Result := nil;
+
+  // Read a chunk of data
   JsonStr := ReadUntilCompleteObject;
 
-  if JsonStr <> '' then
-  begin
+  // Check for empty or invalid data
+  if JsonStr.Trim = '' then
+    Exit;
+
+  try
+    // Parse the JSON string into a TJSONValue
+    JsonValue := TJSONObject.ParseJSONValue(JsonStr);
     try
-      Result := TJsonObject.Create;
-      Result.FromJSON(JsonStr);
-    except
-      on E: Exception do
+      if JsonValue = nil then
+        raise Exception.Create('Failed to parse JSON: Null or invalid format.');
+
+      if JsonValue is TJSONArray then
       begin
-        FreeAndNil(Result);
-        raise Exception.Create('Error parsing card JSON: ' + E.Message);
+        // Handle JSON arrays by returning the first object
+        JsonArray := JsonValue as TJSONArray;
+        if JsonArray.Count > 0 then
+        begin
+          JsonObject := JsonArray.Items[0] as TJSONObject;
+          Result := TJSONObject(JsonObject.Clone); // Return a clone to avoid memory issues
+        end
+        else
+          raise Exception.Create('Error processing JSON array: Empty array.');
+      end
+      else if JsonValue is TJSONObject then
+      begin
+        // Handle JSON objects
+        JsonObject := JsonValue as TJSONObject;
+        Result := TJSONObject(JsonObject.Clone);
+      end
+      else
+      begin
+        // Unexpected data type
+        raise Exception.Create('Unexpected JSON type encountered: ' + JsonValue.ToString);
       end;
+    finally
+      JsonValue.Free;
+    end;
+  except
+    on E: Exception do
+    begin
+      LogStuff('Error processing JSON: ' + E.Message);
+      LogStuff('Problematic JSON: ' + JsonStr.Substring(0, Min(500, JsonStr.Length)));
+      raise;
     end;
   end;
 end;
 
-// Example usage with memory-efficient processing
+
+
+
+
 procedure ProcessScryfallBulkFile(const FileName: string);
 var
   FileStream: TFileStream;
   Reader: TScryfallStreamReader;
-  Card: TJsonObject;
+  Card: TJSONObject;
   ProcessedCount: Integer;
   LastUpdate: TStopwatch;
 begin
   FileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+  Reader := TScryfallStreamReader.Create(FileStream);
   try
-    Reader := TScryfallStreamReader.Create(FileStream);
-    try
-      LastUpdate := TStopwatch.StartNew;
+    LastUpdate := TStopwatch.StartNew;
 
-      Reader.OnProgress := procedure(Position, Total: Int64)
+    Reader.OnProgress := procedure(Position, Total: Int64)
+    begin
+      if LastUpdate.ElapsedMilliseconds >= 1000 then
       begin
-        // Update progress max once per second
-        if LastUpdate.ElapsedMilliseconds >= 1000 then
-        begin
-          LogStuff(Format('Processing: %.1f%%', [(Position / Total) * 100]));
-          LastUpdate.Reset;
-          LastUpdate.Start;
-        end;
+        LogStuff(Format('Progress: %.1f%%', [(Position / Total) * 100]));
+        LastUpdate.Reset;
+        LastUpdate.Start;
       end;
+    end;
 
-      ProcessedCount := 0;
-      while True do
-      begin
+    ProcessedCount := 0;
+    while True do
+    begin
+      try
         Card := Reader.ReadNextCard;
         if Card = nil then
           Break;
 
-        try
-          Inc(ProcessedCount);
+        Inc(ProcessedCount);
 
-          // Process the card
-          LogStuff(Format('Card %d: %s (%s)', [
-            ProcessedCount,
-            Card.S['name'],
-            Card.S['set']
-          ]));
+        // Log the parsed card
+        LogStuff(Format('Card %d: %s (%s)', [
+          ProcessedCount,
+          Card.GetValue<string>('name', 'Unknown'),
+          Card.GetValue<string>('set', 'Unknown')
+        ]));
 
-        finally
-          Card.Free;
+      except
+        on E: Exception do
+        begin
+          LogStuff('Skipping problematic card: ' + E.Message);
+          Continue; // Skip problematic card and move to the next
         end;
       end;
 
-      LogStuff(Format('Successfully processed %d cards', [ProcessedCount]));
-
-    finally
-      Reader.Free;
+      Card.Free;
     end;
+
+    LogStuff(Format('Successfully processed %d cards.', [ProcessedCount]));
   finally
+    Reader.Free;
     FileStream.Free;
   end;
 end;
 
+
+
 end.
+

@@ -14,7 +14,7 @@ uses
   FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, MLogic,
 
   FMX.ComboEdit, CardDisplayManager, ScryfallQueryBuilder,
-  System.IOUtils,System.StrUtils;
+  System.IOUtils,System.StrUtils,ScryfallChunkedReader;
 
 type
 
@@ -61,6 +61,7 @@ type
     procedure ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word;
       var KeyChar: WideChar; Shift: TShiftState);
     procedure ComboBoxEditSearchChange(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
 
   private
     WebBrowserInitialized: Boolean;
@@ -392,6 +393,12 @@ begin
   end;
 
   LayoutControls.Enabled := True;
+end;
+
+procedure TForm1.Button4Click(Sender: TObject);
+begin
+ProcessScryfallBulkFile('C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json');
+//"C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json"
 end;
 
 procedure TForm1.ButtonNextPageClick(Sender: TObject);
