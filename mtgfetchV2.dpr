@@ -18,8 +18,7 @@ uses
   Template in 'Template.pas',
   CardDisplayManager in 'CardDisplayManager.pas',
   ScryfallTypes in 'ScryfallTypes.pas',
-  ScryfallQueryBuilder in 'ScryfallQueryBuilder.pas',
-  ScryfallChunkedReader in 'ScryfallChunkedReader.pas';
+  ScryfallQueryBuilder in 'ScryfallQueryBuilder.pas';
 
 {$R *.res}
 begin

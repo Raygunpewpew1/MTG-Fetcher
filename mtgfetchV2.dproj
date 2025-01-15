@@ -270,8 +270,9 @@
         <DCCReference Include="Template.pas"/>
         <DCCReference Include="CardDisplayManager.pas"/>
         <DCCReference Include="ScryfallTypes.pas"/>
-        <DCCReference Include="ScryfallQueryBuilder.pas"/>
-        <DCCReference Include="ScryfallChunkedReader.pas"/>
+        <DCCReference Include="ScryfallQueryBuilder.pas">
+            <Form>$R *.res</Form>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

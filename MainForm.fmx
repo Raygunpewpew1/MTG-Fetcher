@@ -123,6 +123,7 @@ object Form1: TForm1
         TabOrder = 7
       end
       object ComboBoxAbility: TComboBox
+        ItemIndex = 0
         Position.X = 104.000000000000000000
         Position.Y = 150.000000000000000000
         Size.Width = 148.000000000000000000
@@ -208,6 +209,7 @@ object Form1: TForm1
         TabOrder = 7
         Text = 'Save'
         TextSettings.Trimming = None
+        OnClick = Button4Click
       end
       object Button5: TButton
         Align = Left

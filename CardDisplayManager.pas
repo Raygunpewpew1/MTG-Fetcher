@@ -91,7 +91,7 @@ end;
 
 FCurrentQuery := TScryfallQuery.Create;
 
-  LogStuff('FCurrentQuery assigned. Address: ' + IntToStr(NativeInt(FCurrentQuery)));
+  LogStuff('FCurrentQuery assigned. Address: ' + IntToStr(NativeInt(FCurrentQuery)),DEBUG);
   InitializeWebBrowser;
 end;
 
@@ -103,7 +103,7 @@ begin
  if Assigned(FCurrentQuery) then
   FCurrentQuery.Free;
    FCurrentQuery := nil;
-   LogStuff('TScryfallQuery destroyed. Address: ' + IntToStr(NativeInt(Self)));
+   LogStuff('TScryfallQuery destroyed. Address: ' + IntToStr(NativeInt(Self)),DEBUG);
   inherited;
 end;
 
@@ -211,7 +211,7 @@ begin
             end
             else
               LogStuff(Format('Skipping invalid card at index %d: %s',
-                [CardIndex, FilteredCards[CardIndex].CardName]));
+                [CardIndex, FilteredCards[CardIndex].CardName]),WARNING);
           end;
 
           FHasMorePages := HasMore;
@@ -257,7 +257,7 @@ begin
           TThread.Queue(nil,
             procedure
             begin
-              LogStuff('Error fetching random card: ' + E.Message);
+              LogStuff('Error fetching random card: ' + E.Message,ERROR);
               if Assigned(OnComplete) then
                 OnComplete(False);
             end);
@@ -273,7 +273,7 @@ var
 begin
   if not Assigned(FListView) or Card.CardName.IsEmpty or Card.SFID.IsEmpty then
   begin
-    LogStuff('Skipping card - missing name or ID');
+    LogStuff('Skipping card - missing name or ID',ERROR);
     Exit;
   end;
 
@@ -332,7 +332,7 @@ begin
             end);
         except
           on E: Exception do
-            LogStuff('Failed to fetch set details: ' + E.Message);
+            LogStuff('Failed to fetch set details: ' + E.Message,ERROR);
         end;
       end);
 end;
@@ -374,7 +374,7 @@ begin
           TThread.Queue(nil,
             procedure
             begin
-              ShowMessage('Error displaying card: ' + E.Message);
+              LogStuff('Error displaying card: ' + E.Message,ERROR);
             end);
       end;
     end);
@@ -407,7 +407,7 @@ begin
         ComboBoxes[CatalogName].ItemIndex := 0;
       end
       else
-        LogStuff(Format('Catalog "%s" is missing from the fetched data.', [CatalogName]));
+        LogStuff(Format('Catalog "%s" is missing from the fetched data.', [CatalogName]),ERROR);
     end;
   finally
     Catalogs.Free;

@@ -127,12 +127,12 @@ begin
   FFilters := TList<TScryfallFilter>.Create;
   FLock := TCriticalSection.Create;
   FOptions := Default (TScryfallQueryOptions);
-  LogStuff('TScryfallQuery created. Address: ' + IntToStr(NativeInt(Self)));
+  LogStuff('TScryfallQuery created. Address: ' + IntToStr(NativeInt(Self)),DEBUG);
 end;
 
 destructor TScryfallQuery.Destroy;
 begin
-  LogStuff('TScryfallQuery destroyed. Address: ' + IntToStr(NativeInt(Self)));
+  LogStuff('TScryfallQuery destroyed. Address: ' + IntToStr(NativeInt(Self)),DEBUG);
   FLock.Free;
   FFilters.Free;
   inherited;
@@ -146,7 +146,7 @@ begin
   // Check if FFilters is nil
   if not Assigned(FFilters) then
   begin
-    LogStuff('Error: FFilters is nil.');
+    LogStuff('Error: FFilters is nil.',ERROR);
     Exit(False);
   end;
 
@@ -156,7 +156,7 @@ begin
     // Check if Filter.Values exists and is non-empty
     if (Filter.Values = nil) or (Length(Filter.Values) = 0) then
     begin
-      LogStuff('Error: A filter in FFilters has empty or nil Values.');
+      LogStuff('Error: A filter in FFilters has empty or nil Values.',ERROR);
       Exit(False);
     end;
   end;
@@ -172,13 +172,13 @@ var
 begin
   if not Assigned(FFilters) then
   begin
-    LogStuff('AreFiltersValid: FFilters is nil.');
+    LogStuff('AreFiltersValid: FFilters is nil.',ERROR);
     Exit(False);
   end;
 
   if FFilters.Count = 0 then
   begin
-    LogStuff('AreFiltersValid: FFilters is empty.');
+    LogStuff('AreFiltersValid: FFilters is empty.',ERROR);
     Exit(False);
   end;
 
@@ -187,12 +187,12 @@ begin
     try
       Filter := FFilters[FilterIndex];
       LogStuff(Format('AreFiltersValid: Checking filter [%d], Type: [%s]',
-        [FilterIndex, ScryfallFilterPrefix[Filter.FilterType]]));
+        [FilterIndex, ScryfallFilterPrefix[Filter.FilterType]]),DEBUG);
     except
       on E: Exception do
       begin
         LogStuff(Format('AreFiltersValid: Error accessing filter [%d]: %s',
-          [FilterIndex, E.Message]));
+          [FilterIndex, E.Message]),ERROR);
         Exit(False);
       end;
     end;
@@ -214,7 +214,7 @@ begin
     Result.FOptions := FOptions;
     LogStuff('TScryfallQuery cloned. Original Address: ' +
       IntToStr(NativeInt(Self)) + ', Clone Address: ' +
-      IntToStr(NativeInt(Result)));
+      IntToStr(NativeInt(Result)),DEBUG);
   except
     Result.Free;
     raise;
@@ -398,7 +398,7 @@ begin
   // Validate FFilters
   if not Assigned(FFilters) or (FFilters.Count = 0) then
   begin
-    LogStuff('GetRarityString: FFilters is nil or empty.');
+    LogStuff('GetRarityString: FFilters is nil or empty.',ERROR);
     Exit;
   end;
 
@@ -409,7 +409,7 @@ begin
       if (Length(Filter.Values) > 0) then
         Result := Filter.Values[0].Value
       else
-        LogStuff('GetRarityString: Filter.Values is empty.');
+        LogStuff('GetRarityString: Filter.Values is empty.',WARNING);
       Break;
     end;
 end;
@@ -424,7 +424,7 @@ begin
   // Validate FFilters
   if not Assigned(FFilters) or (FFilters.Count = 0) then
   begin
-    LogStuff('GetColorCode: FFilters is nil or empty.');
+    LogStuff('GetColorCode: FFilters is nil or empty.',WARNING);
     Exit;
   end;
 
@@ -435,7 +435,7 @@ begin
       if (Length(Filter.Values) > 0) then
         Result := Filter.Values[0].Value
       else
-        LogStuff('GetColorCode: Filter.Values is empty.');
+        LogStuff('GetColorCode: Filter.Values is empty.',WARNING);
       Break;
     end;
 end;

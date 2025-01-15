@@ -229,7 +229,7 @@ begin
           ErrorMsg := E.Message;
           SearchResult.Cards := nil;
           SearchResult.HasMore := False;
-          LogStuff('Query execution error: ' + E.Message);
+          LogStuff('Query execution error: ' + E.Message,ERROR);
         end;
       end;
 
@@ -357,12 +357,12 @@ begin
       end
       else
       begin
-        LogStuff('Autocomplete response "data" is not an array.');
+        LogStuff('Autocomplete response "data" is not an array.',WARNING);
       end;
     end
     else
     begin
-      LogStuff('Autocomplete response missing "data" array.');
+      LogStuff('Autocomplete response missing "data" array.',WARNING);
     end;
   finally
     JsonResponse.Free;
@@ -459,7 +459,7 @@ begin
           on E: Exception do
           begin
             LogStuff(Format('Error parsing card at index %d: %s',
-              [i, E.Message]));
+              [i, E.Message]),WARNING);
             Result.Cards[i].Clear;
           end;
         end;
@@ -617,11 +617,10 @@ begin
   CacheFile := GetCacheFilePath(SetCacheFile);
   if TFile.Exists(CacheFile) then
   begin
-    LogStuff('Loading all sets from local cache.');
-    Exit(LoadSetDetailsFromJson(CacheFile));
+    LogStuff('Loading all sets from local cache.',DEBUG);
   end;
 
-  LogStuff('Fetching all sets from Scryfall API.');
+  LogStuff('Fetching all sets from Scryfall API.',DEBUG);
   Result := FetchAllSetsFromAPI;
   SaveSetDetailsToJson(CacheFile, Result); // Cache results for future use
 end;

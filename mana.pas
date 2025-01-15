@@ -48,7 +48,7 @@ begin
     except
       on E: Exception do
       begin
-        LogStuff('Error loading mana symbol cache: ' + E.Message);
+        LogStuff('Error loading mana symbol cache: ' + E.Message,ERROR);
         LogStuff('Deleting file: ' + CacheFilePath);
         SymbolCache.Clear; // Clear any partial cache
         TFile.Delete(CacheFilePath); // Remove corrupt file
@@ -75,7 +75,7 @@ begin
     CacheJson.SaveToFile(CacheFilePath, False, TEncoding.UTF8, False);
   finally
     CacheJson.Free;
-    LogStuff('Symbol cache saved to disk.');
+    LogStuff('Symbol cache saved to disk.',DEBUG);
   end;
 end;
 
@@ -132,7 +132,7 @@ begin
     else
       LogStuff(Format('Failed to fetch SVG from %s. HTTP %d: %s', [
         SVG_URL, Response.StatusCode, Response.StatusText
-      ]));
+      ]),ERROR);
   finally
     HttpClient.Free;
   end;
@@ -173,7 +173,7 @@ begin
         end
         else
         begin
-          LogStuff(Format('No SVG content retrieved for symbol [%s] from [%s]', [Symbol, SVGUrl]));
+          LogStuff(Format('No SVG content retrieved for symbol [%s] from [%s]', [Symbol, SVGUrl]),WARNING);
         end;
       end;
     end;

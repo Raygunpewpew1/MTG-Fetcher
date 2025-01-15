@@ -2,6 +2,7 @@
 
 interface
 
+
 uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
   System.RegularExpressions, System.Classes, FMX.Dialogs, SGlobalsZ,
@@ -164,7 +165,7 @@ begin
         raise Exception.CreateFmt('Database file not found: %s', [SourcePath]);
     except
       on E: Exception do
-        ShowMessage('Error copying database: ' + E.Message);
+        LogStuff('Error copying database: ' + E.Message,ERROR);
     end;
   end;
 end;
@@ -501,7 +502,7 @@ begin
   except
     on E: Exception do
     begin
-      LogStuff('Error creating cache folder: ' + E.Message);
+      LogStuff('Error creating cache folder: ' + E.Message,ERROR);
       Result := '';
     end;
   end;

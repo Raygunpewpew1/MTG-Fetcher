@@ -1,4 +1,4 @@
-unit Template;
+﻿unit Template;
 
 interface
 var
@@ -321,15 +321,15 @@ HtmlTemplate: string = '''
   </head>
   <body>
 
-  <h1 class="card-name">{{CardName}}</h1>
-
+  <!-- <h1 class="card-name">{{CardName}}</h1>
+    -->
 
 
   <div class="card-details">
   <div class="card-container">
     {{FlipIndicator}}
     {{CardImages}}
-    <div class="type-set-row">
+   <div class="type-set-row">
       <div class="type-line">{{TypeLine}}</div>
       <div class="set-details">
         <img src="{{SetIcon}}" class="set-icon" alt="Set Icon">
@@ -344,7 +344,7 @@ HtmlTemplate: string = '''
 
 
     <div class="oracle-text">{{OracleText}}</div>
-
+    <!--
     {{PowerToughness}}
     <div class="flavor-text">{{FlavorText}}</div>
 
@@ -355,23 +355,23 @@ HtmlTemplate: string = '''
     <div class="keywords {{KeywordsClass}}">
       <strong>Keywords:</strong> {{Keywords}}
     </div>
-
-
+    -->
+        <div class="prices">
+      <h2>Prices</h2>
+      <table class="prices-grid">
+        <tr><td>USD:</td><td>${{USD}}</td></tr>
+        <tr><td>USD (Foil):</td><td>${{USD_Foil}}</td></tr>
+        <tr><td>EUR:</td><td>€{{EUR}}</td></tr>
+        <tr><td>TIX:</td><td>{{Tix}}</td></tr>
+      </table>
+    </div>
 
     <div class="legalities">
       <h2>Legalities</h2>
       <table class="legalities-grid">{{Legalities}}</table>
     </div>
-      <div class="type-set-row">
-    <div class="prices">
-      <h2>Prices</h2>
-      <table class="prices-grid">
-        <tr><td>USD:</td><td>${{USD}}</td></tr>
-        <tr><td>USD (Foil):</td><td>${{USD_Foil}}</td></tr>
-        <tr><td>EUR:</td><td>�{{EUR}}</td></tr>
-        <tr><td>TIX:</td><td>{{Tix}}</td></tr>
-      </table>
-    </div>
+
+
 
     <div class="additional-details">
       <p><strong>Artist:</strong> {{Artist}}</p>

@@ -314,7 +314,7 @@ begin
   except
     on E: Exception do
     begin
-      LogStuff(Format(ErrorFillingCardDetails, [E.Message]));
+      LogStuff(Format(ErrorFillingCardDetails, [E.Message]),ERROR);
       CardDetails.Clear;
     end;
   end;

@@ -4,34 +4,50 @@ interface
 
 uses
   APIConstants, System.Classes, System.IOUtils, System.SyncObjs,
-  System.SysUtils;
+  System.SysUtils, System.Generics.Collections;
 
-procedure LogStuff(const Msg: string);
+type
+  TLogLevel = (DEBUG, INFO, WARNING, ERROR);
+
+procedure LogStuff(const Msg: string; Level: TLogLevel = INFO);
 
 implementation
 
 var
   LogCriticalSection: TCriticalSection;
   LogFilePath: string;
+  LogQueue: TQueue<string>;
+  AsyncLogThread: TThread;
+  TerminateLogging: Boolean;
 
 const
   MaxLogFileSize = 1024 * 1024; // Example: 1 MB
   TrimmedLogLines = 1000; // Number of lines to keep after trimming
 
+function LogLevelToString(Level: TLogLevel): string;
+begin
+  case Level of
+    DEBUG: Result := 'DEBUG';
+    INFO: Result := 'INFO';
+    WARNING: Result := 'WARNING';
+    ERROR: Result := 'ERROR';
+  else
+    Result := 'UNKNOWN';
+  end;
+end;
+
 procedure EnsureLogDirectory;
 begin
 {$IF DEFINED(ANDROID)}
-  // Use TPath.GetDocumentsPath for internal storage
-  LogFilePath := TPath.Combine(TPath.TPath.GetDocumentsPath, 'mtgfetch.txt');
+  LogFilePath := TPath.Combine(TPath.GetDocumentsPath, 'mtgfetch.txt');
 {$ELSEIF DEFINED(MSWINDOWS)}
   LogFilePath := TPath.Combine(TPath.GetHomePath, MTGAppFolder);
   if not TDirectory.Exists(LogFilePath) then
     TDirectory.CreateDirectory(LogFilePath);
   LogFilePath := TPath.Combine(LogFilePath, 'mtgfetch.log');
 {$ELSE}
-  LogFilePath := 'mtgfetch.log'; // Default for other platforms
+  LogFilePath := 'mtgfetch.log';
 {$ENDIF}
-  // Create the log file if it doesn't exist
   if not TFile.Exists(LogFilePath) then
   begin
     try
@@ -52,52 +68,60 @@ begin
     if not TFile.Exists(LogFilePath) then
       Exit;
 
-    // Read all lines from the file
     AllLines := TFile.ReadAllLines(LogFilePath, TEncoding.UTF8);
 
     if Length(AllLines) > TrimmedLogLines then
     begin
-      // Keep only the last `TrimmedLogLines`
       TrimmedLines := Copy(AllLines, Length(AllLines) - TrimmedLogLines,
         TrimmedLogLines);
-
-      // Write the trimmed lines back to the file
       TFile.WriteAllLines(LogFilePath, TrimmedLines, TEncoding.UTF8);
     end;
   except
     on E: Exception do
       Writeln('Error trimming log file: ' + E.Message);
-    // Log the error to console
   end;
 end;
 
-procedure LogStuff(const Msg: string);
+procedure AsyncLogProcess;
+begin
+  while not TerminateLogging do
+  begin
+    LogCriticalSection.Enter;
+    try
+      while LogQueue.Count > 0 do
+      begin
+        try
+          TFile.AppendAllText(LogFilePath, LogQueue.Dequeue + sLineBreak, TEncoding.UTF8);
+        except
+          on E: Exception do
+            Writeln('Error writing to log file: ' + E.Message);
+        end;
+      end;
+    finally
+      LogCriticalSection.Leave;
+    end;
+    TThread.Sleep(50); // Adjust as needed for performance
+  end;
+end;
+
+procedure LogStuff(const Msg: string; Level: TLogLevel);
 var
   LogEntry: string;
 begin
   if not Assigned(LogCriticalSection) then
     Exit;
 
+  LogEntry := Format('[%s] [%s] [Thread %d] %s',
+    [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), LogLevelToString(Level),
+    TThread.CurrentThread.ThreadID, Msg]);
+
   LogCriticalSection.Enter;
   try
-    try
-      // Format the log entry
-      LogEntry := Format('[%s] [Thread %d] %s',
-        [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now),
-        TThread.CurrentThread.ThreadID, Msg]);
+    if TFile.Exists(LogFilePath) and
+      (TFile.GetSize(LogFilePath) > MaxLogFileSize) then
+      TrimLogFile;
 
-      // Check log file size and trim if necessary
-      if TFile.Exists(LogFilePath) and
-        (TFile.GetSize(LogFilePath) > MaxLogFileSize) then
-        TrimLogFile;
-
-      // Append the log entry
-      TFile.AppendAllText(LogFilePath, LogEntry + sLineBreak, TEncoding.UTF8);
-    except
-      on E: Exception do
-        Writeln('Error writing to log file: ' + E.Message);
-      // Optional: log to console
-    end;
+    LogQueue.Enqueue(LogEntry);
   finally
     LogCriticalSection.Leave;
   end;
@@ -106,10 +130,21 @@ end;
 initialization
 
 LogCriticalSection := TCriticalSection.Create;
+LogQueue := TQueue<string>.Create;
 EnsureLogDirectory;
+TerminateLogging := False;
+AsyncLogThread := TThread.CreateAnonymousThread(AsyncLogProcess);
+AsyncLogThread.FreeOnTerminate := False;
+AsyncLogThread.Start;
 
 finalization
 
-LogCriticalSection.Free;
+TerminateLogging := True;
+AsyncLogThread.Terminate;
+AsyncLogThread.WaitFor;
+FreeAndNil(AsyncLogThread);
+FreeAndNil(LogQueue);
+FreeAndNil(LogCriticalSection);
 
 end.
+

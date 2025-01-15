@@ -447,7 +447,7 @@ type
     class operator Implicit(const Value: Variant): TJsonDataValueHelper; overload;
 
     function IsNull: Boolean;
-    
+
     property Typ: TJsonDataType read GetTyp;
     property Value: string read GetValue write SetValue;
     property IntValue: Integer read GetIntValue write SetIntValue;

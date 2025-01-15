@@ -14,7 +14,7 @@ uses
   FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, MLogic,
 
   FMX.ComboEdit, CardDisplayManager, ScryfallQueryBuilder,
-  System.IOUtils,System.StrUtils,ScryfallChunkedReader;
+  System.IOUtils,System.StrUtils;
 
 type
 
@@ -62,6 +62,7 @@ type
       var KeyChar: WideChar; Shift: TShiftState);
     procedure ComboBoxEditSearchChange(Sender: TObject);
     procedure Button4Click(Sender: TObject);
+
 
   private
     WebBrowserInitialized: Boolean;
@@ -188,7 +189,7 @@ end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
- // ListViewCards.OnItemClick := nil;
+  ListViewCards.OnItemClick := nil;
   FreeAndNil(FCardDisplayManager);
   FreeAndNil(FScryfallAPI);
 end;
@@ -396,10 +397,31 @@ begin
 end;
 
 procedure TForm1.Button4Click(Sender: TObject);
+//var
+//  FoundCard: System.JSON.TJSONObject;
+//  STerm:string;
 begin
-ProcessScryfallBulkFile('C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json');
-//"C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json"
+//  STerm := ComboBoxEditSearch.Text.Trim;
+//  FoundCard := FindCardByName('C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json', STerm);
+//  try
+//    if Assigned(FoundCard) then
+//    begin
+//      // Print card details to the log
+//      LogStuff('Card Found: ' + FoundCard.ToString);
+//    end
+//    else
+//    begin
+//      LogStuff('Card not found.');
+//    end;
+//  finally
+//    FoundCard.Free; // Ensure the found card is freed to avoid memory leaks
+//  end;
 end;
+
+
+//ProcessScryfallBulkFile('C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json');
+//"C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json"
+
 
 procedure TForm1.ButtonNextPageClick(Sender: TObject);
 begin

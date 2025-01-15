@@ -55,7 +55,6 @@ begin
         begin
           CardObj := BulkJsonArray.O[I]; // Get card object
           try
-            // FillCardDetailsFromJson is presumably from WrapperHelper
             FillCardDetailsFromJson(CardObj, CardDetails);
             CardDataList.Add(CardDetails);
           except
