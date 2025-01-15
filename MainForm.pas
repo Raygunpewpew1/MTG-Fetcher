@@ -14,7 +14,7 @@ uses
   FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, MLogic,
 
   FMX.ComboEdit, CardDisplayManager, ScryfallQueryBuilder,
-  System.IOUtils,System.StrUtils;
+  System.IOUtils,System.StrUtils, FMX.MultiView;
 
 type
 
@@ -25,27 +25,24 @@ type
 
   TForm1 = class(TForm)
     DelayTimer: TTimer;
-    LayoutMain: TLayout;
-    LayoutControls: TLayout;
-    LabelSearch: TLabel;
-    Button1: TButton;
-    ComboBoxSetCode: TComboBox;
-    ComboBoxRarity: TComboBox;
-    ComboBoxColors: TComboBox;
-    ComboBoxAbility: TComboBox;
-    ButtonNextPage: TButton;
-    Switch1: TSwitch;
-    DisplayUniq: TLabel;
-    ListViewCards: TListView;
-    WebBrowser1: TWebBrowser;
-    LayoutButtons: TLayout;
-    ProgressBar1: TProgressBar;
-    LabelProgress: TLabel;
-    CountLabel: TLabel;
     // NetHTTPClient1: TNetHTTPClient;
     TimerDebounce: TTimer;
-    ComboBoxEditSearch: TComboEdit;
     StyleBook1: TStyleBook;
+    MultiViewFilters: TMultiView;
+    LayoutFilters: TLayout;
+    ButtonNextPage: TButton;
+    Button1: TButton;
+    ComboBoxSetCode: TComboBox;
+    ComboBoxColors: TComboBox;
+    ComboBoxRarity: TComboBox;
+    ComboBoxAbility: TComboBox;
+    ComboBoxEditSearch: TComboEdit;
+    LayoutContent: TLayout;
+    ListViewCards: TListView;
+    WebBrowser1: TWebBrowser;
+    LayoutActions: TLayout;
+    Switch1: TSwitch;
+    Button2: TButton;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -62,6 +59,8 @@ type
       var KeyChar: WideChar; Shift: TShiftState);
     procedure ComboBoxEditSearchChange(Sender: TObject);
     procedure Button4Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+
 
 
   private
@@ -116,7 +115,7 @@ begin
 
   FCardDisplayManager.OnProgressUpdate := procedure(Progress: Integer)
     begin
-      ProgressBar1.Value := Progress;
+//      ProgressBar1.Value := Progress;
     end;
   // ComboBoxSetCode
 
@@ -179,13 +178,20 @@ procedure TForm1.OnSearchComplete(Success: Boolean);
 begin
   Button1.Enabled := True;
   ButtonNextPage.Enabled := FCardDisplayManager.HasMorePages;
-  CountLabel.Text := S_CARDS_FOUND + ListViewCards.ItemCount.ToString;
 
   if not Success then
     ShowMessage('Search failed. Please try again.')
   else if ListViewCards.Items.Count = 0 then
-    ShowMessage('No cards found.');
+    ShowMessage('No cards found.')
+  else
+  begin
+    ListViewCards.SearchVisible := True;
+    ListViewCards.ItemIndex := 0;
+    ListViewCards.OnItemClick(ListViewCards, ListViewCards.Items[0]);
+  end;
 end;
+
+
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
@@ -341,8 +347,9 @@ begin
     Exit;
 
   Button1.Enabled := False;
-  ProgressBar1.Value := 0;
-  LayoutControls.Enabled := False;
+  MultiViewFilters.HideMaster;
+ // ProgressBar1.Value := 0;
+ // LayoutControls.Enabled := False;
 
   SelectedRarity := rAll; // Default to all rarities
   if ComboBoxRarity.Text <> S_ALL_RARITIES then
@@ -393,7 +400,12 @@ begin
     Query.Free;
   end;
 
-  LayoutControls.Enabled := True;
+ // LayoutControls.Enabled := True;
+end;
+
+procedure TForm1.Button2Click(Sender: TObject);
+begin
+MultiViewFilters.ShowMaster;
 end;
 
 procedure TForm1.Button4Click(Sender: TObject);
@@ -417,6 +429,8 @@ begin
 //    FoundCard.Free; // Ensure the found card is freed to avoid memory leaks
 //  end;
 end;
+
+
 
 
 //ProcessScryfallBulkFile('C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json');

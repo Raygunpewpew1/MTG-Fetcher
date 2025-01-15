@@ -28,7 +28,8 @@ uses
 function ConstructSearchUrl(const Query, SetCode, Rarity, Colors: string;
   Fuzzy, Unique: Boolean; Page: Integer): string;
 const
-  SearchParams: array [0..3] of string = ('SetCode', 'Rarity', 'Colors', 'Unique');
+  SearchParams: array [0 .. 3] of string = ('SetCode', 'Rarity', 'Colors',
+    'Unique');
 var
   Params: TStringBuilder;
 begin
@@ -37,12 +38,17 @@ begin
 
   Params := TStringBuilder.Create;
   try
-    Params.Append(Format(StandardSStr, [EndpointSearch, TNetEncoding.URL.Encode(Query.ToLower)]));
+    Params.Append(Format(StandardSStr, [EndpointSearch,
+      TNetEncoding.URL.Encode(Query.ToLower)]));
 
-    if not SetCode.IsEmpty then Params.Append(BySetCode + TNetEncoding.URL.Encode(SetCode.ToLower));
-    if not Rarity.IsEmpty then Params.Append(ByRarity + TNetEncoding.URL.Encode(Rarity.ToLower));
-    if not Colors.IsEmpty then Params.Append(ByColor + TNetEncoding.URL.Encode(Colors.ToLower));
-    if Unique then Params.Append(ShowUQ);
+    if not SetCode.IsEmpty then
+      Params.Append(BySetCode + TNetEncoding.URL.Encode(SetCode.ToLower));
+    if not Rarity.IsEmpty then
+      Params.Append(ByRarity + TNetEncoding.URL.Encode(Rarity.ToLower));
+    if not Colors.IsEmpty then
+      Params.Append(ByColor + TNetEncoding.URL.Encode(Colors.ToLower));
+    if Unique then
+      Params.Append(ShowUQ);
     Result := Params.ToString + Format(SPageStr, [Page]);
   finally
     Params.Free;
@@ -52,7 +58,8 @@ begin
 
 end;
 
-function GetSafeStringField(const Obj: TJsonObject; const FieldName: string): string;
+function GetSafeStringField(const Obj: TJsonObject;
+  const FieldName: string): string;
 begin
   if Obj.Contains(FieldName) then
   begin
@@ -111,18 +118,19 @@ begin
     (JsonObj.Types[FieldImageUris] = jdtObject) then
   begin
     ImageUrisObj := JsonObj.O[FieldImageUris];
-    ImageUris.Small       := GetSafeStringField(ImageUrisObj, FieldSmall);
-    ImageUris.Normal      := GetSafeStringField(ImageUrisObj, FieldNormal);
-    ImageUris.Large       := GetSafeStringField(ImageUrisObj, FieldLarge);
-    ImageUris.PNG         := GetSafeStringField(ImageUrisObj, FieldPng);
+    ImageUris.Small := GetSafeStringField(ImageUrisObj, FieldSmall);
+    ImageUris.Normal := GetSafeStringField(ImageUrisObj, FieldNormal);
+    ImageUris.Large := GetSafeStringField(ImageUrisObj, FieldLarge);
+    ImageUris.PNG := GetSafeStringField(ImageUrisObj, FieldPng);
     ImageUris.Border_crop := GetSafeStringField(ImageUrisObj, FieldBorderCrop);
-    ImageUris.Art_crop    := GetSafeStringField(ImageUrisObj, FieldArtCrop);
+    ImageUris.Art_crop := GetSafeStringField(ImageUrisObj, FieldArtCrop);
   end
   else
-    ImageUris := Default(TImageUris);
+    ImageUris := Default (TImageUris);
 end;
 
-procedure ParseLegalities(const JsonObj: TJsonObject; out Legalities: TCardLegalities);
+procedure ParseLegalities(const JsonObj: TJsonObject;
+  out Legalities: TCardLegalities);
 var
   LegalitiesObj: TJsonObject;
 begin
@@ -131,28 +139,30 @@ begin
   begin
     LegalitiesObj := JsonObj.O[FieldLegalities];
 
-    Legalities.Standard        := GetSafeStringField(LegalitiesObj, FieldStandard);
-    Legalities.Future          := GetSafeStringField(LegalitiesObj, FieldFuture);
-    Legalities.Historic        := GetSafeStringField(LegalitiesObj, FieldHistoric);
-    Legalities.Gladiator       := GetSafeStringField(LegalitiesObj, FieldGladiator);
-    Legalities.Pioneer         := GetSafeStringField(LegalitiesObj, FieldPioneer);
-    Legalities.Explorer        := GetSafeStringField(LegalitiesObj, FieldExplorer);
-    Legalities.Modern          := GetSafeStringField(LegalitiesObj, FieldModern);
-    Legalities.Legacy          := GetSafeStringField(LegalitiesObj, FieldLegacy);
-    Legalities.Pauper          := GetSafeStringField(LegalitiesObj, FieldPauper);
-    Legalities.Vintage         := GetSafeStringField(LegalitiesObj, FieldVintage);
-    Legalities.Penny           := GetSafeStringField(LegalitiesObj, FieldPenny);
-    Legalities.Commander       := GetSafeStringField(LegalitiesObj, FieldCommander);
-    Legalities.Oathbreaker     := GetSafeStringField(LegalitiesObj, FieldOathbreaker);
-    Legalities.Alchemy         := GetSafeStringField(LegalitiesObj, FieldAlchemy);
-    Legalities.Brawl           := GetSafeStringField(LegalitiesObj, FieldBrawl);
-    Legalities.PauperCommander := GetSafeStringField(LegalitiesObj, FieldPauperCommander);
-    Legalities.Duel            := GetSafeStringField(LegalitiesObj, FieldDuel);
-    Legalities.Oldschool       := GetSafeStringField(LegalitiesObj, FieldOldschool);
-    Legalities.Premodern       := GetSafeStringField(LegalitiesObj, FieldPremodern);
+    Legalities.Standard := GetSafeStringField(LegalitiesObj, FieldStandard);
+    Legalities.Future := GetSafeStringField(LegalitiesObj, FieldFuture);
+    Legalities.Historic := GetSafeStringField(LegalitiesObj, FieldHistoric);
+    Legalities.Gladiator := GetSafeStringField(LegalitiesObj, FieldGladiator);
+    Legalities.Pioneer := GetSafeStringField(LegalitiesObj, FieldPioneer);
+    Legalities.Explorer := GetSafeStringField(LegalitiesObj, FieldExplorer);
+    Legalities.Modern := GetSafeStringField(LegalitiesObj, FieldModern);
+    Legalities.Legacy := GetSafeStringField(LegalitiesObj, FieldLegacy);
+    Legalities.Pauper := GetSafeStringField(LegalitiesObj, FieldPauper);
+    Legalities.Vintage := GetSafeStringField(LegalitiesObj, FieldVintage);
+    Legalities.Penny := GetSafeStringField(LegalitiesObj, FieldPenny);
+    Legalities.Commander := GetSafeStringField(LegalitiesObj, FieldCommander);
+    Legalities.Oathbreaker := GetSafeStringField(LegalitiesObj,
+      FieldOathbreaker);
+    Legalities.Alchemy := GetSafeStringField(LegalitiesObj, FieldAlchemy);
+    Legalities.Brawl := GetSafeStringField(LegalitiesObj, FieldBrawl);
+    Legalities.PauperCommander := GetSafeStringField(LegalitiesObj,
+      FieldPauperCommander);
+    Legalities.Duel := GetSafeStringField(LegalitiesObj, FieldDuel);
+    Legalities.Oldschool := GetSafeStringField(LegalitiesObj, FieldOldschool);
+    Legalities.Premodern := GetSafeStringField(LegalitiesObj, FieldPremodern);
   end
   else
-    Legalities := Default(TCardLegalities);
+    Legalities := Default (TCardLegalities);
 end;
 
 procedure ParsePrices(const JsonObj: TJsonObject; out Prices: TCardPrices);
@@ -161,18 +171,21 @@ var
 begin
   Prices.Clear;
 
-  if JsonObj.Contains(FieldPrices) and (JsonObj.Types[FieldPrices] = jdtObject) then
+  if JsonObj.Contains(FieldPrices) and (JsonObj.Types[FieldPrices] = jdtObject)
+  then
   begin
     PricesObj := JsonObj.O[FieldPrices];
 
     Prices.USD := StrToCurrDef(GetSafeStringField(PricesObj, FieldUsd), 0);
-    Prices.USD_Foil := StrToCurrDef(GetSafeStringField(PricesObj, FieldUsdFoil), 0);
+    Prices.USD_Foil := StrToCurrDef(GetSafeStringField(PricesObj,
+      FieldUsdFoil), 0);
     Prices.EUR := StrToCurrDef(GetSafeStringField(PricesObj, FieldEur), 0);
     Prices.Tix := StrToCurrDef(GetSafeStringField(PricesObj, FieldTix), 0);
   end;
 end;
 
-procedure ParseCardFaces(const JsonObj: TJsonObject; out CardFaces: TArray<TCardFace>);
+procedure ParseCardFaces(const JsonObj: TJsonObject;
+  out CardFaces: TArray<TCardFace>);
 var
   FacesArray: TJsonArray;
   I: Integer;
@@ -189,20 +202,19 @@ begin
       if FacesArray.Types[I] = jdtObject then
       begin
         FaceObj := FacesArray.O[I];
-        CardFaces[I].Name      := GetSafeStringField(FaceObj, FieldName);
-        CardFaces[I].ManaCost  := GetSafeStringField(FaceObj, FieldManaCost);
-        CardFaces[I].TypeLine  := GetSafeStringField(FaceObj, FieldTypeLine);
+        CardFaces[I].Name := GetSafeStringField(FaceObj, FieldName);
+        CardFaces[I].ManaCost := GetSafeStringField(FaceObj, FieldManaCost);
+        CardFaces[I].TypeLine := GetSafeStringField(FaceObj, FieldTypeLine);
 
-        CardFaces[I].OracleText := GetUtf8String(
-          GetSafeStringField(FaceObj, FieldOracleText)
-        );
-        CardFaces[I].FlavorText := GetUtf8String(
-          GetSafeStringField(FaceObj, FieldFlavorText)
-        );
+        CardFaces[I].OracleText :=
+          GetUtf8String(GetSafeStringField(FaceObj, FieldOracleText));
+        CardFaces[I].FlavorText :=
+          GetUtf8String(GetSafeStringField(FaceObj, FieldFlavorText));
 
-        CardFaces[I].Power     := GetSafeStringField(FaceObj, FieldPower);
+        CardFaces[I].Power := GetSafeStringField(FaceObj, FieldPower);
         CardFaces[I].Toughness := GetSafeStringField(FaceObj, FieldToughness);
-        CardFaces[I].Loyalty   := GetSafeStringField(FaceObj, FieldCardFaceLoyalty);
+        CardFaces[I].Loyalty := GetSafeStringField(FaceObj,
+          FieldCardFaceLoyalty);
 
         ParseImageUris(FaceObj, CardFaces[I].ImageUris);
       end;
@@ -212,33 +224,34 @@ begin
     SetLength(CardFaces, 0);
 end;
 
-procedure FillSetDetailsFromJson(const JsonObj: TJsonObject; out SetDetails: TSetDetails);
+procedure FillSetDetailsFromJson(const JsonObj: TJsonObject;
+  out SetDetails: TSetDetails);
 begin
   SetDetails.Clear;
 
-  SetDetails.SFID         := GetSafeStringField(JsonObj, FieldID);
-  SetDetails.Name         := GetSafeStringField(JsonObj, FieldName);
-  SetDetails.Code         := GetSafeStringField(JsonObj, FieldCode);
-  SetDetails.ReleaseDate  := GetSafeStringField(JsonObj, FieldReleasedAt);
-  SetDetails.SetType      := GetSafeStringField(JsonObj, FieldSetType);
-  SetDetails.Block        := GetSafeStringField(JsonObj, FieldBlock);
-  SetDetails.BlockCode    := GetSafeStringField(JsonObj, FieldBlockCode);
-  SetDetails.ParentSetCode:= GetSafeStringField(JsonObj, FieldParentSetCode);
+  SetDetails.SFID := GetSafeStringField(JsonObj, FieldID);
+  SetDetails.Name := GetSafeStringField(JsonObj, FieldName);
+  SetDetails.Code := GetSafeStringField(JsonObj, FieldCode);
+  SetDetails.ReleaseDate := GetSafeStringField(JsonObj, FieldReleasedAt);
+  SetDetails.SetType := GetSafeStringField(JsonObj, FieldSetType);
+  SetDetails.Block := GetSafeStringField(JsonObj, FieldBlock);
+  SetDetails.BlockCode := GetSafeStringField(JsonObj, FieldBlockCode);
+  SetDetails.ParentSetCode := GetSafeStringField(JsonObj, FieldParentSetCode);
 
-  SetDetails.CardCount    := JsonObj.I[FieldCardCount];
-  SetDetails.Digital      := JsonObj.B[FieldDigital];
-  SetDetails.FoilOnly     := JsonObj.B[FieldFoilOnly];
+  SetDetails.CardCount := JsonObj.I[FieldCardCount];
+  SetDetails.Digital := JsonObj.B[FieldDigital];
+  SetDetails.FoilOnly := JsonObj.B[FieldFoilOnly];
 
-  SetDetails.IconSVGURI   := GetUtf8String(
-    GetSafeStringField(JsonObj, FieldIconSvgUri)
-  );
+  SetDetails.IconSVGURI := GetUtf8String(GetSafeStringField(JsonObj,
+    FieldIconSvgUri));
 
-  SetDetails.ScryfallURI  := GetSafeStringField(JsonObj, FieldScryfallUri);
-  SetDetails.URI          := GetSafeStringField(JsonObj, FieldUri);
-  SetDetails.SearchURI    := GetSafeStringField(JsonObj, FieldSearchUri);
+  SetDetails.ScryfallURI := GetSafeStringField(JsonObj, FieldScryfallUri);
+  SetDetails.URI := GetSafeStringField(JsonObj, FieldUri);
+  SetDetails.SearchURI := GetSafeStringField(JsonObj, FieldSearchUri);
 end;
 
-procedure FillCardDetailsFromJson(const JsonObj: TJsonObject; out CardDetails: TCardDetails);
+procedure FillCardDetailsFromJson(const JsonObj: TJsonObject;
+  out CardDetails: TCardDetails);
 begin
   // If we already have IDs, clear them out before refilling
   if (not CardDetails.SFID.IsEmpty) or (not CardDetails.OracleID.IsEmpty) then
@@ -250,18 +263,16 @@ begin
       (JsonObj.Types[FieldTypeLine] = jdtString) then
       CardDetails.TypeLine := GetUtf8String(JsonObj.S[FieldTypeLine]);
 
-    CardDetails.SFID     := GetSafeStringField(JsonObj, FieldID);
-    CardDetails.ArenaID  := JsonObj.I[FieldArena];
-    CardDetails.EDHRank  := JsonObj.I[FieldEDHRank];
+    CardDetails.SFID := GetSafeStringField(JsonObj, FieldID);
+    CardDetails.ArenaID := JsonObj.I[FieldArena];
+    CardDetails.EDHRank := JsonObj.I[FieldEDHRank];
 
-    CardDetails.CardName := GetUtf8String(
-      GetSafeStringField(JsonObj, FieldName)
-    );
+    CardDetails.CardName := GetUtf8String(GetSafeStringField(JsonObj,
+      FieldName));
     CardDetails.ManaCost := GetSafeStringField(JsonObj, FieldManaCost);
 
-    CardDetails.OracleText := GetUtf8String(
-      GetSafeStringField(JsonObj, FieldOracleText)
-    );
+    CardDetails.OracleText := GetUtf8String(GetSafeStringField(JsonObj,
+      FieldOracleText));
 
     // Games array
     GetSafeStringArrayField(JsonObj, FieldGames, CardDetails.Games);
@@ -269,42 +280,46 @@ begin
     // Keywords array
     GetSafeStringArrayField(JsonObj, FieldKeywords, CardDetails.Keywords);
 
-    CardDetails.SetCode         := GetSafeStringField(JsonObj, FieldSet);
-    CardDetails.SetName         := GetSafeStringField(JsonObj, FieldSetName);
-    CardDetails.Rarity          := StringToRarity(JsonObj.S['rarity']);
-    CardDetails.Power           := GetSafeStringField(JsonObj, FieldPower);
-    CardDetails.Toughness       := GetSafeStringField(JsonObj, FieldToughness);
-    CardDetails.Loyalty         := GetSafeStringField(JsonObj, FieldLoyalty);
-    CardDetails.PrintsSearchUri := GetSafeStringField(JsonObj, FieldPrintsSearchUri);
-    CardDetails.OracleID        := GetSafeStringField(JsonObj, FieldOracleID);
-    CardDetails.FlavorText      := GetUtf8String(
-      GetSafeStringField(JsonObj, FieldFlavorText)
-    );
+    CardDetails.SetCode := GetSafeStringField(JsonObj, FieldSet);
+    CardDetails.SetName := GetSafeStringField(JsonObj, FieldSetName);
+    CardDetails.Rarity := StringToRarity(JsonObj.S['rarity']);
+    CardDetails.Power := GetSafeStringField(JsonObj, FieldPower);
+    CardDetails.Toughness := GetSafeStringField(JsonObj, FieldToughness);
+    CardDetails.Loyalty := GetSafeStringField(JsonObj, FieldLoyalty);
+    CardDetails.PrintsSearchUri := GetSafeStringField(JsonObj,
+      FieldPrintsSearchUri);
+    CardDetails.OracleID := GetSafeStringField(JsonObj, FieldOracleID);
+    CardDetails.FlavorText := GetUtf8String(GetSafeStringField(JsonObj,
+      FieldFlavorText));
 
-    CardDetails.Layout     := GetSafeStringField(JsonObj, FieldLayout).ToLower;
-    CardDetails.Lang       := GetSafeStringField(JsonObj, FieldLang);
+    CardDetails.Layout := GetSafeStringField(JsonObj, FieldLayout).ToLower;
+    CardDetails.Lang := GetSafeStringField(JsonObj, FieldLang);
     CardDetails.ReleasedAt := GetSafeStringField(JsonObj, FieldReleasedAt);
 
-    if (JsonObj.Contains(FieldCMC)) and (JsonObj.Types[FieldCMC] = jdtFloat) then
+    if (JsonObj.Contains(FieldCMC)) and (JsonObj.Types[FieldCMC] = jdtFloat)
+    then
       CardDetails.CMC := JsonObj.F[FieldCMC];
 
-    CardDetails.Reserved    := JsonObj.B[FieldReserved];
-    CardDetails.Foil        := JsonObj.B[FieldFoil];
-    CardDetails.NonFoil     := JsonObj.B[FieldNonFoil];
-    CardDetails.Oversized   := JsonObj.B[FieldOversized];
-    CardDetails.Promo       := JsonObj.B[FieldPromo];
-    CardDetails.Reprint     := JsonObj.B[FieldReprint];
-    CardDetails.Digital     := JsonObj.B[FieldDigital];
-    CardDetails.Artist      := GetSafeStringField(JsonObj, FieldArtist);
-    CardDetails.CollectorNumber := GetSafeStringField(JsonObj, FieldCollectorNumber);
+    CardDetails.Reserved := JsonObj.B[FieldReserved];
+    CardDetails.Foil := JsonObj.B[FieldFoil];
+    CardDetails.NonFoil := JsonObj.B[FieldNonFoil];
+    CardDetails.Oversized := JsonObj.B[FieldOversized];
+    CardDetails.Promo := JsonObj.B[FieldPromo];
+    CardDetails.Reprint := JsonObj.B[FieldReprint];
+    CardDetails.Digital := JsonObj.B[FieldDigital];
+    CardDetails.Artist := GetSafeStringField(JsonObj, FieldArtist);
+    CardDetails.CollectorNumber := GetSafeStringField(JsonObj,
+      FieldCollectorNumber);
     CardDetails.BorderColor := GetSafeStringField(JsonObj, FieldBorderColor);
-    CardDetails.Frame       := GetSafeStringField(JsonObj, FieldFrame);
-    CardDetails.SecurityStamp := GetSafeStringField(JsonObj, FieldSecurityStamp);
-    CardDetails.FullArt     := JsonObj.B[FieldFullArt];
-    CardDetails.Textless    := JsonObj.B[FieldTextless];
+    CardDetails.Frame := GetSafeStringField(JsonObj, FieldFrame);
+    CardDetails.SecurityStamp := GetSafeStringField(JsonObj,
+      FieldSecurityStamp);
+    CardDetails.FullArt := JsonObj.B[FieldFullArt];
+    CardDetails.Textless := JsonObj.B[FieldTextless];
     CardDetails.StorySpotlight := JsonObj.B[FieldStorySpotlight];
 
-    GetSafeStringArrayField(JsonObj, FieldColorIdentity, CardDetails.ColorIdentity);
+    GetSafeStringArrayField(JsonObj, FieldColorIdentity,
+      CardDetails.ColorIdentity);
 
     // Nested objects
     ParseImageUris(JsonObj, CardDetails.ImageUris);
@@ -314,7 +329,7 @@ begin
   except
     on E: Exception do
     begin
-      LogStuff(Format(ErrorFillingCardDetails, [E.Message]),ERROR);
+      LogStuff(Format(ErrorFillingCardDetails, [E.Message]), ERROR);
       CardDetails.Clear;
     end;
   end;

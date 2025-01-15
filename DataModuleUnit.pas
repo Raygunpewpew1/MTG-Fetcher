@@ -19,8 +19,6 @@ type
 
   private
 
-
-
   public
 
     procedure SetupDatabase(const DBPath: string);
@@ -32,10 +30,7 @@ var
 
 implementation
 
-
-
 {$R *.dfm}
-
 { TDataModule1 }
 
 procedure TDataModule1.SetupDatabase(const DBPath: string);
@@ -45,12 +40,12 @@ begin
   FDConnection1.Params.Database := DBPath;
   FDConnection1.LoginPrompt := False;
   FDGUIxWaitCursor1.Provider := 'FMX';
-                                               //Just implanmenting the setup
-                                               //old code didnt work
+  // Just implanmenting the setup
+  // old code didnt work
   try
 
     try
-    FDConnection1.Connected := True;
+      FDConnection1.Connected := True;
     finally
 
     end;
@@ -59,7 +54,5 @@ begin
       raise Exception.Create('Error connecting to database: ' + E.Message);
   end;
 end;
-
-
 
 end.
