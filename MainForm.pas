@@ -14,7 +14,8 @@ uses
   FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, MLogic,
 
   FMX.ComboEdit, CardDisplayManager, ScryfallQueryBuilder,
-  System.IOUtils,System.StrUtils, FMX.MultiView;
+  System.IOUtils, System.StrUtils, FMX.MultiView, FMX.Platform;
+
 
 type
 
@@ -61,8 +62,6 @@ type
     procedure Button4Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
 
-
-
   private
     WebBrowserInitialized: Boolean;
     FIsProgrammaticChange: Boolean;
@@ -97,6 +96,9 @@ begin
   inherited;
 end;
 
+
+
+
 procedure TForm1.FormCreate(Sender: TObject);
 var
   SetDetailsArray: TArray<TSetDetails>;
@@ -115,7 +117,7 @@ begin
 
   FCardDisplayManager.OnProgressUpdate := procedure(Progress: Integer)
     begin
-//      ProgressBar1.Value := Progress;
+      // ProgressBar1.Value := Progress;
     end;
   // ComboBoxSetCode
 
@@ -171,7 +173,7 @@ begin
     ComboBoxRarity.ItemIndex := 0;
   end;
 
- DelayTimer.Enabled := True;
+  DelayTimer.Enabled := True;
 end;
 
 procedure TForm1.OnSearchComplete(Success: Boolean);
@@ -190,8 +192,6 @@ begin
     ListViewCards.OnItemClick(ListViewCards, ListViewCards.Items[0]);
   end;
 end;
-
-
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
@@ -348,8 +348,8 @@ begin
 
   Button1.Enabled := False;
   MultiViewFilters.HideMaster;
- // ProgressBar1.Value := 0;
- // LayoutControls.Enabled := False;
+  // ProgressBar1.Value := 0;
+  // LayoutControls.Enabled := False;
 
   SelectedRarity := rAll; // Default to all rarities
   if ComboBoxRarity.Text <> S_ALL_RARITIES then
@@ -386,56 +386,53 @@ begin
     UniqueMode := System.StrUtils.IfThen(Switch1.IsChecked, 'prints', '');
 
     // Build the query
-    Query.WithName(ComboBoxEditSearch.Text)
-         .WithSet(SelectedSetCode)
-         .WithRarity(SelectedRarity)
-         .WithColors(SelectedColors)
-         .Unique(UniqueMode)  // Use UniqueMode determined by IfThen
-         .OrderBy('name');
+    Query.WithName(ComboBoxEditSearch.Text).WithSet(SelectedSetCode)
+      .WithRarity(SelectedRarity).WithColors(SelectedColors).Unique(UniqueMode)
+    // Use UniqueMode determined by IfThen
+      .OrderBy('name');
 
     // Call your FCardDisplayManager.ExecuteQuery method
-     FCardDisplayManager.ExecuteQuery(Query, OnSearchComplete);
+    FCardDisplayManager.ExecuteQuery(Query, OnSearchComplete);
 
   finally
     Query.Free;
   end;
 
- // LayoutControls.Enabled := True;
+  // LayoutControls.Enabled := True;
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
 begin
-MultiViewFilters.ShowMaster;
+  MultiViewFilters.ShowMaster;
 end;
 
 procedure TForm1.Button4Click(Sender: TObject);
-//var
-//  FoundCard: System.JSON.TJSONObject;
-//  STerm:string;
+// var
+// FoundCard: System.JSON.TJSONObject;
+// STerm:string;
 begin
-//  STerm := ComboBoxEditSearch.Text.Trim;
-//  FoundCard := FindCardByName('C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json', STerm);
-//  try
-//    if Assigned(FoundCard) then
-//    begin
-//      // Print card details to the log
-//      LogStuff('Card Found: ' + FoundCard.ToString);
-//    end
-//    else
-//    begin
-//      LogStuff('Card not found.');
-//    end;
-//  finally
-//    FoundCard.Free; // Ensure the found card is freed to avoid memory leaks
-//  end;
+  // STerm := ComboBoxEditSearch.Text.Trim;
+  // FoundCard := FindCardByName('C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json', STerm);
+  // try
+  // if Assigned(FoundCard) then
+  // begin
+  // // Print card details to the log
+  // LogStuff('Card Found: ' + FoundCard.ToString);
+  // end
+  // else
+  // begin
+  // LogStuff('Card not found.');
+  // end;
+  // finally
+  // FoundCard.Free; // Ensure the found card is freed to avoid memory leaks
+  // end;
 end;
 
 
 
 
-//ProcessScryfallBulkFile('C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json');
-//"C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json"
-
+// ProcessScryfallBulkFile('C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json');
+// "C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json"
 
 procedure TForm1.ButtonNextPageClick(Sender: TObject);
 begin
@@ -478,6 +475,13 @@ begin
     Exit;
 
   case Key of
+
+    vkReturn:
+      begin
+        Button1Click(Sender);
+        Exit;
+      end;
+
     vkDown:
       begin
         if ComboBoxEditSearch.Items.Count > 0 then

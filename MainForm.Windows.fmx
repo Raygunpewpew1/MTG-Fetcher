@@ -21,7 +21,6 @@ inherited Form1_Windows: TForm1_Windows
     inherited ListViewCards: TListView
       Size.Width = 393.000000000000000000
       Size.Height = 576.000000000000000000
-      SearchVisible = False
     end
     inherited WebBrowser1: TWebBrowser
       Size.Width = 479.000000000000000000
