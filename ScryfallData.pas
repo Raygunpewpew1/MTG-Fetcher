@@ -10,6 +10,9 @@ uses
 
 type
   EScryfallAPIError = class(Exception);
+  EScryfallRateLimitError = class(EScryfallAPIError);
+  EScryfallServerError = class(EScryfallAPIError);
+
 
   TOnSearchComplete = reference to procedure(Success: Boolean;
     Cards: TArray<TCardDetails>; HasMore: Boolean; ErrorMsg: string);
@@ -331,15 +334,12 @@ begin
           end;
         429:
           begin
-            // Too Many Requests: Log and retry after delay
-            LogStuff(Format('Rate limited (429). Retrying in %d ms...',
-              [RetryDelayMs]));
+            raise EScryfallRateLimitError.Create('Rate limit exceeded.');
           end;
         500 .. 599:
           begin
-            // Server error: Log and retry
-            LogStuff(Format('Server error (%d). Retrying in %d ms...',
-              [StatusCode, RetryDelayMs]), WARNING);
+
+           raise EScryfallServerError.Create('Server error occurred.');
           end;
       else
         begin

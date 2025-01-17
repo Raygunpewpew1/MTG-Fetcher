@@ -172,13 +172,13 @@ var
 begin
   if not Assigned(FFilters) then
   begin
-    LogStuff('AreFiltersValid: FFilters is nil.',ERROR);
+    //LogStuff('AreFiltersValid: FFilters is nil.',ERROR);
     Exit(False);
   end;
 
   if FFilters.Count = 0 then
   begin
-    LogStuff('AreFiltersValid: FFilters is empty.',ERROR);
+   // LogStuff('AreFiltersValid: FFilters is empty.',ERROR);
     Exit(False);
   end;
 
@@ -186,8 +186,8 @@ begin
   begin
     try
       Filter := FFilters[FilterIndex];
-      LogStuff(Format('AreFiltersValid: Checking filter [%d], Type: [%s]',
-        [FilterIndex, ScryfallFilterPrefix[Filter.FilterType]]),DEBUG);
+//      LogStuff(Format('AreFiltersValid: Checking filter [%d], Type: [%s]',
+//        [FilterIndex, ScryfallFilterPrefix[Filter.FilterType]]),DEBUG);
     except
       on E: Exception do
       begin
@@ -212,9 +212,9 @@ begin
         Result.FFilters.Add(Filter.Clone);
     end;
     Result.FOptions := FOptions;
-    LogStuff('TScryfallQuery cloned. Original Address: ' +
-      IntToStr(NativeInt(Self)) + ', Clone Address: ' +
-      IntToStr(NativeInt(Result)),DEBUG);
+//    LogStuff('TScryfallQuery cloned. Original Address: ' +
+//      IntToStr(NativeInt(Self)) + ', Clone Address: ' +
+//      IntToStr(NativeInt(Result)),DEBUG);
   except
     Result.Free;
     raise;

@@ -9,53 +9,27 @@ uses
   FMX.ListView, JsonDataObjects, Logger;
 
 procedure CopyDatabaseToInternalStorage;
-
-function GetDatabasePathMTJSON: string;
-
+function GetAssetPath(const SubFolder, FileName: string): string;
 function GetTemplatePath: string;
-
-// procedure CopyTemplateToInternalStorage;
-
-
-// function LoadTemplate(const FileName: string; const DefaultTemplate: string = ''): string;
-
 function GetAppDirectory: string;
-
 function ParseTextWithSymbolsManual(const Input: string): TArray<string>;
-
 function GetStatusClass(const LegalityStatus: string): string;
-
 function IsCardValid(const Card: TCardDetails): Boolean;
-
 procedure SaveCatalogsToFile(const FileName: string;
   const Catalogs: TDictionary<string, TScryfallCatalog>);
-
 procedure LoadCatalogsFromFile(const FileName: string;
   var Catalogs: TDictionary<string, TScryfallCatalog>);
-
 function GetLegalStatus(const Legalities: TCardLegalities;
   const FieldName: string): string;
-
 procedure ClearListViewItems(ListView: TListView);
-
 function ConvertColorCodeToName(const Code: string): string;
-
 function MatchesColors(const CardColors: string;
   const SearchColors: string): Boolean;
-
-function GetDatabasePathLocal: string;
-
-function GetJsonPathLocal: string;
-
 function SafeJsonArrayToJSON(const JsonArray: TJsonArray): string;
-
 function SafeJsonValue(JsonObject: TJsonObject; const Key: string): string;
-
 function SafePriceValue(PricesObject: TJsonObject; const Key: string): string;
-
 function GetJSONStringOrDefault(const JsonObject: TJsonObject;
   const Key: string; const DefaultValue: string = ''): string;
-
 function GetCacheFilePath(const FileName: string): string;
 
 var
@@ -66,103 +40,59 @@ implementation
 uses
   System.Types, APIConstants;
 
+const
+  MTGAppRootFolder = 'MTGCardFetch';
+
+function EnsureDirectoryExists(const FolderPath: string): string;
+begin
+  if not TDirectory.Exists(FolderPath) then
+  begin
+    LogStuff('Creating directory: ' + FolderPath, DEBUG);
+    TDirectory.CreateDirectory(FolderPath);
+  end;
+  Result := FolderPath;
+end;
+
 function GetAppDirectory: string;
 begin
-{$IF DEFINED(MSWINDOWS)}
-  Result := TPath.Combine(TPath.GetHomePath, MTGAppFolder);
-{$ELSEIF DEFINED(ANDROID)}
-  Result := TPath.Combine(TPath.GetHomePath, MTGAppFolder);
-{$ELSE}
+  {$IF DEFINED(MSWINDOWS)}
+  Result := TPath.Combine(TPath.GetHomePath, MTGAppRootFolder);
+  {$ELSEIF DEFINED(ANDROID)}
+  Result := TPath.Combine(TPath.GetHomePath, MTGAppRootFolder);
+  {$ELSE}
   raise Exception.Create('Unsupported platform');
-{$ENDIF}
-  if not TDirectory.Exists(Result) then
-    TDirectory.CreateDirectory(Result);
+  {$ENDIF}
+  Result := EnsureDirectoryExists(Result);
 end;
 
-function GetTargetPath(const FileName: string): string;
+function GetAssetPath(const SubFolder, FileName: string): string;
+var
+  AppDataPath: string;
 begin
-  Result := TPath.Combine(GetAppDirectory, FileName);
+  if SubFolder.IsEmpty then
+    AppDataPath := GetAppDirectory
+  else
+    AppDataPath := TPath.Combine(GetAppDirectory, SubFolder);
+
+  EnsureDirectoryExists(AppDataPath);
+  Result := TPath.Combine(AppDataPath, FileName);
 end;
 
-function GetSourcePath(const FileName: string): string;
-begin
-{$IF DEFINED(MSWINDOWS)}
-  // For development on Windows
-  Result := TPath.Combine(TPath.GetDirectoryName(ParamStr(0)), FileName);
-{$ELSEIF DEFINED(ANDROID)}
-  // On Android, files must be included in the app's assets folder
-  Result := TPath.Combine(TPath.GetDocumentsPath, FileName);
-{$ELSE}
-  raise Exception.Create('Unsupported platform');
-{$ENDIF}
-end;
-
-{ Centralized Template Path Logic }
 function GetTemplatePath: string;
-begin
-  Result := TPath.Combine(GetAppDirectory, TemplateFileName);
-end;
-
-function GetDatabasePathMTJSON: string;
 const
-  MTGAppRootFolder = 'MTGCardFetch';
-  MTGAppSubFolder = 'mtgjson';
-  DatabaseFileName = 'AllPrintings.sqlite';
-var
-  AppDataPath: string;
+  TemplateFileName = 'template.html';
 begin
-
-  AppDataPath := TPath.Combine(TPath.GetHomePath,
-    TPath.Combine(MTGAppRootFolder, MTGAppSubFolder));
-
-  if not TDirectory.Exists(AppDataPath) then
-    TDirectory.CreateDirectory(AppDataPath);
-
-  Result := TPath.Combine(AppDataPath, DatabaseFileName);
-end;
-
-function GetDatabasePathLocal: string;
-const
-  MTGAppRootFolder = 'MTGCardFetch';
-  DatabaseFileName = 'Collection.db';
-var
-  AppDataPath: string;
-begin
-
-  AppDataPath := TPath.Combine(TPath.GetHomePath,
-    TPath.Combine(MTGAppRootFolder, DatabaseFileName));
-
-  if not TDirectory.Exists(AppDataPath) then
-    TDirectory.CreateDirectory(AppDataPath);
-
-  Result := AppDataPath;
-  // Result := TPath.Combine(AppDataPath, DatabaseFileName);
-end;
-
-function GetJsonPathLocal: string;
-const
-  MTGAppRootFolder = 'MTGCardFetch';
-  JFileName = 'oracle-cards.json';
-var
-  AppDataPath: string;
-begin
-
-  AppDataPath := TPath.Combine(TPath.GetHomePath,
-    TPath.Combine(MTGAppRootFolder, JFileName));
-
-  if not TDirectory.Exists(AppDataPath) then
-    TDirectory.CreateDirectory(AppDataPath);
-
-  Result := AppDataPath;
+  Result := GetAssetPath('', TemplateFileName);
 end;
 
 procedure CopyDatabaseToInternalStorage;
+const
+  DatabaseFileName = 'Collection.db';
 var
   SourcePath, DestinationPath: string;
 begin
-  DestinationPath := GetTargetPath(DatabaseFileName);
-
-  SourcePath := GetSourcePath(DatabaseFileName);
+  DestinationPath := GetAssetPath('mtgjson', DatabaseFileName);
+  SourcePath := TPath.Combine(TPath.GetDirectoryName(ParamStr(0)), DatabaseFileName);
 
   if not TFile.Exists(DestinationPath) then
   begin
@@ -178,46 +108,6 @@ begin
   end;
 end;
 
-// { Copy Template to Internal Storage }
-// procedure CopyTemplateToInternalStorage;
-// var
-// SourcePath, DestinationPath: string;
-// begin
-// DestinationPath := GetTargetPath(TemplateFileName);
-// SourcePath := GetSourcePath(TemplateFileName);
-//
-// if not TFile.Exists(DestinationPath) then
-// begin
-// try
-// if TFile.Exists(SourcePath) then
-// TFile.Copy(SourcePath, DestinationPath)
-// else
-// raise Exception.CreateFmt('Template file not found: %s', [SourcePath]);
-// except
-// on E: Exception do
-// ShowMessage('Error copying template: ' + E.Message);
-// end;
-// end;
-// end;
-//
-// function LoadTemplate(const FileName: string; const DefaultTemplate: string = ''): string;
-// var
-// FullPath: string;
-// begin
-// // Ensure the template exists in the target directory
-// CopyTemplateToInternalStorage;
-//
-// // Use centralized target path logic
-// FullPath := GetTargetPath(FileName);
-// if TFile.Exists(FullPath) then
-// Result := TFile.ReadAllText(FullPath, TEncoding.UTF8)
-// else if not DefaultTemplate.IsEmpty then
-// Result := DefaultTemplate
-// else
-// raise Exception.CreateFmt('Template file not found: %s', [FullPath]);
-// end;
-
-{ Save Catalogs to File }
 procedure SaveCatalogsToFile(const FileName: string;
   const Catalogs: TDictionary<string, TScryfallCatalog>);
 var
@@ -226,13 +116,12 @@ var
   CatalogData: TJsonArray;
   FullFilePath: string;
 begin
-  FullFilePath := TPath.Combine(GetAppDirectory, FileName);
+  FullFilePath := GetAssetPath('', FileName);
   JsonCatalogs := TJsonObject.Create;
   try
     for CatalogName in Catalogs.Keys do
     begin
-      var
-      Catalog := Catalogs[CatalogName];
+      var Catalog := Catalogs[CatalogName];
       CatalogData := TJsonArray.Create;
       for var Item in Catalog.Data do
         CatalogData.Add(Item);
@@ -249,14 +138,13 @@ begin
   end;
 end;
 
-{ Load Catalogs from File }
 procedure LoadCatalogsFromFile(const FileName: string;
   var Catalogs: TDictionary<string, TScryfallCatalog>);
 var
   JsonCatalogs: TJsonObject;
   FullFilePath: string;
 begin
-  FullFilePath := TPath.Combine(GetAppDirectory, FileName);
+  FullFilePath := GetAssetPath('', FileName);
 
   if not TFile.Exists(FullFilePath) then
   begin
@@ -271,17 +159,13 @@ begin
     Catalogs.Clear;
     for var I := 0 to JsonCatalogs.Count - 1 do
     begin
-      var
-      CatalogName := JsonCatalogs.Names[I];
-      var
-      CatalogObj := JsonCatalogs.O[CatalogName];
-      var
-        Catalog: TScryfallCatalog;
+      var CatalogName := JsonCatalogs.Names[I];
+      var CatalogObj := JsonCatalogs.O[CatalogName];
+      var Catalog: TScryfallCatalog;
       Catalog.Name := CatalogObj.S[FieldName];
       Catalog.TotalItems := CatalogObj.I[FieldCount];
 
-      var
-      CatalogDataArray := CatalogObj.A[FieldData];
+      var CatalogDataArray := CatalogObj.A[FieldData];
       SetLength(Catalog.Data, CatalogDataArray.Count);
       for var J := 0 to CatalogDataArray.Count - 1 do
         Catalog.Data[J] := CatalogDataArray.S[J];
@@ -320,10 +204,7 @@ var
 begin
   PartsList := TList<string>.Create;
   try
-    // Regular expression to match either {symbol} or plain text
-    Regex := TRegEx.Create('\{[^}]+\}|[^{]+');
-
-    // Find all matches in the input string
+    Regex := TRegEx.Create('\{[^}]+\}|[^\{]+');
     Matches := Regex.Matches(Input);
     for Match in Matches do
       PartsList.Add(Match.Value);
@@ -406,7 +287,7 @@ begin
     if SameText(Code, ColorMap[I].Code) then
       Exit(ColorMap[I].Name);
 
-  Result := ''; // Return empty string if no match is found
+  Result := '';
 end;
 
 function MatchesColors(const CardColors: string;
@@ -418,21 +299,17 @@ var
   I: Integer;
   Found: Boolean;
 begin
-  // Split the input strings into arrays
   CardColorArray := CardColors.Split([','], TStringSplitOptions.ExcludeEmpty);
   SearchColorArray := SearchColors.ToLower.Split([',', ' '],
     TStringSplitOptions.ExcludeEmpty);
 
-  // Convert card color codes to full names
   SetLength(ConvertedCardColors, Length(CardColorArray));
   for I := Low(CardColorArray) to High(CardColorArray) do
     ConvertedCardColors[I] := ConvertColorCodeToName(CardColorArray[I]).ToLower;
 
-  // If no search colors are specified, match all
   if Length(SearchColorArray) = 0 then
     Exit(True);
 
-  // Check if all search colors are present in the converted card colors
   for SearchColor in SearchColorArray do
   begin
     Found := False;
@@ -446,10 +323,10 @@ begin
     end;
 
     if not Found then
-      Exit(False); // If any search color is not found, return False
+      Exit(False);
   end;
 
-  Result := True; // All search colors matched
+  Result := True;
 end;
 
 function SafeJsonArrayToJSON(const JsonArray: TJsonArray): string;
@@ -457,7 +334,7 @@ begin
   if Assigned(JsonArray) then
     Result := JsonArray.ToJSON
   else
-    Result := '[]'; // Default to empty JSON array
+    Result := '[]';
 end;
 
 function SafeJsonValue(JsonObject: TJsonObject; const Key: string): string;
@@ -472,23 +349,23 @@ begin
       jdtLong:
         Result := IntToStr(JsonObject.L[Key]);
       jdtULong:
-        Result := UIntToStr(JsonObject.U[Key]); // Unsigned long integer value
+        Result := UIntToStr(JsonObject.U[Key]);
       jdtFloat:
-        Result := FloatToStr(JsonObject.F[Key]); // Float value
+        Result := FloatToStr(JsonObject.F[Key]);
       jdtDateTime, jdtUtcDateTime:
-        Result := DateTimeToStr(JsonObject.D[Key]); // DateTime value
+        Result := DateTimeToStr(JsonObject.D[Key]);
       jdtBool:
-        Result := BoolToStr(JsonObject.B[Key], True); // Boolean value
+        Result := BoolToStr(JsonObject.B[Key], True);
       jdtArray:
-        Result := JsonObject.A[Key].ToJSON; // Array as JSON string
+        Result := JsonObject.A[Key].ToJSON;
       jdtObject:
-        Result := JsonObject.O[Key].ToJSON; // Object as JSON string
+        Result := JsonObject.O[Key].ToJSON;
     else
       Result := '';
     end;
   end
   else
-    Result := ''; // Return empty string if key doesn't exist
+    Result := '';
 end;
 
 function SafePriceValue(PricesObject: TJsonObject; const Key: string): string;
@@ -497,7 +374,7 @@ begin
     not PricesObject.Values[Key].IsNull then
     Result := PricesObject.S[Key]
   else
-    Result := '0.00'; // Default to '0.00' if the price is null or not there
+    Result := '0.00';
 end;
 
 function GetJSONStringOrDefault(const JsonObject: TJsonObject;
@@ -510,22 +387,8 @@ begin
 end;
 
 function GetCacheFilePath(const FileName: string): string;
-var
-  CacheFolder: string;
 begin
-  try
-    CacheFolder := TPath.Combine(TPath.GetHomePath, MTGAppFolder);
-    if not TDirectory.Exists(CacheFolder) then
-      TDirectory.CreateDirectory(CacheFolder);
-
-    Result := TPath.Combine(CacheFolder, FileName);
-  except
-    on E: Exception do
-    begin
-      LogStuff('Error creating cache folder: ' + E.Message, ERROR);
-      Result := '';
-    end;
-  end;
+  Result := GetAssetPath('', FileName);
 end;
 
 initialization
@@ -533,3 +396,4 @@ initialization
 finalization
 
 end.
+

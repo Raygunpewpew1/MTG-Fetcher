@@ -195,10 +195,22 @@ end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
-  ListViewCards.OnItemClick := nil;
-  FreeAndNil(FCardDisplayManager);
-  FreeAndNil(FScryfallAPI);
+  try
+    if Assigned(ListViewCards) then
+      ListViewCards.OnItemClick := nil;
+    if Assigned(FScryfallAPI) then
+    begin
+      FScryfallAPI.Free;
+      FScryfallAPI := nil;
+    end;
+  except
+    on E: Exception do
+    begin
+      LogStuff('Error during FormDestroy: ' + E.Message, ERROR);
+    end;
+  end;
 end;
+
 
 procedure TForm1.FormShow(Sender: TObject);
 begin
@@ -216,6 +228,9 @@ begin
     Exit;
   end;
 
+
+
+
   // LogStuff('TagObject class: ' + AItem.TagObject.ClassName);
   // LogStuff('Is TCardDetailsObject: ' +
   // BoolToStr(AItem.TagObject is TCardDetailsObject, True));
@@ -223,6 +238,7 @@ begin
   if AItem.TagObject is TCardDetailsObject then
   begin
     CardDetailsObj := TCardDetailsObject(AItem.TagObject);
+    //LogStuff('Clicked on card: ' + CardDetailsObj.CardDetails.CardName, DEBUG);
     FCardDisplayManager.ShowCardDetails(CardDetailsObj.CardDetails);
   end
   else

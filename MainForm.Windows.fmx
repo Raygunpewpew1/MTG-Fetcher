@@ -39,7 +39,6 @@ inherited Form1_Windows: TForm1_Windows
       Size.Height = 576.000000000000000000
       inherited ButtonNextPage: TButton
         Position.X = 281.000000000000000000
-        Position.Y = 40.000000000000000000
       end
       inherited ComboBoxSetCode: TComboBox
         Position.X = 8.000000000000000000

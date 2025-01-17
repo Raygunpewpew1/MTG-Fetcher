@@ -49,6 +49,7 @@ HtmlTemplate: string = '''
     box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
   }
 
+
   .flip-indicator {
     color: #E0E6ED;
     background-color: #333;
@@ -99,6 +100,62 @@ HtmlTemplate: string = '''
     border: 2px solid #444;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   }
+
+  .meld-container {
+  border: 2px solid #FFD700;
+  background: #1A1F27;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 15px;
+  }
+
+  .meld-container h2 {
+  color: #FFD700;
+  font-size: 18px;
+  text-align: center;
+  }
+
+  .meld-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  }
+
+  .meld-part {
+  width: 100px;
+  text-align: center;
+  }
+
+  .meld-part img {
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+  }
+
+  .meld-result {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+  color: #FFD700;
+  }
+
+  .meld-result img {
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+  }
+
+  .meld-part img:hover{
+    transform: scale(2.1);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  }
+
+   .meld-result:hover{
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  }
+
 
   .card-name {
     text-align: center;
@@ -327,8 +384,13 @@ HtmlTemplate: string = '''
 
   <div class="card-details">
   <div class="card-container">
+  <h1 div class="card-name">
+  {{CardName}}
+  </div>
     {{FlipIndicator}}
     {{CardImages}}
+
+
    <div class="type-set-row">
       <div class="type-line">{{TypeLine}}</div>
       <div class="set-details">
@@ -341,7 +403,12 @@ HtmlTemplate: string = '''
       <strong>Available in:</strong> {{Games}}
     </div>
     <div class="rarity {{RarityClass}}">{{Rarity}}</div>
-
+         <div class="meld-container {{MeldClass}}">
+    <div class="meldclass">
+    <div class="meld-parts">
+    {{MeldDetails}}
+    </div>
+    </div>
 
     <div class="oracle-text">{{OracleText}}</div>
     <!--
@@ -392,7 +459,7 @@ HtmlTemplate: string = '''
   JScript: string = 'document.addEventListener("contextmenu", function (e) { e.preventDefault(); });'
     + 'function flipCard() {' +
     '  const card = document.querySelector(".flip-card");' + '  if (card) {' +
-    '    card.classList.toggle("show-back");' + '  }' + '}';
+    '    card.classList.toggle("show-back");setTimeout(() => {}, 300);' + '  }' + '}';
 
   SVG_TEMPLATE =
     '<img style="display:inline-block; width:16px; height:16px; vertical-align:text-bottom; margin:0 2px;" ' +

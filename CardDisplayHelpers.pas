@@ -4,7 +4,7 @@ interface
 
 uses
   System.Generics.Collections, System.SysUtils, SGlobalsZ, System.StrUtils,
-  System.Net.HttpClient;
+  System.Net.HttpClient, ScryfallData;
 
 procedure AddCoreReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
@@ -18,7 +18,8 @@ procedure AddBadgesReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
 procedure AddKeywordsReplacement(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
-
+procedure AddMeldDetails(const CardDetails: TCardDetails;
+  Replacements: TDictionary<string, string>);
 function BuildPowerToughnessHtml(const CardDetails: TCardDetails): string;
 function GetRarityClass(Rarity: TRarity): string;
 function GetStatusClass(const LegalityStatus: string): string;
@@ -29,19 +30,18 @@ function IsInArray(const Value: string;
 function GetSetIconAsBase64(const IconURL, SetCode: string): string;
 function LoadSetDetailsFromJson(const FileName: string): TArray<TSetDetails>;
 
-procedure SaveSetDetailsToJson(const FileName: string; const SetDetailsArray: TArray<TSetDetails>);
-
-
-
+procedure SaveSetDetailsToJson(const FileName: string;
+  const SetDetailsArray: TArray<TSetDetails>);
 
 implementation
 
 uses
   System.NetEncoding, MLogic, Mana, System.Classes, JsonDataObjects,
-  System.IOUtils, Logger, APIConstants;
+  System.IOUtils, Logger, APIConstants, WrapperHelper;
 
 var
   SetIconCache: TDictionary<string, string>;
+
 
 function EncodeHTML(const HtmlText: string): string;
 begin
@@ -67,24 +67,54 @@ function ProcessOracleText(const OracleText: string): string;
 var
   Parts: TArray<string>;
   Part: string;
+  EncodedPart: string;
   Builder: TStringBuilder;
 begin
   Builder := TStringBuilder.Create;
+  Builder.Clear;
   try
     Parts := ParseTextWithSymbolsManual(OracleText);
     for Part in Parts do
     begin
       if Part.StartsWith('{') and Part.EndsWith('}') then
-        Builder.Append(ReplaceManaSymbolsWithImages(Part))
+      begin
+        // Replace mana symbols with images
+        Builder.Append(ReplaceManaSymbolsWithImages(Part));
+      end
       else
-        Builder.Append(StringReplace(EncodeHTML(Part), #10, '<br>',
-          [rfReplaceAll]));
+      begin
+        {$IFDEF MSWINDOWS}
+        // Avoid unnecessary encoding conversions
+        try
+          EncodedPart := EncodeHTML(Part);
+        except
+          on E: Exception do
+          begin
+            LogStuff('Error encoding part: ' + Part + '. Error: ' + E.Message, ERROR);
+            EncodedPart := ''; // Fallback to an empty string
+          end;
+        end;
+        {$ELSE}
+        EncodedPart := EncodeHTML(Part);
+        {$ENDIF}
+
+        // Replace newline characters with <br> tags
+        Builder.Append(StringReplace(EncodedPart, #10, '<br>', [rfReplaceAll]));
+      end;
     end;
     Result := Builder.ToString;
-  finally
     Builder.Free;
+  except
+    on E: Exception do
+    begin
+      Builder.Free;
+      LogStuff('Error in ProcessOracleText: ' + E.Message, ERROR);
+      Result := ''; // Return an empty string in case of errors
+    end;
   end;
 end;
+
+
 
 procedure AddReplacement(Replacements: TDictionary<string, string>;
   const Key, Value: string);
@@ -92,23 +122,118 @@ begin
   Replacements.AddOrSetValue(Key, Value);
 end;
 
+function FetchMeldPartImages(const MeldParts: TArray<TCardPart>)
+  : TArray<TImageUris>;
+var
+  ScryfallAPI: TScryfallAPI;
+  i: Integer;
+begin
+  ScryfallAPI := TScryfallAPI.Create;
+  try
+    SetLength(Result, Length(MeldParts));
+    for i := 0 to High(MeldParts) do
+    begin
+      try
+        Result[i] := ScryfallAPI.GetCardImageUris(MeldParts[i].ID);
+      except
+        on E: Exception do
+        begin
+          LogStuff(Format('Error fetching image for meld part %s: %s',
+            [MeldParts[i].Name, E.Message]));
+          Result[i].Clear; // Ensure we don't return invalid data
+        end;
+      end;
+    end;
+  finally
+    ScryfallAPI.Free;
+  end;
+end;
+
+procedure AddMeldDetails(const CardDetails: TCardDetails;
+  Replacements: TDictionary<string, string>);
+var
+  MeldPartsHtml, PartHtml: string;
+  Part: TCardPart;
+  PartImages: TArray<TImageUris>;
+  ImageUri: string;
+  i: Integer;
+begin
+  if not CardDetails.IsMeld then
+  begin
+    // If the card is not a Meld card, hide the Meld section
+    Replacements.AddOrSetValue('{{MeldDetails}}', '');
+    Replacements.AddOrSetValue('{{MeldClass}}', 'hidden');
+    Exit;
+  end;
+
+  // If the card is a Meld card, generate HTML for its details
+  MeldPartsHtml := '<div class="meld-parts">';
+  PartImages := FetchMeldPartImages(CardDetails.MeldDetails.MeldParts);
+
+  for i := 0 to High(CardDetails.MeldDetails.MeldParts) do
+  begin
+    Part := CardDetails.MeldDetails.MeldParts[i];
+    if i < Length(PartImages) then
+      ImageUri := PartImages[i].Small
+    else
+      ImageUri := ''; // Fallback if no image URI is found
+
+    {$IFDEF MSWINDOWS}
+    var EncodedTypeLine := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(Part.TypeLine));
+    {$ELSE}
+    var EncodedTypeLine := EncodeHTML(Part.TypeLine);
+    {$ENDIF}
+
+    PartHtml := Format('<div class="meld-part">' +
+      '<p><strong>%s</strong></p>' +
+      '<p>%s</p>' +
+      '<img src="%s" alt="%s">' +
+      '</div>',
+      [EncodeHTML(Part.Name), EncodedTypeLine, EncodeHTML(ImageUri), EncodeHTML(Part.Name)]);
+    MeldPartsHtml := MeldPartsHtml + PartHtml;
+  end;
+
+  // Add the meld result details
+  if not CardDetails.MeldDetails.MeldResult.Name.IsEmpty then
+  begin
+    var MeldResultImages := FetchMeldPartImages([CardDetails.MeldDetails.MeldResult])[0];
+    ImageUri := MeldResultImages.Small;
+    MeldPartsHtml := MeldPartsHtml + Format('<div class="meld-result">' +
+      '<p><strong>Meld Result:</strong> %s</p>' +
+      '<img src="%s" alt="%s">' +
+      '</div>', [EncodeHTML(CardDetails.MeldDetails.MeldResult.Name),
+      EncodeHTML(ImageUri),
+      EncodeHTML(CardDetails.MeldDetails.MeldResult.Name)]);
+  end;
+
+  MeldPartsHtml := MeldPartsHtml + '</div>';
+  Replacements.AddOrSetValue('{{MeldDetails}}', MeldPartsHtml);
+  Replacements.AddOrSetValue('{{MeldClass}}', ''); // Remove hidden class
+end;
+
+
 procedure AddMultiFaceOracleText(const CardDetails: TCardDetails;
   Replacements: TDictionary<string, string>);
 var
   Face: TCardFace;
   ExtraHtml: string;
   EncodeTypeLine: string;
-  FaceBuilder: TStringBuilder;
+  Builder: TStringBuilder;
 begin
-  FaceBuilder := TStringBuilder.Create;
+   Builder := TStringBuilder.Create;
+   Builder.Clear;
   try
-    FaceBuilder.Append('<div class="card-faces-grid">'); // Start grid container
+
+      Builder.Append('<div class="card-faces-grid">'); // Start grid container
 
     for Face in CardDetails.CardFaces do
     begin
       // Preprocess text, type line, etc.
-      EncodeTypeLine := TEncoding.UTF8.GetString
-        (TEncoding.ANSI.GetBytes(Face.TypeLine));
+      {$IFDEF MSWINDOWS}
+      EncodeTypeLine := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(Face.TypeLine));
+      {$ELSE}
+      EncodeTypeLine := EncodeHTML(Face.TypeLine);
+      {$ENDIF}
 
       // Build up "extra" lines: Power/Toughness, Flavor
       ExtraHtml := '';
@@ -118,32 +243,31 @@ begin
           [EncodeHTML(Face.Power), EncodeHTML(Face.Toughness)]);
 
       if not Face.FlavorText.Trim.IsEmpty then
-        ExtraHtml := ExtraHtml +
-          Format('<p></strong> %s</p>',
+        ExtraHtml := ExtraHtml + Format('<p></strong> %s</p>',
           [EncodeHTML(Face.FlavorText)]);
 
       // Combine all the details into a single face block
-      FaceBuilder.AppendFormat('<div class="card-face-block">' + // Face block
-        '<p><strong></strong> %s</p>' +
-        '<p><strong>Mana Cost:</strong> %s</p>' +
-        '<p><strong></strong> %s</p>' +
-        '<p><strong></strong> %s</p>' + '%s' + // ExtraHtml
+      Builder.AppendFormat('<div class="card-face-block">' + // Face block
+        '<p><strong></strong> %s</p>' + '<p><strong>Mana Cost:</strong> %s</p>'
+        + '<p><strong></strong> %s</p>' + '<p><strong></strong> %s</p>' + '%s' +
+        // ExtraHtml
         '</div>', [EncodeHTML(Face.Name),
         ReplaceManaSymbolsWithImages(Face.ManaCost), EncodeHTML(EncodeTypeLine),
         ProcessOracleText(Face.OracleText), ExtraHtml]);
     end;
 
-    FaceBuilder.Append('</div>'); // End grid container
+    Builder.Append('</div>'); // End grid container
 
     // Add constructed HTML to replacements
-    AddReplacement(Replacements, '{{OracleText}}', FaceBuilder.ToString);
+    AddReplacement(Replacements, '{{OracleText}}', Builder.ToString);
 
     // Clear single {{FlavorText}} for multi-faced cards
     AddReplacement(Replacements, '{{FlavorText}}', '');
   finally
-    FaceBuilder.Free;
+    Builder.Free;
   end;
 end;
+
 
 procedure AddCoreReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
@@ -151,6 +275,12 @@ var
   ProcessedOracleText, GamesList: string;
   RarityStr: string;
 begin
+
+  if CardDetails.IsMeld then
+    AddMeldDetails(CardDetails, Replacements)
+  else
+    AddReplacement(Replacements, '{{MeldDetails}}', '');
+
   // For single-faced cards, add flavor text. Otherwise, let AddMultiFaceOracleText handle it.
   if Length(CardDetails.CardFaces) = 0 then
     AddReplacement(Replacements, '{{FlavorText}}',
@@ -262,17 +392,19 @@ end;
 procedure AddLegalitiesReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
 var
-  I: Integer;
-  LegalitiesHtml: TStringBuilder;
+  i: Integer;
   LegalityName, LegalityStatus, StatusClass: string;
+  Builder: TStringBuilder;
 begin
-  LegalitiesHtml := TStringBuilder.Create;
+   Builder := TStringBuilder.Create;
+   Builder.Clear;
   try
-    LegalitiesHtml.Append('<div class="legalities-grid">');
 
-    for I := Low(LegalitiesArray) to High(LegalitiesArray) do
+    Builder.Append('<div class="legalities-grid">');
+
+    for i := Low(LegalitiesArray) to High(LegalitiesArray) do
     begin
-      LegalityName := LegalitiesArray[I];
+      LegalityName := LegalitiesArray[i];
       LegalityStatus := GetLegalStatus(CardDetails.Legalities, LegalityName);
 
       if not LegalityStatus.IsEmpty then
@@ -280,17 +412,17 @@ begin
         StatusClass := GetStatusClass(LegalityStatus);
         LegalityStatus := FormatLegalityStatus(LegalityStatus);
 
-        LegalitiesHtml.AppendFormat('<div class="format-name">%s</div>' +
+        Builder.AppendFormat('<div class="format-name">%s</div>' +
           '<div class="status"><span class="%s">%s</span></div>',
           [EncodeHTML(CapitalizeFirstLetter(LegalityName)), StatusClass,
           EncodeHTML(LegalityStatus)]);
       end;
     end;
 
-    LegalitiesHtml.Append('</div>');
-    AddReplacement(Replacements, '{{Legalities}}', LegalitiesHtml.ToString);
+    Builder.Append('</div>');
+    AddReplacement(Replacements, '{{Legalities}}', Builder.ToString);
   finally
-    LegalitiesHtml.Free;
+    Builder.Free;
   end;
 end;
 
@@ -433,13 +565,11 @@ end;
 
 function GetRarityClass(Rarity: TRarity): string;
 begin
-  if Rarity in [Low(TRarity)..High(TRarity)] then
+  if Rarity in [Low(TRarity) .. High(TRarity)] then
     Result := RarityToString[Rarity]
   else
     Result := 'unknown';
 end;
-
-
 
 procedure SaveSetIconCacheToFile;
 var
@@ -467,7 +597,7 @@ procedure LoadSetIconCacheFromFile;
 var
   CacheJson: TJsonObject;
   CachePath: string;
-  I: Integer;
+  i: Integer;
   Key: string;
 begin
   CachePath := GetCacheFilePath(SetIconCacheFile);
@@ -478,9 +608,9 @@ begin
   try
     try
       CacheJson.LoadFromFile(CachePath);
-      for I := 0 to CacheJson.Count - 1 do
+      for i := 0 to CacheJson.Count - 1 do
       begin
-        Key := CacheJson.Names[I];
+        Key := CacheJson.Names[i];
         SetIconCache.AddOrSetValue(Key, CacheJson.S[Key]);
       end;
       LogStuff('Set icon cache loaded from disk: ' + CachePath);
@@ -546,7 +676,7 @@ begin
   if SetIconCache.ContainsKey(SetCode) then
   begin
     Result := SetIconCache[SetCode];
-   // LogStuff('Set icon loaded from memory cache for set code: ' + SetCode);
+    // LogStuff('Set icon loaded from memory cache for set code: ' + SetCode);
     Exit;
   end;
 
@@ -564,7 +694,7 @@ var
   JsonObject: TJsonObject;
   JsonArray: TJsonArray;
   SetDetails: TSetDetails;
-  I: Integer;
+  i: Integer;
 begin
   // Check if the file exists, return an empty array if it doesn't
   if not TFile.Exists(FileName) then
@@ -582,20 +712,21 @@ begin
     SetLength(Result, JsonArray.Count);
 
     // Iterate through JSON array and populate Result array
-    for I := 0 to JsonArray.Count - 1 do
+    for i := 0 to JsonArray.Count - 1 do
     begin
-      SetDetails.Code := JsonArray.O[I].S[FieldCode];
-      SetDetails.Name := JsonArray.O[I].S[FieldName];
-      SetDetails.IconSVGURI := JsonArray.O[I].S[FieldIconSvgUri]; // Adjust fields as needed
-      Result[I] := SetDetails;
+      SetDetails.Code := JsonArray.O[i].S[FieldCode];
+      SetDetails.Name := JsonArray.O[i].S[FieldName];
+      SetDetails.IconSVGURI := JsonArray.O[i].S[FieldIconSvgUri];
+      // Adjust fields as needed
+      Result[i] := SetDetails;
     end;
   finally
     JsonObject.Free;
   end;
 end;
 
-
-procedure SaveSetDetailsToJson(const FileName: string; const SetDetailsArray: TArray<TSetDetails>);
+procedure SaveSetDetailsToJson(const FileName: string;
+  const SetDetailsArray: TArray<TSetDetails>);
 var
   JsonObject: TJsonObject;
   JsonArray: TJsonArray;
@@ -604,7 +735,8 @@ var
 begin
   JsonObject := TJsonObject.Create;
   try
-    JsonArray := JsonObject.A[FieldSets]; // Create a JSON array inside the JSON object
+    JsonArray := JsonObject.A[FieldSets];
+    // Create a JSON array inside the JSON object
 
     // Add each set to the JSON array
     for SetDetails in SetDetailsArray do
@@ -617,15 +749,14 @@ begin
     end;
 
     // Save the JSON object to a file
-    JsonObject.SaveToFile(FileName,False, TEncoding.UTF8,False);
+    JsonObject.SaveToFile(FileName, False, TEncoding.UTF8, False);
   finally
     JsonObject.Free;
   end;
 end;
 
-
-
 initialization
+
 
 SetIconCache := TDictionary<string, string>.Create;
 LoadSetIconCacheFromFile;

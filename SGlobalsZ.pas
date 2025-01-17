@@ -72,6 +72,23 @@ type
     procedure Clear;
   end;
 
+
+  TCardPart = record
+    ObjectType: string;
+    ID: string;
+    Component: string;
+    Name: string;
+    TypeLine: string;
+    URI: string;
+  end;
+
+
+  TMeldDetails = record
+    MeldParts: TArray<TCardPart>;
+    MeldResult: TCardPart;
+  end;
+
+
   // Main Card Details structure
   TCardDetails = record
     // Core Identifiers
@@ -100,6 +117,10 @@ type
     Frame: string;
     SecurityStamp: string;
     Keywords: TArray<string>;
+    AllParts: TArray<TCardPart>;
+    IsMeld: Boolean;
+    MeldDetails: TMeldDetails;
+
 
     // Legalities and Rules
     Legalities: TCardLegalities;

@@ -8,6 +8,8 @@ uses
 
 function ConstructSearchUrl(const Query, SetCode, Rarity, Colors: string;
   Fuzzy, Unique: Boolean; Page: Integer): string;
+procedure ParseAllParts(const JsonObj: TJsonObject;
+  out AllParts: TArray<TCardPart>);
 
 procedure ParseImageUris(const JsonObj: TJsonObject; out ImageUris: TImageUris);
 procedure ParseLegalities(const JsonObj: TJsonObject;
@@ -19,6 +21,7 @@ procedure FillSetDetailsFromJson(const JsonObj: TJsonObject;
   out SetDetails: TSetDetails);
 procedure FillCardDetailsFromJson(const JsonObj: TJsonObject;
   out CardDetails: TCardDetails);
+  function GetUtf8String(const S: string): string;
 
 implementation
 
@@ -72,6 +75,45 @@ begin
   Result := '';
 end;
 
+procedure ParseAllParts(const JsonObj: TJsonObject;
+  out AllParts: TArray<TCardPart>);
+var
+  PartsArray: TJsonArray;
+  I: Integer;
+  PartObj: TJsonObject;
+begin
+  if JsonObj.Contains('all_parts') and (JsonObj.Types['all_parts'] = jdtArray)
+  then
+  begin
+    PartsArray := JsonObj.A['all_parts'];
+//    LogStuff('all_parts found. Count: ' + IntToStr(PartsArray.Count));
+    SetLength(AllParts, PartsArray.Count);
+
+    for I := 0 to PartsArray.Count - 1 do
+    begin
+      if PartsArray.Types[I] = jdtObject then
+      begin
+        PartObj := PartsArray.O[I];
+        AllParts[I].ObjectType := GetSafeStringField(PartObj, 'object');
+        AllParts[I].ID := GetSafeStringField(PartObj, 'id');
+        AllParts[I].Component := GetSafeStringField(PartObj, 'component');
+        AllParts[I].Name := GetSafeStringField(PartObj, 'name');
+        AllParts[I].TypeLine := GetSafeStringField(PartObj, 'type_line');
+        AllParts[I].URI := GetSafeStringField(PartObj, 'uri');
+
+        // Add debug logging
+//        LogStuff(Format('Part %d: Name=%s, Component=%s, URI=%s',
+//          [I, AllParts[I].Name, AllParts[I].Component, AllParts[I].URI]));
+      end;
+    end;
+  end
+  else
+  begin
+    SetLength(AllParts, 0);
+  //  LogStuff('all_parts not found or is not an array.');
+  end;
+end;
+
 {$IF DEFINED(MSWINDOWS)}
 
 function GetUtf8String(const S: string): string;
@@ -84,7 +126,6 @@ end;
 
 function GetUtf8String(const S: string): string;
 begin
-  // On non-Windows platforms, no conversion needed.
   Result := S;
 end;
 
@@ -252,6 +293,9 @@ end;
 
 procedure FillCardDetailsFromJson(const JsonObj: TJsonObject;
   out CardDetails: TCardDetails);
+var
+  AllParts: TArray<TCardPart>;
+  Part: TCardPart;
 begin
   // If we already have IDs, clear them out before refilling
   if (not CardDetails.SFID.IsEmpty) or (not CardDetails.OracleID.IsEmpty) then
@@ -326,6 +370,45 @@ begin
     ParseLegalities(JsonObj, CardDetails.Legalities);
     ParsePrices(JsonObj, CardDetails.Prices);
     ParseCardFaces(JsonObj, CardDetails.CardFaces);
+ //   ParseAllParts(JsonObj, CardDetails.AllParts);
+
+
+    // Parse "all_parts" field
+    ParseAllParts(JsonObj, AllParts);
+
+    if Length(AllParts) > 0 then
+    begin
+    //  LogStuff('Processing all_parts for meld detection...');
+      for Part in AllParts do
+      begin
+//        LogStuff(Format('Part: Name=%s, Component=%s, URI=%s',
+//          [Part.Name, Part.Component, Part.URI]));
+
+        if Part.Component = 'meld_part' then
+        begin
+          CardDetails.IsMeld := True;  // Set IsMeld to True
+          CardDetails.MeldDetails.MeldParts := CardDetails.MeldDetails.MeldParts + [Part];
+       //   LogStuff('Detected meld_part. Setting IsMeld to True.');
+        end
+        else if Part.Component = 'meld_result' then
+        begin
+          CardDetails.MeldDetails.MeldResult := Part;
+      //    LogStuff('Detected meld_result. Setting MeldResult.');
+        end;
+      end;
+    end
+    else
+    begin
+     // LogStuff('No all_parts found. Setting IsMeld to False.');
+      CardDetails.IsMeld := False;
+    end;
+
+    // Log final state
+//    if CardDetails.IsMeld then
+//      LogStuff('Final IsMeld=True with MeldParts count: ' + IntToStr(Length(CardDetails.MeldDetails.MeldParts)))
+//    else
+//      LogStuff('Final IsMeld=False.');
+
   except
     on E: Exception do
     begin

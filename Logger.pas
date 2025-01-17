@@ -2,9 +2,19 @@
 
 interface
 
+
+{$IFDEF ANDROID}
+uses
+  APIConstants, System.Classes, System.IOUtils, System.SyncObjs,
+  System.SysUtils, System.Generics.Collections, Androidapi.Log;
+{$ENDIF}
+{$IFDEF MSWINDOWS}
 uses
   APIConstants, System.Classes, System.IOUtils, System.SyncObjs,
   System.SysUtils, System.Generics.Collections;
+{$ENDIF}
+
+
 
 type
   TLogLevel = (DEBUG, INFO, WARNING, ERROR);
@@ -108,12 +118,18 @@ procedure LogStuff(const Msg: string; Level: TLogLevel);
 var
   LogEntry: string;
 begin
+
+
+
   if not Assigned(LogCriticalSection) then
     Exit;
 
   LogEntry := Format('[%s] [%s] [Thread %d] %s',
     [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), LogLevelToString(Level),
     TThread.CurrentThread.ThreadID, Msg]);
+  {$IFDEF ANDROID}
+  __android_log_write(ANDROID_LOG_DEBUG, 'MTG-Fetcher', PAnsiChar(AnsiString(LogEntry)));
+  {$ENDIF}
 
   LogCriticalSection.Enter;
   try
