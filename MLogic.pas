@@ -19,8 +19,7 @@ procedure SaveCatalogsToFile(const FileName: string;
   const Catalogs: TDictionary<string, TScryfallCatalog>);
 procedure LoadCatalogsFromFile(const FileName: string;
   var Catalogs: TDictionary<string, TScryfallCatalog>);
-function GetLegalStatus(const Legalities: TCardLegalities;
-  const FieldName: string): string;
+function GetLegalStatus(const Legalities: TCardLegalities; Format: TLegalityFormat): string;
 procedure ClearListViewItems(ListView: TListView);
 function ConvertColorCodeToName(const Code: string): string;
 function MatchesColors(const CardColors: string;
@@ -234,50 +233,12 @@ begin
   Result := not Card.CardName.IsEmpty and not Card.SFID.IsEmpty;
 end;
 
-function GetLegalStatus(const Legalities: TCardLegalities;
-  const FieldName: string): string;
+function GetLegalStatus(const Legalities: TCardLegalities; Format: TLegalityFormat): string;
 begin
-  if FieldName = FieldStandard then
-    Result := Legalities.Standard
-  else if FieldName = FieldFuture then
-    Result := Legalities.Future
-  else if FieldName = FieldHistoric then
-    Result := Legalities.Historic
-  else if FieldName = FieldGladiator then
-    Result := Legalities.Gladiator
-  else if FieldName = FieldPioneer then
-    Result := Legalities.Pioneer
-  else if FieldName = FieldExplorer then
-    Result := Legalities.Explorer
-  else if FieldName = FieldModern then
-    Result := Legalities.Modern
-  else if FieldName = FieldLegacy then
-    Result := Legalities.Legacy
-  else if FieldName = FieldPauper then
-    Result := Legalities.Pauper
-  else if FieldName = FieldVintage then
-    Result := Legalities.Vintage
-  else if FieldName = FieldPenny then
-    Result := Legalities.Penny
-  else if FieldName = FieldCommander then
-    Result := Legalities.Commander
-  else if FieldName = FieldOathbreaker then
-    Result := Legalities.Oathbreaker
-  else if FieldName = FieldAlchemy then
-    Result := Legalities.Alchemy
-  else if FieldName = FieldBrawl then
-    Result := Legalities.Brawl
-  else if FieldName = FieldPauperCommander then
-    Result := Legalities.PauperCommander
-  else if FieldName = FieldDuel then
-    Result := Legalities.Duel
-  else if FieldName = FieldOldschool then
-    Result := Legalities.Oldschool
-  else if FieldName = FieldPremodern then
-    Result := Legalities.Premodern
-  else
-    Result := '';
+  Result := Legalities.GetStatus(Format);
 end;
+
+
 
 function ConvertColorCodeToName(const Code: string): string;
 var

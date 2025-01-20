@@ -37,7 +37,7 @@ implementation
 
 uses
   System.NetEncoding, MLogic, Mana, System.Classes, JsonDataObjects,
-  System.IOUtils, Logger, APIConstants, WrapperHelper;
+  System.IOUtils, Logger, APIConstants;
 
 var
   SetIconCache: TDictionary<string, string>;
@@ -392,26 +392,26 @@ end;
 procedure AddLegalitiesReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
 var
-  i: Integer;
+  Format: TLegalityFormat;
   LegalityName, LegalityStatus, StatusClass: string;
   Builder: TStringBuilder;
 begin
-   Builder := TStringBuilder.Create;
-   Builder.Clear;
+  Builder := TStringBuilder.Create;
   try
-
     Builder.Append('<div class="legalities-grid">');
 
-    for i := Low(LegalitiesArray) to High(LegalitiesArray) do
+
+    for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
     begin
-      LegalityName := LegalitiesArray[i];
-      LegalityStatus := GetLegalStatus(CardDetails.Legalities, LegalityName);
+      LegalityName := LegalityToString[Format]; // Map format to string
+      LegalityStatus := CardDetails.Legalities.GetStatus(Format); // Get legality status
 
       if not LegalityStatus.IsEmpty then
       begin
-        StatusClass := GetStatusClass(LegalityStatus);
-        LegalityStatus := FormatLegalityStatus(LegalityStatus);
+        StatusClass := GetStatusClass(LegalityStatus); // Get CSS class for status
+        LegalityStatus := FormatLegalityStatus(LegalityStatus); // Format status string
 
+        // Append legality information to the builder
         Builder.AppendFormat('<div class="format-name">%s</div>' +
           '<div class="status"><span class="%s">%s</span></div>',
           [EncodeHTML(CapitalizeFirstLetter(LegalityName)), StatusClass,
@@ -425,6 +425,7 @@ begin
     Builder.Free;
   end;
 end;
+
 
 function StringToRarity(const RarityStr: string): TRarity;
 begin

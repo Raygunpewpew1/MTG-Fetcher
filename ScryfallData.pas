@@ -13,7 +13,6 @@ type
   EScryfallRateLimitError = class(EScryfallAPIError);
   EScryfallServerError = class(EScryfallAPIError);
 
-
   TOnSearchComplete = reference to procedure(Success: Boolean;
     Cards: TArray<TCardDetails>; HasMore: Boolean; ErrorMsg: string);
 
@@ -50,6 +49,7 @@ type
     procedure CacheResult(const CacheKey: string;
       const JsonResponse: TJsonObject);
 
+
   public
     constructor Create;
     destructor Destroy; override;
@@ -81,6 +81,7 @@ type
     function CreateQuery: TScryfallQuery;
     function FetchCardsCollection(const Identifiers: TJSONArray)
       : TArray<TCardDetails>;
+    function IsInternetAvailable: Boolean;
 
     /// <summary>
     /// Returns the autocomplete suggestions for a partial query, using
@@ -110,6 +111,8 @@ begin
   FHttpClient := THTTPClient.Create;
   FHttpClient.CustomHeaders['User-Agent'] := UserAgent;
   FHttpClient.CustomHeaders['Accept'] := AcceptHeader;
+  FHttpClient.ConnectionTimeout := 3000;
+  FHttpClient.ResponseTimeout := 3000;
 
   // Initialize optional autocomplete cache
   FAutocompleteCache := TDictionary < string, TArray < string >>.Create;
@@ -138,6 +141,16 @@ end;
 function TScryfallAPI.CreateQuery: TScryfallQuery;
 begin
   Result := TScryfallQuery.Create;
+end;
+
+function TScryfallAPI.IsInternetAvailable: Boolean;
+begin
+  try
+    FHttpClient.Head('https://www.google.com');
+    Result := True;
+  except
+    Result := False;
+  end;
 end;
 
 function TScryfallAPI.ExecuteQuery(const Query: TScryfallQuery): TSearchResult;
@@ -260,6 +273,10 @@ end;
 procedure TScryfallAPI.SearchAllCardsAsync(const Query: TScryfallQuery;
 const OnComplete: TOnSearchComplete);
 begin
+  LogStuff(Format('SearchAllCardsAsync - Query Address: %p, IncludeExtras: %s',
+    [Pointer(Query), BoolToStr(Query.Options.IncludeExtras, True)]), DEBUG);
+
+  // Use the passed Query directly
   SearchWithQueryAsync(Query, OnComplete);
 end;
 
@@ -274,13 +291,26 @@ var
   StatusCode, RetryCount: Integer;
   URL: string;
 begin
+
+  if not IsInternetAvailable then
+  begin
+    raise EScryfallAPIError.Create('No internet connection available.');
+    Exit;
+
+  end;
+
   // Ensure Endpoint is not a full URL
   if Endpoint.StartsWith('http') then
     URL := Endpoint
-  else if BaseUrl.EndsWith('/') then
-    URL := BaseUrl + Endpoint
   else
-    URL := BaseUrl + '/' + Endpoint;
+  begin
+    if not BaseUrl.EndsWith('/') then
+      URL := BaseUrl + '/'
+    else
+      URL := BaseUrl;
+
+    URL := URL + Endpoint.TrimLeft(['/']);
+  end;
 
   ResponseStream := TStringStream.Create;
   RequestStream := nil;
@@ -339,7 +369,7 @@ begin
         500 .. 599:
           begin
 
-           raise EScryfallServerError.Create('Server error occurred.');
+            raise EScryfallServerError.Create('Server error occurred.');
           end;
       else
         begin
@@ -590,15 +620,12 @@ begin
   QueryBuilder := CreateQuery;
   try
     QueryBuilder.WithName(Query, Fuzzy).WithSet(SetCode)
-      .WithRarity(StringToRarity(Rarity)).WithColors(Colors).SetPage(Page);
-
-    if Unique then
-      QueryBuilder.Unique('prints');
+      .WithRarity(StringToRarity(Rarity)).WithColors(Colors).SetPage(Page)
+      .IncludeExtras(False);
 
     SearchWithQueryAsync(QueryBuilder, Callback);
-  except
+  finally
     QueryBuilder.Free;
-    raise;
   end;
 end;
 

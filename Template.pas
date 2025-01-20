@@ -20,7 +20,7 @@ HtmlTemplate: string = '''
     padding: 0;
   }
 
-  h1 { color: #FFD700; font-size: 28px; text-align: center; margin: 20px 0; }
+  h1 { color: #FFD700; font-size: 20px; text-align: center; margin: 5px 0; }
   h2 { margin: 0; padding: 5px 0; }
 
   .card-container {
@@ -384,7 +384,7 @@ HtmlTemplate: string = '''
 
   <div class="card-details">
   <div class="card-container">
-  <h1 div class="card-name">
+  <div class="card-name">
   {{CardName}}
   </div>
     {{FlipIndicator}}
@@ -456,10 +456,20 @@ HtmlTemplate: string = '''
 
 
   const
-  JScript: string = 'document.addEventListener("contextmenu", function (e) { e.preventDefault(); });'
-    + 'function flipCard() {' +
-    '  const card = document.querySelector(".flip-card");' + '  if (card) {' +
-    '    card.classList.toggle("show-back");setTimeout(() => {}, 300);' + '  }' + '}';
+  JScript: string = '''
+
+    document.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+    });
+
+
+    document.querySelectorAll(".flip-card").forEach(card => {
+    card.addEventListener("click", function () {
+        this.classList.toggle("show-back");
+    });
+    });
+
+    ''';
 
   SVG_TEMPLATE =
     '<img style="display:inline-block; width:16px; height:16px; vertical-align:text-bottom; margin:0 2px;" ' +

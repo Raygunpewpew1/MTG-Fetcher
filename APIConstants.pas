@@ -54,6 +54,7 @@ const
   LogSetCodeAddedToCache = 'SetCode added to cache: %s';
 
   // JSON Field Names
+  FieldAllParts = 'all_parts';
   FieldEDHRank = 'edhrec_rank';
   FieldArena = 'arena_id';
   FieldData = 'data';
@@ -66,6 +67,7 @@ const
   FieldSVGUri = 'svg_uri';
   FieldColorIdentity = 'color_identity';
   FieldID = 'id';
+  FieldComponent = 'component';
   FieldName = 'name';
   FieldCount = 'total_items';
   FieldManaCost = 'mana_cost';
@@ -136,6 +138,19 @@ const
   FieldOathbreaker = 'oathbreaker';
   FieldPauperCommander = 'paupercommander';
   FieldPredh = 'predh';
+  FieldRelatedUris = 'related_uris';
+  FieldPurchaseUris = 'purchase_uris';
+
+  // PurchaseURIs
+  FieldTcgplayer = 'tcgplayer';
+  FieldCardmarket = 'cardmarket';
+  FieldCardhoarder = 'cardhoarder';
+
+  // Related URIs
+  FieldGatherer = 'gatherer';
+  FieldTcgplayerInfiniteArticles = 'tcgplayer_infinite_articles';
+  FieldTcgplayerInfiniteDecks = 'tcgplayer_infinite_decks';
+  FieldEdhrec = 'edhrec';
 
   // Additional fields
   FieldCardFaces = 'card_faces';
@@ -170,6 +185,7 @@ const
   CatalogAbilityWords = 'ability-words';
   CatalogWordBank = 'word-bank';
   CatalogCardNames = 'card-names';
+
 ColorMap:
 array [0 .. 4] of record Code: string;
 Name:
@@ -177,6 +193,8 @@ string;
 end
 = ((Code: 'W'; Name: 'White'), (Code: 'U'; Name: 'Blue'), (Code: 'B';
   Name: 'Black'), (Code: 'R'; Name: 'Red'), (Code: 'G'; Name: 'Green'));
+
+
 SAboutBlank = 'about:blank';
 SCatalogsJson = 'catalogs.json';
 TemplateFileName = 'card_template.html';
@@ -199,7 +217,7 @@ var
     : string = 'Download complete! File saved to: ';
   S_ERROR_DOWNLOADING_BULK_DATA: string = 'Error downloading bulk data.';
   S_ALL_SETS: string = 'All Sets';
-  S_ABOUT_BLANK: string = 'about:blank';
+  S_ABOUT_BLANK: string = '<html><body>Loading...</body></html>';
   S_NO_CARD_DETAILS_ARE_AVAILABLE_FOR_THIS
     : string = 'No card details are available for this item.';
   S_ERROR_FETCHING_RANDOM_CARD: string = 'Error fetching random card: ';

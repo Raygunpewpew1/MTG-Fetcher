@@ -5,17 +5,12 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   FMX.ListView.Types, FMX.ListView.Appearances,
-  FMX.ListView.Adapters.Base, FMX.ListView, FMX.WebBrowser,
+  FMX.ListView, FMX.WebBrowser,
   ScryfallData, System.Threading, FMX.Dialogs, FMX.ListBox,
   CardDisplayHelpers, Template, Logger, SGlobalsZ, MLogic, APIConstants,
-  ScryfallTypes, ScryfallQueryBuilder, System.StrUtils;
+  ScryfallTypes, ScryfallQueryBuilder, System.SyncObjs;
 
 type
-  TCardDetailsObject = class
-  public
-    CardDetails: TCardDetails;
-    constructor Create(const ACardDetails: TCardDetails);
-  end;
 
   TCardDisplayManager = class
   private
@@ -27,30 +22,38 @@ type
     FCurrentPage: Integer;
     FHasMorePages: Boolean;
     FCurrentQuery: TScryfallQuery;
+    FCriticalSection: TCriticalSection;
 
     procedure ClearListViewItems;
     procedure InitializeWebBrowser;
-    procedure DisplayCardArtworks(const Query: TScryfallQuery; const OnComplete: TProc<Boolean>);
-    procedure HandleSetDetails(const CardDetails: TCardDetails; const SetDetails: TSetDetails);
-    function ApplyLocalFilters(const Cards: TArray<TCardDetails>): TArray<TCardDetails>;
+    procedure DisplayCardArtworks(const Query: TScryfallQuery;
+      const OnComplete: TProc<Boolean>);
+    procedure HandleSetDetails(const CardDetails: TCardDetails;
+      const SetDetails: TSetDetails);
+//    function ApplyLocalFilters(const Cards: TArray<TCardDetails>)
+//      : TArray<TCardDetails>;
     procedure SafeFreeAndNil<T: class>(var Obj: T);
 
   public
-    constructor Create(AListView: TListView; AWebBrowser: TWebBrowser; AScryfallAPI: TScryfallAPI);
+    constructor Create(AListView: TListView; AWebBrowser: TWebBrowser;
+      AScryfallAPI: TScryfallAPI);
     destructor Destroy; override;
 
-    procedure ExecuteQuery(const Query: TScryfallQuery; const OnComplete: TProc<Boolean>);
+    procedure ExecuteQuery(const Query: TScryfallQuery;
+      const OnComplete: TProc<Boolean>);
     function GetCurrentQuery: TScryfallQuery;
     procedure LoadNextPage(const OnComplete: TProc<Boolean>);
     procedure ShowCardDetails(const CardDetails: TCardDetails);
-    procedure DisplayCardInBrowser(const CardDetails: TCardDetails; const Rulings: TArray<TRuling>);
+    procedure DisplayCardInBrowser(const CardDetails: TCardDetails;
+      const Rulings: TArray<TRuling>);
     procedure AddCardToListView(const Card: TCardDetails);
     procedure LoadAllCatalogs(const ComboBoxes: TDictionary<string, TComboBox>);
     procedure LoadRandomCard(const OnComplete: TProc<Boolean>);
     procedure SetupDefaultFilters(Query: TScryfallQuery);
     procedure UpdateProgress(Current, Total: Integer);
 
-    property OnProgressUpdate: TProc<Integer> read FOnProgressUpdate write FOnProgressUpdate;
+    property OnProgressUpdate: TProc<Integer> read FOnProgressUpdate
+      write FOnProgressUpdate;
     property CurrentPage: Integer read FCurrentPage;
     property HasMorePages: Boolean read FHasMorePages;
     property CardDataList: TList<TCardDetails> read FCardDataList;
@@ -58,18 +61,10 @@ type
 
 implementation
 
-{ TCardDetailsObject }
-
-constructor TCardDetailsObject.Create(const ACardDetails: TCardDetails);
-begin
-  inherited Create;
-  CardDetails := ACardDetails;
-end;
-
 { TCardDisplayManager }
 
-constructor TCardDisplayManager.Create(AListView: TListView; AWebBrowser: TWebBrowser;
-  AScryfallAPI: TScryfallAPI);
+constructor TCardDisplayManager.Create(AListView: TListView;
+  AWebBrowser: TWebBrowser; AScryfallAPI: TScryfallAPI);
 begin
   inherited Create;
   FListView := AListView;
@@ -79,14 +74,30 @@ begin
   FCurrentPage := 1;
   FHasMorePages := False;
   FCurrentQuery := TScryfallQuery.Create;
+  FCriticalSection := TCriticalSection.Create;
   InitializeWebBrowser;
 end;
 
 destructor TCardDisplayManager.Destroy;
 begin
-  SafeFreeAndNil<TList<TCardDetails>>(FCardDataList);
+  SafeFreeAndNil < TList < TCardDetails >> (FCardDataList);
   SafeFreeAndNil<TScryfallQuery>(FCurrentQuery);
+  FCriticalSection.Free;
   inherited;
+end;
+
+procedure LogQueryState(Query: TScryfallQuery; const Context: string);
+begin
+  if Assigned(Query) then
+    LogStuff(Format('%s - Query State: Options: IncludeExtras: %s, UniqueMode: %s, Sort: %s, Direction: %s, Page: %d',
+      [Context,
+       BoolToStr(Query.Options.IncludeExtras, True),
+       Query.Options.UniqueMode,
+       Query.Options.Sort,
+       Query.Options.Direction,
+       Query.Options.Page]), DEBUG)
+  else
+    LogStuff(Format('%s - Query is nil.', [Context]), ERROR);
 end;
 
 procedure TCardDisplayManager.SafeFreeAndNil<T>(var Obj: T);
@@ -109,12 +120,21 @@ end;
 
 procedure TCardDisplayManager.ExecuteQuery(const Query: TScryfallQuery; const OnComplete: TProc<Boolean>);
 begin
-  SafeFreeAndNil<TScryfallQuery>(FCurrentQuery);
-  FCurrentQuery := Query.Clone;
-  FCurrentPage := 1;
+  FCriticalSection.Enter;
+  try
+    // Clone and store the query
+    SafeFreeAndNil<TScryfallQuery>(FCurrentQuery);
+    FCurrentQuery := Query.Clone;
+    FCurrentPage := 1; // Reset pagination
+    LogStuff(Format('ExecuteQuery - After Cloning - Query State: %s', [FCurrentQuery.Options.ToString]), DEBUG);
+  finally
+    FCriticalSection.Leave;
+  end;
   ClearListViewItems;
+  // Display card artworks
   DisplayCardArtworks(FCurrentQuery, OnComplete);
 end;
+
 
 function TCardDisplayManager.GetCurrentQuery: TScryfallQuery;
 begin
@@ -123,10 +143,19 @@ end;
 
 procedure TCardDisplayManager.SetupDefaultFilters(Query: TScryfallQuery);
 begin
-  Query.IncludeExtras(False)
-       .OrderBy('name')
-       .Page(FCurrentPage);
+//  LogQueryState(Query, 'SetupDefaultFilters - Before');
+
+  // Set default sort order if not already specified
+  if Query.Options.Sort.IsEmpty then
+    Query.OrderBy('name', 'asc');
+
+  // Ensure the page number is set
+  if Query.Options.Page < 1 then
+    Query.SetPage(1);
+
+//  LogQueryState(Query, 'SetupDefaultFilters - After');
 end;
+
 
 procedure TCardDisplayManager.LoadNextPage(const OnComplete: TProc<Boolean>);
 var
@@ -141,30 +170,34 @@ begin
 
   ClonedQuery := FCurrentQuery.Clone;
   try
-    Inc(FCurrentPage);
-    ClonedQuery.SetPage(FCurrentPage);
-    DisplayCardArtworks(ClonedQuery, OnComplete);
+    ClonedQuery.SetPage(FCurrentPage + 1);
+    LogQueryState(ClonedQuery, 'LoadNextPage - Before DisplayCardArtworks');
+    DisplayCardArtworks(ClonedQuery,
+      procedure(Success: Boolean)
+      begin
+        if Success then
+        begin
+          Inc(FCurrentPage); // Increment the page only after successful fetch
+          LogStuff(Format('LoadNextPage: FCurrentPage incremented to %d.', [FCurrentPage]), DEBUG);
+        end
+        else
+          LogStuff('LoadNextPage: Failed to load next page.', ERROR);
+        OnComplete(Success);
+      end);
   finally
-    ClonedQuery.Free;
+    // Do NOT free ClonedQuery here as it is used in DisplayCardArtworks
   end;
 end;
 
-procedure TCardDisplayManager.DisplayCardArtworks(const Query: TScryfallQuery; const OnComplete: TProc<Boolean>);
+
+procedure TCardDisplayManager.DisplayCardArtworks(const Query: TScryfallQuery;
+  const OnComplete: TProc<Boolean>);
 begin
   FCardDataList.Clear;
   SetupDefaultFilters(Query);
 
-  FScryfallAPI.SearchAllCardsAsync(
-    Query.GetSearchTerm,
-    Query.GetSetCode,
-    Query.GetRarityString,
-    Query.GetColorCode,
-    False,
-    Query.GetShowUnique,
-    Query.GetCurrentPage,
+  FScryfallAPI.SearchAllCardsAsync(Query,
     procedure(Success: Boolean; Cards: TArray<TCardDetails>; HasMore: Boolean; ErrorMsg: string)
-    var
-      FilteredCards: TArray<TCardDetails>;
     begin
       TThread.Synchronize(nil,
         procedure
@@ -175,9 +208,7 @@ begin
             Exit;
           end;
 
-          FilteredCards := ApplyLocalFilters(Cards);
-
-          for var Card in FilteredCards do
+          for var Card in Cards do
           begin
             FCardDataList.Add(Card);
             AddCardToListView(Card);
@@ -189,16 +220,19 @@ begin
     end);
 end;
 
+
+
 procedure TCardDisplayManager.UpdateProgress(Current, Total: Integer);
 begin
   if Assigned(FOnProgressUpdate) then
     FOnProgressUpdate(Round((Current / Total) * 100));
 end;
 
-function TCardDisplayManager.ApplyLocalFilters(const Cards: TArray<TCardDetails>): TArray<TCardDetails>;
-begin
-  Result := Cards; // Extend with filtering logic if needed
-end;
+//function TCardDisplayManager.ApplyLocalFilters(const Cards
+//  : TArray<TCardDetails>): TArray<TCardDetails>;
+//begin
+//  Result := Cards;
+//end;
 
 procedure TCardDisplayManager.LoadRandomCard(const OnComplete: TProc<Boolean>);
 begin
@@ -237,27 +271,32 @@ var
 begin
   if not Assigned(FListView) or Card.CardName.IsEmpty or Card.SFID.IsEmpty then
   begin
-    LogStuff('Skipping card - missing name or ID', ERROR);
+    LogStuff(Format('AddCardToListView: Skipping card due to missing data. CardName: %s, SFID: %s',
+      [Card.CardName, Card.SFID]), ERROR);
     Exit;
   end;
-
-  CardDetailsObj := TCardDetailsObject.Create(Card);
+//  FListView.BeginUpdate;
   RareStr := RarityToString[Card.Rarity];
   RareStr := RareStr.Substring(0, 1).ToUpper + RareStr.Substring(1);
+
+  CardDetailsObj := TCardDetailsObject.Create(Card);
 
   ListViewItem := FListView.Items.Add;
   ListViewItem.Text := Card.CardName;
   ListViewItem.Detail := RareStr;
   ListViewItem.TagObject := CardDetailsObj;
+//  FListView.EndUpdate;
 end;
 
-procedure TCardDisplayManager.HandleSetDetails(const CardDetails: TCardDetails; const SetDetails: TSetDetails);
+
+procedure TCardDisplayManager.HandleSetDetails(const CardDetails: TCardDetails;
+const SetDetails: TSetDetails);
 begin
-  var UpdatedCard := CardDetails;
+  var
+  UpdatedCard := CardDetails;
   UpdatedCard.SetName := SetDetails.Name;
-  UpdatedCard.SetIconURI := Format('data:image/svg+xml;base64,%s', [
-    GetSetIconAsBase64(SetDetails.IconSVGURI, SetDetails.Code)
-  ]);
+  UpdatedCard.SetIconURI := Format('data:image/svg+xml;base64,%s',
+    [GetSetIconAsBase64(SetDetails.IconSVGURI, SetDetails.Code)]);
 
   DisplayCardInBrowser(UpdatedCard, []);
 end;
@@ -304,8 +343,8 @@ begin
       end);
 end;
 
-procedure TCardDisplayManager.DisplayCardInBrowser(const CardDetails: TCardDetails;
-  const Rulings: TArray<TRuling>);
+procedure TCardDisplayManager.DisplayCardInBrowser(const CardDetails
+  : TCardDetails; const Rulings: TArray<TRuling>);
 begin
   TTask.Run(
     procedure
@@ -341,13 +380,15 @@ begin
           TThread.Queue(nil,
             procedure
             begin
-              LogStuff('Error displaying card: ' + E.ClassName + ', Message: ' + E.Message, ERROR);
+              LogStuff('Error displaying card: ' + E.ClassName + ', Message: ' +
+                E.Message, ERROR);
             end);
       end;
     end);
 end;
 
-procedure TCardDisplayManager.LoadAllCatalogs(const ComboBoxes: TDictionary<string, TComboBox>);
+procedure TCardDisplayManager.LoadAllCatalogs(const ComboBoxes
+  : TDictionary<string, TComboBox>);
 var
   Catalogs: TDictionary<string, TScryfallCatalog>;
   FileName: string;
@@ -374,7 +415,8 @@ begin
         ComboBoxes[CatalogName].ItemIndex := 0;
       end
       else
-        LogStuff(Format('Catalog "%s" is missing from the fetched data.', [CatalogName]), ERROR);
+        LogStuff(Format('Catalog "%s" is missing from the fetched data.',
+          [CatalogName]), ERROR);
     end;
   finally
     Catalogs.Free;
@@ -382,4 +424,3 @@ begin
 end;
 
 end.
-

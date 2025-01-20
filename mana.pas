@@ -48,7 +48,7 @@ begin
       on E: Exception do
       begin
         LogStuff('Error loading mana symbol cache: ' + E.Message, ERROR);
-        LogStuff('Deleting file: ' + CacheFilePath);
+        LogStuff('Deleting corrupt cache file: ' + CacheFilePath);
         SymbolCache.Clear; // Clear any partial cache
         TFile.Delete(CacheFilePath); // Remove corrupt file
       end;
@@ -99,13 +99,13 @@ begin
       try
         JsonResponse.LoadFromStream(Response.ContentStream);
         SymbolsJSON := JsonResponse.A[FieldData].Clone as TJsonArray;
-        LogStuff('Successfully fetched symbol list from Scryfall.');
+        LogStuff('Successfully fetched symbol list from Scryfall.', INFO);
       finally
         JsonResponse.Free;
       end;
     end
     else
-      raise Exception.CreateFmt('Failed to fetch symbols. HTTP status: %d. %s',
+      raise Exception.CreateFmt('Failed to fetch symbols from Scryfall. HTTP status: %d. %s',
         [Response.StatusCode, Response.StatusText]);
   finally
     HttpClient.Free;
@@ -127,7 +127,7 @@ begin
     if Response.StatusCode = 200 then
       Result := Response.ContentAsString(TEncoding.UTF8)
     else
-      LogStuff(Format('Failed to fetch SVG from %s. HTTP %d: %s',
+      LogStuff(Format('Failed to fetch SVG content from %s. HTTP status: %d. %s',
         [SVG_URL, Response.StatusCode, Response.StatusText]), ERROR);
   finally
     HttpClient.Free;
@@ -169,7 +169,7 @@ begin
         end
         else
         begin
-          LogStuff(Format('No SVG content retrieved for symbol [%s] from [%s]',
+          LogStuff(Format('No SVG content retrieved for mana symbol [%s] from URL [%s]',
             [Symbol, SVGUrl]), WARNING);
         end;
       end;
@@ -190,7 +190,7 @@ end;
 /// </summary>
 function ReplaceManaSymbolsWithImages(const OracleText: string): string;
 var
-  Symbol, InlineSVG: string;
+  Symbol, InlineSVG, EncodedSVG: string;
 begin
   Result := OracleText;
 
@@ -201,8 +201,8 @@ begin
   // Perform string replacements
   for Symbol in SymbolCache.Keys do
   begin
-    InlineSVG := Format(SVG_TEMPLATE,
-      [TNetEncoding.Base64.Encode(SymbolCache[Symbol]), Symbol]);
+    EncodedSVG := TNetEncoding.Base64.Encode(SymbolCache[Symbol]);
+    InlineSVG := Format(SVG_TEMPLATE, [EncodedSVG, Symbol]);
 
     Result := Result.Replace(Symbol, InlineSVG, [rfReplaceAll]);
   end;
@@ -216,7 +216,11 @@ LoadCacheFromFile;
 
 finalization
 
-SaveCacheToFile;
-SymbolCache.Free;
+try
+  SaveCacheToFile;
+finally
+  SymbolCache.Free;
+end;
 
 end.
+

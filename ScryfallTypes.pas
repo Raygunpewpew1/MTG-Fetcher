@@ -3,129 +3,120 @@
 interface
 
 uses
-  System.SysUtils, System.Generics.Collections, SGlobalsZ, APIConstants;
+  System.SysUtils, System.Generics.Collections, SGlobalsZ, APIConstants, Logger,System.NetEncoding;
 
 type
   EScryfallFilterError = class(Exception);
 
-  TScryfallFilterType = (
-    ftName,        // name:
-    ftOracle,      // o:
-    ftType,        // t:
-    ftColor,       // c:
-    ftColorId,     // id:
-    ftSet,         // s:
-    ftRarity,      // r:
-    ftCmc,         // cmc:
-    ftFormat,      // f:
-    ftPrice,       // various price filters
-    ftKeyword,     // keyword:
-    ftArtist,      // a:
-    ftPower,       // pow:
-    ftToughness,   // tou:
-    ftLegal,       // legal:
-    ftBanned,      // banned:
-    ftRestricted,  // restricted:
-    ftBlock,       // b:
-    ftCollector,   // cn:
-    ftSet_Type     // st:
-  );
+  TScryfallFilterType = (ftName, // name:
+    ftOracle, // o:
+    ftType, // t:
+    ftColor, // c:
+    ftColorId, // id:
+    ftSet, // s:
+    ftRarity, // r:
+    ftCmc, // cmc:
+    ftFormat, // f:
+    ftPrice, // various price filters
+    ftKeyword, // keyword:
+    ftArtist, // a:
+    ftPower, // pow:
+    ftToughness, // tou:
+    ftLegal, // legal:
+    ftBanned, // banned:
+    ftRestricted, // restricted:
+    ftBlock, // b:
+    ftCollector, // cn:
+    ftSet_Type // st:
+    );
 
-  TScryfallOperator = (
-    opEquals,      // :
-    opExact,       // =
-    opGreater,     // >
-    opLess,        // <
+  TScryfallOperator = (opEquals, // :
+    opExact, // =
+    opGreater, // >
+    opLess, // <
     opGreaterEqual, // >=
-    opLessEqual,    // <=
-    opNot,         // -
-    opOr           // OR
-  );
+    opLessEqual, // <=
+    opNot, // -
+    opOr // OR
+    );
 
-  TScryfallPriceType = (
-    ptUSD,
-    ptUSDFoil,
-    ptEUR,
-    ptTIX
-  );
+  TScryfallPriceType = (ptUSD, ptUSDFoil, ptEUR, ptTIX);
 
   TScryfallFilterValue = record
     Value: string;
     Operator: TScryfallOperator;
-    ExtraValue: string;  // For range values
+    ExtraValue: string; // For range values
   end;
 
   TScryfallFilter = record
     FilterType: TScryfallFilterType;
-    Values: TArray<TScryfallFilterValue>;  // Support multiple values for OR conditions
+    Values: TArray<TScryfallFilterValue>;
+    // Support multiple values for OR conditions
     function ToQueryPart: string;
     function Clone: TScryfallFilter;
-    class function Create(AType: TScryfallFilterType; const AValue: string; 
+    class function Create(AType: TScryfallFilterType; const AValue: string;
       AOperator: TScryfallOperator = opEquals): TScryfallFilter; static;
-    procedure AddValue(const Value: string; Operator: TScryfallOperator = opEquals);
+    procedure AddValue(const Value: string;
+      Operator: TScryfallOperator = opEquals);
     procedure Clear;
   end;
 
   TScryfallQueryOptions = record
     IncludeExtras: Boolean;
-    UniqueMode: string;      // 'cards', 'art', 'prints'
+    UniqueMode: string; // 'cards', 'art', 'prints'
     Sort: string;
-    Direction: string;       // 'auto', 'asc', 'desc'
+    Direction: string; // 'auto', 'asc', 'desc'
     Page: Integer;
     function Clone: TScryfallQueryOptions;
+    function ToString: string;
     procedure Clear;
   end;
 
 const
   // Filter type to API syntax mapping
-  ScryfallFilterPrefix: array[TScryfallFilterType] of string = (
-    'name',        // ftName
-    'o',           // ftOracle
-    't',           // ftType
-    'c',           // ftColor
-    'id',          // ftColorId
-    'e',           // ftSet
-    'r',           // ftRarity
-    'cmc',         // ftCmc
-    'f',           // ftFormat
-    'usd',         // ftPrice (default to USD)
-    'keyword',     // ftKeyword
-    'a',           // ftArtist
-    'pow',         // ftPower
-    'tou',         // ftToughness
-    'legal',       // ftLegal
-    'banned',      // ftBanned
-    'restricted',  // ftRestricted
-    'b',           // ftBlock
-    'cn',          // ftCollector
-    'st'           // ftSet_Type
-  );
+  ScryfallFilterPrefix: array [TScryfallFilterType] of string = ('name',
+    // ftName
+    'o', // ftOracle
+    't', // ftType
+    'c', // ftColor
+    'id', // ftColorId
+    'e', // ftSet
+    'r', // ftRarity
+    'cmc', // ftCmc
+    'f', // ftFormat
+    'usd', // ftPrice (default to USD)
+    'keyword', // ftKeyword
+    'a', // ftArtist
+    'pow', // ftPower
+    'tou', // ftToughness
+    'legal', // ftLegal
+    'banned', // ftBanned
+    'restricted', // ftRestricted
+    'b', // ftBlock
+    'cn', // ftCollector
+    'st' // ftSet_Type
+    );
 
   // Operator to syntax mapping
-  ScryfallOperatorStr: array[TScryfallOperator] of string = (
-    ':',    // opEquals
-    '=',    // opExact
-    '>',    // opGreater
-    '<',    // opLess
-    '>=',   // opGreaterEqual
-    '<=',   // opLessEqual
-    '-',    // opNot
-    'OR'    // opOr
-  );
+  ScryfallOperatorStr: array [TScryfallOperator] of string = (':', // opEquals
+    '=', // opExact
+    '>', // opGreater
+    '<', // opLess
+    '>=', // opGreaterEqual
+    '<=', // opLessEqual
+    '-', // opNot
+    'OR' // opOr
+    );
 
   // Price type to API parameter mapping
-  ScryfallPricePrefix: array[TScryfallPriceType] of string = (
-    'usd',
-    'usd_foil',
-    'eur',
-    'tix'
-  );
+  ScryfallPricePrefix: array [TScryfallPriceType] of string = ('usd',
+    'usd_foil', 'eur', 'tix');
 
   // Cache constants
-  DefaultCacheTimeout = 3600;  // 1 hour in seconds
-  MaxCacheSize = 1000;         // Maximum number of cached queries
+  DefaultCacheTimeout = 3600; // 1 hour in seconds
+  MaxCacheSize = 1000; // Maximum number of cached queries
 
-// Helper functions
+  // Helper functions
 function GetOperatorStr(Op: TScryfallOperator): string;
 function MapRarityToString(Rarity: TRarity): string;
 function EscapeQueryValue(const Value: string): string;
@@ -147,12 +138,26 @@ begin
 end;
 
 function EscapeQueryValue(const Value: string): string;
+var
+  EscapedValue: string;
 begin
-  if Value.Contains(' ') or Value.Contains('"') then
-    Result := '"' + StringReplace(Value, '"', '\"', [rfReplaceAll]) + '"'
+  // Step 1: Escape double quotes for Scryfall's syntax
+  if Value.Contains('"') then
+    EscapedValue := StringReplace(Value, '"', '\"', [rfReplaceAll])
   else
-    Result := Value;
+    EscapedValue := Value;
+
+  // Step 2: Wrap the value in double quotes if it contains spaces
+  if Value.Contains(' ') then
+    EscapedValue := '"' + EscapedValue + '"';
+
+  // Step 3: URL-encode the escaped value
+  Result := TNetEncoding.URL.Encode(EscapedValue);
+
+  // Optional: Replace '%20' with '+' for Scryfall's preferred space encoding
+  Result := Result.Replace('%20', '+');
 end;
+
 
 function FormatPriceValue(const Value: Currency): string;
 begin
@@ -161,8 +166,8 @@ end;
 
 { TScryfallFilter }
 
-class function TScryfallFilter.Create(AType: TScryfallFilterType; const AValue: string;
-  AOperator: TScryfallOperator): TScryfallFilter;
+class function TScryfallFilter.Create(AType: TScryfallFilterType;
+  const AValue: string; AOperator: TScryfallOperator): TScryfallFilter;
 var
   Ch: Char;
 begin
@@ -173,7 +178,8 @@ begin
   begin
     for Ch in AValue.ToLower do
       if not CharInSet(Ch, ['w', 'u', 'b', 'r', 'g']) then
-        raise EScryfallFilterError.CreateFmt('Invalid color identity value: %s', [Ch]);
+        raise EScryfallFilterError.CreateFmt
+          ('Invalid color identity value: %s', [Ch]);
   end;
 
   Result.FilterType := AType;
@@ -183,7 +189,8 @@ begin
   Result.Values[0].ExtraValue := '';
 end;
 
-procedure TScryfallFilter.AddValue(const Value: string; Operator: TScryfallOperator);
+procedure TScryfallFilter.AddValue(const Value: string;
+  Operator: TScryfallOperator);
 var
   Idx: Integer;
 begin
@@ -206,35 +213,34 @@ var
   Prefix: string;
 begin
   if Length(Values) = 0 then
-    Exit('');
+    Exit(''); // No values, return an empty string
 
   SB := TStringBuilder.Create;
   try
-    Prefix := ScryfallFilterPrefix[FilterType];
+    Prefix := ScryfallFilterPrefix[FilterType]; // Get the filter type prefix
 
     for i := 0 to High(Values) do
     begin
       if i > 0 then
-        SB.Append(' OR ');
+        SB.Append(' OR '); // Scryfall supports "OR" for multiple values
 
-      // Append the filter value
-      SB.Append(Prefix)
-        .Append(GetOperatorStr(Values[i].Operator))
+      // Append the filter prefix and the escaped + encoded value
+      SB.Append(Prefix).Append(GetOperatorStr(Values[i].Operator))
         .Append(EscapeQueryValue(Values[i].Value));
 
-      // Handle range queries using ExtraValue
+      // Handle range queries with ExtraValue
       if Values[i].ExtraValue <> '' then
-        SB.Append(' ')
-          .Append(Prefix)
-          .Append(GetOperatorStr(opLessEqual)) // Ensure the correct operator
+        SB.Append(' ').Append(Prefix).Append(GetOperatorStr(opLessEqual))
           .Append(EscapeQueryValue(Values[i].ExtraValue));
     end;
 
-    Result := SB.ToString;
+    Result := SB.ToString; // Return the constructed query part
   finally
     SB.Free;
   end;
 end;
+
+
 
 function TScryfallFilter.Clone: TScryfallFilter;
 begin
@@ -249,8 +255,16 @@ end;
 
 { TScryfallQueryOptions }
 
+function TScryfallQueryOptions.ToString: string;
+begin
+  Result := Format
+    ('IncludeExtras: %s, UniqueMode: %s, Sort: %s, Direction: %s, Page: %d',
+    [BoolToStr(IncludeExtras, True), UniqueMode, Sort, Direction, Page]);
+end;
+
 procedure TScryfallQueryOptions.Clear;
 begin
+  LogStuff('TScryfallQueryOptions.Clear called.', DEBUG);
   IncludeExtras := False;
   UniqueMode := 'cards';
   Sort := 'name';

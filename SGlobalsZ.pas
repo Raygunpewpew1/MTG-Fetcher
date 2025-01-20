@@ -3,14 +3,23 @@
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections;
+  System.Classes, System.SysUtils, System.Generics.Collections,System.StrUtils;
 
 type
   TRarity = (rAll, rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus,
     rTimeshifted, rMasterpiece, rToken, rDoubleFacedToken, rDraft,
     rPlaneshifted, rUnique, rBasic, rPromo);
 
-type
+
+  TLegalityFormat = (
+    lfStandard, lfFuture, lfHistoric, lfGladiator, lfPioneer, lfExplorer,
+    lfModern, lfLegacy, lfPauper, lfVintage, lfPenny, lfCommander, lfAlchemy,
+    lfBrawl, lfPauperCommander, lfDuel, lfOldschool, lfPremodern, lfOathbreaker
+  );
+
+//  TCardColor = (ccWhite, ccBlue, ccBlack, ccRed, ccGreen, ccColorless);
+
+
   // Prices for different currencies
   TCardPrices = record
     USD: Currency;
@@ -33,29 +42,12 @@ type
   end;
 
   // Legalities for different formats
+type
   TCardLegalities = record
-    Standard: string;
-    Pioneer: string;
-    Modern: string;
-    Legacy: string;
-    Commander: string;
-    Vintage: string;
-    Pauper: string;
-    Historic: string;
-    Explorer: string;
-    Alchemy: string;
-    Brawl: string;
-    Future: string;
-    Oldschool: string;
-    Premodern: string;
-    Duel: string;
-    Penny: string;
-    Gladiator: string;
-    PauperCommander: string;
-    Oathbreaker: string;
+    Status: array[TLegalityFormat] of string;
     procedure Clear;
-    procedure SetStatus(const FormatName, Status: string);
-    function GetStatus(const FormatName: string): string;
+    function GetStatus(Format: TLegalityFormat): string;
+    procedure SetStatus(Format: TLegalityFormat; const Status: string);
   end;
 
   // Card Face for multi-faced cards
@@ -69,9 +61,9 @@ type
     Toughness: string;
     ImageUris: TImageUris;
     Loyalty: string;
+    CMC: Double;
     procedure Clear;
   end;
-
 
   TCardPart = record
     ObjectType: string;
@@ -82,12 +74,25 @@ type
     URI: string;
   end;
 
-
   TMeldDetails = record
     MeldParts: TArray<TCardPart>;
     MeldResult: TCardPart;
   end;
 
+  TRelatedURIs = record
+    Gatherer: string;
+    Tcgplayerinfinitearticles: string;
+    Tcgplayerinfinitedecks: string;
+    Edhrec: string;
+    procedure Clear;
+  end;
+
+  TPurchaseURIs = record
+    Tcgplayer: string;
+    Cardmarket: string;
+    Cardhoarder: string;
+    procedure Clear;
+  end;
 
   // Main Card Details structure
   TCardDetails = record
@@ -120,7 +125,6 @@ type
     AllParts: TArray<TCardPart>;
     IsMeld: Boolean;
     MeldDetails: TMeldDetails;
-
 
     // Legalities and Rules
     Legalities: TCardLegalities;
@@ -159,8 +163,8 @@ type
     // External Links
     ScryfallURI: string;
     URI: string;
-    RelatedURIs: TDictionary<string, string>;
-    PurchaseURIs: TDictionary<string, string>;
+    RelatedURIs: TRelatedURIs;
+    PurchaseURIs: TPurchaseURIs;
     ScryfallCardBackID: string;
     ScryfallID: string;
     ScryfallIllustrationID: string;
@@ -233,6 +237,14 @@ type
     procedure Clear;
   end;
 
+  // TCardDetailsObject
+type
+  TCardDetailsObject = class
+  public
+    CardDetails: TCardDetails;
+    constructor Create(const ACardDetails: TCardDetails);
+  end;
+
 const
   RarityToString: array [TRarity] of string = ('', // rAll
     'common', // rCommon
@@ -253,14 +265,33 @@ const
     );
 
 const
+  LegalityToString: array[TLegalityFormat] of string = (
+    'standard', 'future', 'historic', 'gladiator', 'pioneer', 'explorer',
+    'modern', 'legacy', 'pauper', 'vintage', 'penny', 'commander', 'alchemy',
+    'brawl', 'paupercommander', 'duel', 'oldschool', 'premodern', 'oathbreaker'
+  );
+
+
   LegalitiesArray: array [0 .. 18] of string = ('standard', 'future',
     'historic', 'gladiator', 'pioneer', 'explorer', 'modern', 'legacy',
     'pauper', 'vintage', 'penny', 'commander', 'alchemy', 'brawl',
     'paupercommander', 'duel', 'oldschool', 'premodern', 'oathbreaker');
 
- var   AppClose: Boolean;
+var
+  AppClose: Boolean;
 
 implementation
+
+
+
+
+{ TCardDetailsObject }
+constructor TCardDetailsObject.Create(const ACardDetails: TCardDetails);
+begin
+  inherited Create;
+  CardDetails := ACardDetails;
+end;
+
 
 { TCardPrices }
 
@@ -272,6 +303,16 @@ begin
   Tix := 0;
 end;
 
+procedure TPurchaseURIs.Clear;
+begin
+  Self := Default (TPurchaseURIs);
+end;
+
+procedure TRelatedURIs.Clear;
+begin
+  Self := Default (TRelatedURIs);
+end;
+
 { TImageUris }
 
 procedure TImageUris.Clear;
@@ -280,97 +321,108 @@ begin
 end;
 
 { TCardLegalities }
-
 procedure TCardLegalities.Clear;
+var
+  Format: TLegalityFormat;
 begin
-  Self := Default (TCardLegalities);
+  for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
+    Status[Format] := '';
 end;
 
-procedure TCardLegalities.SetStatus(const FormatName, Status: string);
+function TCardLegalities.GetStatus(Format: TLegalityFormat): string;
 begin
-  if FormatName = 'Standard' then
-    Standard := Status
-  else if FormatName = 'Future' then
-    Future := Status
-  else if FormatName = 'Historic' then
-    Historic := Status
-  else if FormatName = 'Gladiator' then
-    Gladiator := Status
-  else if FormatName = 'Pioneer' then
-    Pioneer := Status
-  else if FormatName = 'Explorer' then
-    Explorer := Status
-  else if FormatName = 'Modern' then
-    Modern := Status
-  else if FormatName = 'Legacy' then
-    Legacy := Status
-  else if FormatName = 'Pauper' then
-    Pauper := Status
-  else if FormatName = 'Vintage' then
-    Vintage := Status
-  else if FormatName = 'Penny' then
-    Penny := Status
-  else if FormatName = 'Commander' then
-    Commander := Status
-  else if FormatName = 'Alchemy' then
-    Alchemy := Status
-  else if FormatName = 'Brawl' then
-    Brawl := Status
-  else if FormatName = 'PauperCommander' then
-    PauperCommander := Status
-  else if FormatName = 'Duel' then
-    Duel := Status
-  else if FormatName = 'Oldschool' then
-    Oldschool := Status
-  else if FormatName = 'Premodern' then
-    Premodern := Status
-  else if FormatName = 'Oathbreaker' then
-    Oathbreaker := Status;
+  Result := Status[Format];
 end;
 
-function TCardLegalities.GetStatus(const FormatName: string): string;
+procedure TCardLegalities.SetStatus(Format: TLegalityFormat; const Status: string);
 begin
-  if FormatName = 'Standard' then
-    Result := Standard
-  else if FormatName = 'Future' then
-    Result := Future
-  else if FormatName = 'Historic' then
-    Result := Historic
-  else if FormatName = 'Gladiator' then
-    Result := Gladiator
-  else if FormatName = 'Pioneer' then
-    Result := Pioneer
-  else if FormatName = 'Explorer' then
-    Result := Explorer
-  else if FormatName = 'Modern' then
-    Result := Modern
-  else if FormatName = 'Legacy' then
-    Result := Legacy
-  else if FormatName = 'Pauper' then
-    Result := Pauper
-  else if FormatName = 'Vintage' then
-    Result := Vintage
-  else if FormatName = 'Penny' then
-    Result := Penny
-  else if FormatName = 'Commander' then
-    Result := Commander
-  else if FormatName = 'Alchemy' then
-    Result := Alchemy
-  else if FormatName = 'Brawl' then
-    Result := Brawl
-  else if FormatName = 'PauperCommander' then
-    Result := PauperCommander
-  else if FormatName = 'Duel' then
-    Result := Duel
-  else if FormatName = 'Oldschool' then
-    Result := Oldschool
-  else if FormatName = 'Premodern' then
-    Result := Premodern
-  else if FormatName = 'Oathbreaker' then
-    Result := Oathbreaker
+  Self.Status[Format] := Status;
+end;
+
+
+function StringToLegalityFormat(const FormatName: string): TLegalityFormat;
+begin
+  case IndexText(FormatName.ToLower, LegalityToString) of
+    0: Result := lfStandard;
+    1: Result := lfFuture;
+    2: Result := lfHistoric;
+    3: Result := lfGladiator;
+    4: Result := lfPioneer;
+    5: Result := lfExplorer;
+    6: Result := lfModern;
+    7: Result := lfLegacy;
+    8: Result := lfPauper;
+    9: Result := lfVintage;
+    10: Result := lfPenny;
+    11: Result := lfCommander;
+    12: Result := lfAlchemy;
+    13: Result := lfBrawl;
+    14: Result := lfPauperCommander;
+    15: Result := lfDuel;
+    16: Result := lfOldschool;
+    17: Result := lfPremodern;
+    18: Result := lfOathbreaker;
   else
-    Result := '';
+    raise Exception.CreateFmt('Unknown legality format: %s', [FormatName]);
+  end;
 end;
+
+
+
+//procedure TCardLegalities.SetStatus(const FormatName, Status: string);
+//begin
+//  case IndexText(FormatName.ToLower, LegalitiesArray) of
+//    0: Standard := Status;
+//    1: Future := Status;
+//    2: Historic := Status;
+//    3: Gladiator := Status;
+//    4: Pioneer := Status;
+//    5: Explorer := Status;
+//    6: Modern := Status;
+//    7: Legacy := Status;
+//    8: Pauper := Status;
+//    9: Vintage := Status;
+//    10: Penny := Status;
+//    11: Commander := Status;
+//    12: Alchemy := Status;
+//    13: Brawl := Status;
+//    14: PauperCommander := Status;
+//    15: Duel := Status;
+//    16: Oldschool := Status;
+//    17: Premodern := Status;
+//    18: Oathbreaker := Status;
+//  else
+//    raise Exception.CreateFmt('Unknown format: %s', [FormatName]);
+//  end;
+//end;
+//
+//function TCardLegalities.GetStatus(const FormatName: string): string;
+//begin
+//  case IndexText(FormatName.ToLower, LegalitiesArray) of
+//    0: Result := Standard;
+//    1: Result := Future;
+//    2: Result := Historic;
+//    3: Result := Gladiator;
+//    4: Result := Pioneer;
+//    5: Result := Explorer;
+//    6: Result := Modern;
+//    7: Result := Legacy;
+//    8: Result := Pauper;
+//    9: Result := Vintage;
+//    10: Result := Penny;
+//    11: Result := Commander;
+//    12: Result := Alchemy;
+//    13: Result := Brawl;
+//    14: Result := PauperCommander;
+//    15: Result := Duel;
+//    16: Result := Oldschool;
+//    17: Result := Premodern;
+//    18: Result := Oathbreaker;
+//  else
+//    Result := '';
+//  end;
+//end;
+
 
 { TCardFace }
 
@@ -383,14 +435,22 @@ end;
 
 procedure TCardDetails.Clear;
 begin
-  Self := Default (TCardDetails);
+  Self := Default(TCardDetails);
 
-  if Assigned(RelatedURIs) then
-    FreeAndNil(RelatedURIs);
+  Legalities.Clear;
+  Prices.Clear;
+  ImageUris.Clear;
+  RelatedURIs.Clear;
+  PurchaseURIs.Clear;
 
-  if Assigned(PurchaseURIs) then
-    FreeAndNil(PurchaseURIs);
+  SetLength(ColorIdentity, 0);
+  SetLength(Keywords, 0);
+  SetLength(Games, 0);
+  SetLength(AllParts, 0);
+  SetLength(CardFaces, 0);
 end;
+
+
 
 { TSetDetails }
 

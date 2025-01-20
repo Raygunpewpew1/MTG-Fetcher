@@ -78,3 +78,4 @@ deployedassets.txt
 mtgfetchV2.deployproj
 /mtgfetchV2.Artwork
 Neslib.Json/
+.vscode/settings.json

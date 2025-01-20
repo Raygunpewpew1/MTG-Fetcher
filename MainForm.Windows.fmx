@@ -34,6 +34,7 @@ inherited Form1_Windows: TForm1_Windows
   inherited MultiViewFilters: TMultiView
     Size.Width = 389.000000000000000000
     Size.Height = 576.000000000000000000
+    StyleLookup = 'multiviewstyle'
     inherited LayoutFilters: TLayout
       Size.Width = 389.000000000000000000
       Size.Height = 576.000000000000000000
@@ -41,13 +42,7 @@ inherited Form1_Windows: TForm1_Windows
         Position.X = 281.000000000000000000
       end
       inherited ComboBoxSetCode: TComboBox
-        Position.X = 8.000000000000000000
         Position.Y = 218.000000000000000000
-        Size.Width = 265.000000000000000000
-      end
-      inherited ComboBoxColors: TComboBox
-        Position.X = 8.000000000000000000
-        Position.Y = 178.000000000000000000
         Size.Width = 265.000000000000000000
       end
       inherited ComboBoxRarity: TComboBox
@@ -55,7 +50,6 @@ inherited Form1_Windows: TForm1_Windows
         Size.Width = 265.000000000000000000
       end
       inherited ComboBoxAbility: TComboBox
-        Position.X = 8.000000000000000000
         Position.Y = 98.000000000000000000
         Size.Width = 265.000000000000000000
       end
@@ -65,6 +59,12 @@ inherited Form1_Windows: TForm1_Windows
       inherited Switch1: TSwitch
         Position.X = 216.000000000000000000
         Position.Y = 48.000000000000000000
+      end
+      inherited ListBoxColors: TListBox
+        Position.Y = 258.000000000000000000
+        Size.Width = 257.000000000000000000
+        Viewport.Width = 253.000000000000000000
+        Viewport.Height = 125.000000000000000000
       end
     end
   end
