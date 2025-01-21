@@ -4,12 +4,14 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
-  System.Generics.Collections, FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics,
+  System.Generics.Collections, FMX.Types, FMX.Controls, FMX.Forms,
+  FMX.Graphics,
   FMX.Dialogs, FMX.Layouts, FMX.ExtCtrls, FMX.Ani, FMX.Edit, FMX.StdCtrls,
   FMX.WebBrowser, FMX.Skia, SGlobalsZ, ScryfallData, System.TypInfo, Math,
   System.Threading, FMX.Controls.Presentation, FMX.ListView.Types,
   FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
-  FMX.ListBox, MLogic, FMX.ComboEdit, CardDisplayManager, ScryfallQueryBuilder,
+  FMX.ListBox, MLogic, FMX.ComboEdit, CardDisplayManager,
+  ScryfallQueryBuilder,
   System.IOUtils, System.StrUtils, FMX.MultiView, FMX.Platform;
 
 type
@@ -20,7 +22,7 @@ type
 
   TForm1 = class(TForm)
     DelayTimer: TTimer;
-    // NetHTTPClient1: TNetHTTPClient;
+
     TimerDebounce: TTimer;
     StyleBook1: TStyleBook;
     MultiViewFilters: TMultiView;
@@ -47,22 +49,14 @@ type
     procedure WebBrowser1DidFinishLoad(ASender: TObject);
     procedure ButtonNextPageClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure TimerDebounceTimer(Sender: TObject);
-    procedure ComboBoxEditSearchItemClick(const Sender: TObject;
-      const AItem: TListBoxItem);
+
     procedure ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word;
       var KeyChar: WideChar; Shift: TShiftState);
-    procedure ComboBoxEditSearchChange(Sender: TObject);
     procedure Button2Click(Sender: TObject);
-    procedure Button3Click(Sender: TObject);
 
   private
     WebBrowserInitialized: Boolean;
     FIsProgrammaticChange: Boolean;
-
-    // SearchTerm: string;
-    FCurrentAutocompleteTask: ITask;
-    // HttpClient: THTTPClient;
 
     FCardDisplayManager: TCardDisplayManager;
     FScryfallAPI: TScryfallAPI;
@@ -70,15 +64,16 @@ type
     AmOnline: Boolean;
 
     procedure OnSearchComplete(Success: Boolean);
-    procedure PopulateColorListBox;
-    function GetSelectedColors: string;
+
+    // procedure PopulateColorListBox;
+    // function GetSelectedColors: string;
 
   public
   end;
 
 var
   Form1: TForm1;
-  ColorCheckBoxes: TObjectList<TCheckBox>;
+  // ColorCheckBoxes: TObjectList<TCheckBox>;
 
 implementation
 
@@ -110,27 +105,32 @@ begin
     on E: Exception do
     begin
       ShowMessage('Error checking internet connection: ' + E.Message);
-     {$IF DEFINED(MSWINDOWS) OR DEFINED(MACOS)}
+{$IF DEFINED(MSWINDOWS) OR DEFINED(MACOS)}
       Application.Terminate;
-     {$ELSE}
+{$ELSE}
       Halt;
-     {$ENDIF}
+{$ENDIF}
     end;
   end;
 
   WebBrowserInitialized := False;
   FIsProgrammaticChange := False;
-  WebBrowser1.LoadFromStrings(HtmlTemplate, '');
+  // WebBrowser1.LoadFromStrings(HtmlTemplate, '');
   ComboBoxMap := TDictionary<string, TComboBox>.Create;
 
   FCardDisplayManager := TCardDisplayManager.Create(ListViewCards, WebBrowser1,
     FScryfallAPI);
 
+  // Link the ListBoxColors to the CardDisplayManager
+  FCardDisplayManager.ListBoxColors := ListBoxColors;
+
+  // Populate the color list
+  FCardDisplayManager.PopulateColorListBox;
+
   FCardDisplayManager.OnProgressUpdate := procedure(Progress: Integer)
     begin
-      // ProgressBar1.Value := Progress;
+
     end;
-  // ComboBoxSetCode
 
   try
     ComboBoxMap.Add(CatalogKeywordAbilities, ComboBoxAbility);
@@ -138,8 +138,6 @@ begin
   finally
     ComboBoxMap.Free;
   end;
-
-  // HttpClient := THTTPClient.Create;
 
   AppClose := False;
 
@@ -162,7 +160,6 @@ begin
     try
       SetDetailsArray := FScryfallAPI.GetAllSets;
 
-      // Save to cache
       SaveSetDetailsToJson(CacheFileName, SetDetailsArray);
     except
       on E: Exception do
@@ -180,72 +177,81 @@ begin
 
   finally
     ComboBoxSetCode.ItemIndex := 0;
- //   ComboBoxColors.ItemIndex := 0;
+
     ComboBoxRarity.ItemIndex := 0;
   end;
-  ColorCheckBoxes := TObjectList<TCheckBox>.Create(True); // Auto-own checkboxes
-  PopulateColorListBox;
+  // ColorCheckBoxes := TObjectList<TCheckBox>.Create(True);
+  // PopulateColorListBox;
   DelayTimer.Enabled := True;
 end;
 
-
-function TForm1.GetSelectedColors: string;
-var
-  CheckBox: TCheckBox;
-  Colors: string;
-begin
-  Colors := ''; // Initialize the result
-  for CheckBox in ColorCheckBoxes do
-  begin
-    if CheckBox.IsChecked then
-      Colors := Colors + CheckBox.TagString; // Append the color code
-  end;
-  Result := Colors; // Return the combined color string
-end;
-
-
-
-
-
-procedure TForm1.PopulateColorListBox;
-  procedure AddColor(const ColorName: string; const TagValue: string);
-  var
-    ListBoxItem: TListBoxItem;
-    CheckBox: TCheckBox;
-  begin
-    // Create a new ListBoxItem
-    ListBoxItem := TListBoxItem.Create(ListBoxColors);
-    ListBoxItem.Parent := ListBoxColors; // Attach to the ListBox
-    ListBoxItem.Height := 40;           // Set item height for spacing
-
-    // Create a CheckBox and add it to the ListBoxItem
-    CheckBox := TCheckBox.Create(ListBoxItem);
-    CheckBox.Parent := ListBoxItem;        // Attach to the ListBoxItem
-    CheckBox.Align := TAlignLayout.Client; // Make the checkbox fill the item
-    CheckBox.Text := ColorName;            // Set the checkbox label
-    CheckBox.TagString := TagValue;        // Store the color code in TagString
-
-    // Store the reference to the CheckBox
-    ColorCheckBoxes.Add(CheckBox);
-  end;
-
-begin
-  // Clear the ListBox and the checkbox list
-  ListBoxColors.Clear;
-  ColorCheckBoxes.Clear;
-
-  // Populate the ListBox with color options
-  AddColor('White', 'W');
-  AddColor('Blue', 'U');
-  AddColor('Black', 'B');
-  AddColor('Red', 'R');
-  AddColor('Green', 'G');
-  AddColor('Colorless', 'C');
-end;
-
-
-
-
+// function TForm1.GetSelectedColors: string;
+// var
+// CheckBox: TCheckBox;
+// Colors: string;
+// IncludeMulticolor: Boolean;
+// begin
+// Colors := '';
+// IncludeMulticolor := False;
+//
+// for CheckBox in ColorCheckBoxes do
+// begin
+// if CheckBox.IsChecked then
+// begin
+// if CheckBox.TagString = 'M' then
+// IncludeMulticolor := True
+// else
+// Colors := Colors + CheckBox.TagString;
+//
+// end;
+// end;
+//
+// if IncludeMulticolor then
+// begin
+// if Colors.IsEmpty then
+// Result := 'M'
+// else
+// Result := '>' + Colors;
+// end
+// else
+// Result := Colors;
+//
+// end;
+//
+// procedure TForm1.PopulateColorListBox;
+// procedure AddColor(const ColorName: string; const TagValue: string);
+// var
+// ListBoxItem: TListBoxItem;
+// CheckBox: TCheckBox;
+// begin
+// Assert(not TagValue.IsEmpty, Format('TagValue for %s must not be empty.',
+// [ColorName]));
+//
+// ListBoxItem := TListBoxItem.Create(ListBoxColors);
+// ListBoxItem.Parent := ListBoxColors;
+// ListBoxItem.Height := 20;
+//
+// CheckBox := TCheckBox.Create(ListBoxItem);
+// CheckBox.Parent := ListBoxItem;
+// CheckBox.Align := TAlignLayout.Client;
+// CheckBox.Text := ColorName;
+// CheckBox.TagString := TagValue;
+//
+// ColorCheckBoxes.Add(CheckBox);
+// end;
+//
+// begin
+// ListBoxColors.Clear;
+// ColorCheckBoxes.Clear;
+//
+// AddColor('White', 'W');
+// AddColor('Blue', 'U');
+// AddColor('Black', 'B');
+// AddColor('Red', 'R');
+// AddColor('Green', 'G');
+// AddColor('Colorless', 'C');
+// AddColor('Multicolor', 'M');
+// end;
 
 procedure TForm1.OnSearchComplete(Success: Boolean);
 begin
@@ -273,7 +279,7 @@ begin
     begin
       FScryfallAPI.Free;
       FScryfallAPI := nil;
-      ColorCheckBoxes.Free;
+      // ColorCheckBoxes.Free;
     end;
   except
     on E: Exception do
@@ -285,28 +291,30 @@ end;
 
 procedure TForm1.FormShow(Sender: TObject);
 begin
-  WebBrowser1.Navigate(HtmlTemplate);
-  TTask.Run(
-    procedure
-    begin
-      TThread.Sleep(500); // Adjust timeout if needed
-      TThread.Queue(nil,
-        procedure
-        begin
-          if not WebBrowserInitialized then
-          begin
-            WebBrowserInitialized := True; // Fallback for initialization
-            LogStuff('WebBrowser initialized via fallback.', WARNING);
-          end;
-        end);
-    end);
+  // WebBrowser1.Navigate(HtmlTemplate);
+  // TTask.Run(
+  // procedure
+  // begin
+  // TThread.Sleep(500);
+  // TThread.Queue(nil,
+  // procedure
+  // begin
+  // if not WebBrowserInitialized then
+  // begin
+  // WebBrowserInitialized := True;
+  // LogStuff('WebBrowser initialized via fallback.', WARNING);
+  // end;
+  // end);
+  // end);
+
+  WebBrowser1.Navigate('about:blank');
 
   MultiViewFilters.ShowMaster;
 
 end;
 
 procedure TForm1.ListViewCardsItemClick(const Sender: TObject;
-const AItem: TListViewItem);
+  const AItem: TListViewItem);
 var
   CardDetailsObj: TCardDetailsObject;
 begin
@@ -316,84 +324,22 @@ begin
     Exit;
   end;
 
-  // LogStuff('TagObject class: ' + AItem.TagObject.ClassName);
-  // LogStuff('Is TCardDetailsObject: ' +
-  // BoolToStr(AItem.TagObject is TCardDetailsObject, True));
-
   if AItem.TagObject is TCardDetailsObject then
   begin
     CardDetailsObj := TCardDetailsObject(AItem.TagObject);
-    // LogStuff('Clicked on card: ' + CardDetailsObj.CardDetails.CardName, DEBUG);
+
     FCardDisplayManager.ShowCardDetails(CardDetailsObj.CardDetails);
   end
   else
     ShowMessage('TagObject is not TCardDetailsObject');
 end;
 
-procedure TForm1.TimerDebounceTimer(Sender: TObject);
-var
-  PartialQuery: string;
-begin
-  TimerDebounce.Enabled := False;
-  PartialQuery := ComboBoxEditSearch.Text.Trim;
-
-  if Length(PartialQuery) < 2 then
-  begin
-    TThread.Queue(nil,
-      procedure
-      begin
-        ComboBoxEditSearch.Items.Clear;
-      end);
-    Exit;
-  end;
-
-  if Assigned(FCurrentAutocompleteTask) and
-    (FCurrentAutocompleteTask.Status = TTaskStatus.Running) then
-    FCurrentAutocompleteTask.Cancel;
-
-  FCurrentAutocompleteTask := TTask.Run(
-    procedure
-    var
-      Suggestions: TArray<string>;
-    begin
-      try
-        Suggestions := FScryfallAPI.AutocompleteCards(PartialQuery);
-
-        if TTask.CurrentTask.Status = TTaskStatus.Canceled then
-          Exit;
-
-        TThread.Queue(nil,
-          procedure
-          begin
-            ComboBoxEditSearch.Items.BeginUpdate;
-            try
-              ComboBoxEditSearch.Items.Clear;
-              ComboBoxEditSearch.Items.AddStrings(Suggestions);
-            finally
-              ComboBoxEditSearch.Items.EndUpdate;
-            end;
-
-            if Length(Suggestions) > 0 then
-              ComboBoxEditSearch.DropDown
-            else
-              ComboBoxEditSearch.Items.Clear;
-          end);
-      except
-        on E: Exception do
-          LogStuff('Autocomplete error: ' + E.Message);
-      end;
-    end);
-end;
-
 procedure TForm1.WebBrowser1DidFinishLoad(ASender: TObject);
 begin
-  if SameText(WebBrowser1.URL, SAboutBlank) then
+  if Assigned(WebBrowser1) and (WebBrowser1.URL <> '') then
   begin
-    WebBrowserInitialized := True;
 
-  end
-  else
-  begin
+    WebBrowserInitialized := True;
     WebBrowser1.EvaluateJavaScript(JScript);
 
   end;
@@ -414,7 +360,6 @@ begin
     Exit;
   end;
 
-  // Fetch a random card asynchronously
   TTask.Run(
     procedure
     var
@@ -429,8 +374,8 @@ begin
             begin
 
               FCardDisplayManager.AddCardToListView(RandomCard);
-              BrIsLoaded := True; // Mark as loaded
-              DelayTimer.Enabled := False; // Disable after successful run
+              BrIsLoaded := True;
+              DelayTimer.Enabled := False;
 
               if ListViewCards.Items.Count > 0 then
               begin
@@ -459,23 +404,6 @@ begin
   Result := TNetEncoding.URL.Decode(EncodedURL);
 end;
 
-procedure TestIncludeExtras;
-var
-  Query: TScryfallQuery;
-  DecodedURL: string;
-begin
-  Query := TScryfallQuery.Create;
-  try
-    Query.IncludeExtras(True);
-    DecodedURL := DecodeURL(Query.BuildURL);
-    Assert(DecodedURL.Contains('&include_extras=true'),
-      'IncludeExtras not included in URL.');
-    LogStuff('Test passed: ' + DecodedURL, DEBUG);
-  finally
-    Query.Free;
-  end;
-end;
-
 procedure TForm1.Button1Click(Sender: TObject);
 var
   Query: TScryfallQuery;
@@ -483,7 +411,6 @@ var
   SelectedSetCode: string;
   SelectedColors: string;
   UniqueMode: string;
-  // MaxBudget: Currency; // For budget-based filtering
 begin
   if ComboBoxEditSearch.Text.Trim.IsEmpty then
     Exit;
@@ -491,7 +418,7 @@ begin
   Button1.Enabled := False;
   MultiViewFilters.HideMaster;
 
-  SelectedRarity := rAll; // Default to all rarities
+  SelectedRarity := rAll;
   if ComboBoxRarity.Text <> S_ALL_RARITIES then
   begin
     if AnsiSameText(ComboBoxRarity.Text.Trim, S_MYTHIC_RARE) then
@@ -507,35 +434,26 @@ begin
     else
       raise Exception.Create('Invalid rarity selected.');
   end;
+
   Query := TScryfallQuery.Create;
   try
+
     if (ComboBoxSetCode.Selected <> nil) and
       (ComboBoxSetCode.Selected.Text <> S_ALL_SETS) then
       SelectedSetCode := ComboBoxSetCode.Selected.Text.Split([S])[0]
     else
       SelectedSetCode := '';
 
-//    if ComboBoxColors.Text = S_ALL_COLORS then
-//      SelectedColors := ''
-//    else
-//      SelectedColors := ComboBoxColors.Text;
-    SelectedColors := GetSelectedColors; // Get selected colors from the ListBox
+    SelectedColors := FCardDisplayManager.GetSelectedColors;
 
-    // Determine the Unique mode
     UniqueMode := System.StrUtils.IfThen(Switch1.IsChecked, 'prints', '');
 
-    // Example: Using the CreateBudgetQuery helper
-    // MaxBudget := 10.00; // Example: Filter cards with a price below $10
-
-    // Add additional filters based on user inputs
     Query.WithName(ComboBoxEditSearch.Text).WithSet(SelectedSetCode)
       .WithRarity(SelectedRarity).WithColors(SelectedColors).Unique(UniqueMode)
-      .OrderBy('name', 'asc').IncludeExtras(False);
+      .OrderBy('released').IncludeExtras(False);
 
-    // Pass the query to FCardDisplayManager
     FCardDisplayManager.ExecuteQuery(Query, OnSearchComplete);
 
-    // Do not free Query here. It will be managed by FCardDisplayManager.
   except
     Query.Free;
     raise;
@@ -547,38 +465,6 @@ begin
   MultiViewFilters.ShowMaster;
 end;
 
-procedure TestCreateBudgetQuery;
-var
-  Query: TScryfallQuery;
-begin
-  try
-    Query := TScryfallQueryHelper.CreateBudgetQuery(10.0);
-    // Example budget: $10
-    try
-      // Display the generated query for debugging
-      Query.LogQueryState('TestCreateBudgetQuery');
-
-      // Execute the query (replace with your method to handle API calls)
-      // E.g., ScryfallAPI.ExecuteQuery(Query);
-    finally
-      Query.Free;
-    end;
-  except
-    on E: Exception do
-    begin
-      LogStuff('TestCreateBudgetQuery failed: ' + E.Message, ERROR);
-    end;
-  end;
-end;
-
-procedure TForm1.Button3Click(Sender: TObject);
-begin
-  TestCreateBudgetQuery;
-end;
-
-// ProcessScryfallBulkFile('C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json');
-// "C:\Users\raygu\AppData\Roaming\MTGCardFetch\oracle-cards-20250112100215.json"
-
 procedure TForm1.ButtonNextPageClick(Sender: TObject);
 begin
   if not FCardDisplayManager.HasMorePages then
@@ -588,34 +474,7 @@ begin
   MultiViewFilters.HideMaster;
 
   FCardDisplayManager.LoadNextPage(OnSearchComplete);
-  // ListViewCards.ItemIndex := ListViewCards.ItemCount -1;
-  // ListViewCards.OnItemClick(ListViewCards, ListViewCards.Items[ListViewCards.ItemCount -1]);
 
-end;
-
-procedure TForm1.ComboBoxEditSearchChange(Sender: TObject);
-begin
-//  TimerDebounce.Enabled := False;
-//  TimerDebounce.Enabled := True;
-end;
-
-procedure TForm1.ComboBoxEditSearchItemClick(const Sender: TObject;
-const AItem: TListBoxItem);
-begin
-  if Assigned(AItem) then
-  begin
-    FIsProgrammaticChange := True;
-    try
-      ComboBoxEditSearch.Text := AItem.Text;
-      LogStuff(Format('User selected suggestion: "%s"', [AItem.Text]));
-    finally
-      FIsProgrammaticChange := False;
-    end;
-  end
-  else
-  begin
-    LogStuff('Selected item is not assigned (nil).');
-  end;
 end;
 
 procedure TForm1.ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word;
@@ -629,19 +488,15 @@ begin
     vkReturn:
       begin
         Button1Click(Sender);
-
       end;
 
     vkDown:
       begin
-        if ComboBoxEditSearch.Items.Count > 0 then
-          ComboBoxEditSearch.DropDown;
-        Key := 0;
+
       end;
     vkEscape:
       begin
-        ComboBoxEditSearch.Items.Clear;
-        Key := 0;
+
       end;
   end;
 end;

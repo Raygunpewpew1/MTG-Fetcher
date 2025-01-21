@@ -42,7 +42,6 @@ uses
 var
   SetIconCache: TDictionary<string, string>;
 
-
 function EncodeHTML(const HtmlText: string): string;
 begin
   Result := TNetEncoding.HTML.Encode(HtmlText);
@@ -83,21 +82,21 @@ begin
       end
       else
       begin
-        {$IFDEF MSWINDOWS}
+{$IFDEF MSWINDOWS}
         // Avoid unnecessary encoding conversions
         try
           EncodedPart := EncodeHTML(Part);
         except
           on E: Exception do
           begin
-            LogStuff('Error encoding part: ' + Part + '. Error: ' + E.Message, ERROR);
+            LogStuff('Error encoding part: ' + Part + '. Error: ' +
+              E.Message, ERROR);
             EncodedPart := ''; // Fallback to an empty string
           end;
         end;
-        {$ELSE}
+{$ELSE}
         EncodedPart := EncodeHTML(Part);
-        {$ENDIF}
-
+{$ENDIF}
         // Replace newline characters with <br> tags
         Builder.Append(StringReplace(EncodedPart, #10, '<br>', [rfReplaceAll]));
       end;
@@ -113,8 +112,6 @@ begin
     end;
   end;
 end;
-
-
 
 procedure AddReplacement(Replacements: TDictionary<string, string>;
   const Key, Value: string);
@@ -178,29 +175,30 @@ begin
     else
       ImageUri := ''; // Fallback if no image URI is found
 
-    {$IFDEF MSWINDOWS}
-    var EncodedTypeLine := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(Part.TypeLine));
-    {$ELSE}
-    var EncodedTypeLine := EncodeHTML(Part.TypeLine);
-    {$ENDIF}
-
-    PartHtml := Format('<div class="meld-part">' +
-      '<p><strong>%s</strong></p>' +
-      '<p>%s</p>' +
-      '<img src="%s" alt="%s">' +
-      '</div>',
-      [EncodeHTML(Part.Name), EncodedTypeLine, EncodeHTML(ImageUri), EncodeHTML(Part.Name)]);
+{$IFDEF MSWINDOWS}
+    var
+    EncodedTypeLine := TEncoding.UTF8.GetString
+      (TEncoding.ANSI.GetBytes(Part.TypeLine));
+{$ELSE}
+    var
+    EncodedTypeLine := EncodeHTML(Part.TypeLine);
+{$ENDIF}
+    PartHtml := Format('<div class="meld-part">' + '<p><strong>%s</strong></p>'
+      + '<p>%s</p>' + '<img src="%s" alt="%s">' + '</div>',
+      [EncodeHTML(Part.Name), EncodedTypeLine, EncodeHTML(ImageUri),
+      EncodeHTML(Part.Name)]);
     MeldPartsHtml := MeldPartsHtml + PartHtml;
   end;
 
   // Add the meld result details
   if not CardDetails.MeldDetails.MeldResult.Name.IsEmpty then
   begin
-    var MeldResultImages := FetchMeldPartImages([CardDetails.MeldDetails.MeldResult])[0];
+    var
+    MeldResultImages := FetchMeldPartImages
+      ([CardDetails.MeldDetails.MeldResult])[0];
     ImageUri := MeldResultImages.Small;
     MeldPartsHtml := MeldPartsHtml + Format('<div class="meld-result">' +
-      '<p><strong>Meld Result:</strong> %s</p>' +
-      '<img src="%s" alt="%s">' +
+      '<p><strong>Meld Result:</strong> %s</p>' + '<img src="%s" alt="%s">' +
       '</div>', [EncodeHTML(CardDetails.MeldDetails.MeldResult.Name),
       EncodeHTML(ImageUri),
       EncodeHTML(CardDetails.MeldDetails.MeldResult.Name)]);
@@ -211,7 +209,6 @@ begin
   Replacements.AddOrSetValue('{{MeldClass}}', ''); // Remove hidden class
 end;
 
-
 procedure AddMultiFaceOracleText(const CardDetails: TCardDetails;
   Replacements: TDictionary<string, string>);
 var
@@ -220,21 +217,21 @@ var
   EncodeTypeLine: string;
   Builder: TStringBuilder;
 begin
-   Builder := TStringBuilder.Create;
-   Builder.Clear;
+  Builder := TStringBuilder.Create;
+  Builder.Clear;
   try
 
-      Builder.Append('<div class="card-faces-grid">'); // Start grid container
+    Builder.Append('<div class="card-faces-grid">'); // Start grid container
 
     for Face in CardDetails.CardFaces do
     begin
       // Preprocess text, type line, etc.
-      {$IFDEF MSWINDOWS}
-      EncodeTypeLine := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(Face.TypeLine));
-      {$ELSE}
+{$IFDEF MSWINDOWS}
+      EncodeTypeLine := TEncoding.UTF8.GetString
+        (TEncoding.ANSI.GetBytes(Face.TypeLine));
+{$ELSE}
       EncodeTypeLine := EncodeHTML(Face.TypeLine);
-      {$ENDIF}
-
+{$ENDIF}
       // Build up "extra" lines: Power/Toughness, Flavor
       ExtraHtml := '';
       if not Face.Power.Trim.IsEmpty and not Face.Toughness.Trim.IsEmpty then
@@ -267,7 +264,6 @@ begin
     Builder.Free;
   end;
 end;
-
 
 procedure AddCoreReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
@@ -398,28 +394,28 @@ var
 begin
   Builder := TStringBuilder.Create;
   try
-    Builder.Append('<div class="legalities-grid">');
-
-
+    // Open the table rows
     for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
     begin
       LegalityName := LegalityToString[Format]; // Map format to string
-      LegalityStatus := CardDetails.Legalities.GetStatus(Format); // Get legality status
+      LegalityStatus := CardDetails.Legalities.GetStatus(Format);
 
       if not LegalityStatus.IsEmpty then
       begin
         StatusClass := GetStatusClass(LegalityStatus); // Get CSS class for status
         LegalityStatus := FormatLegalityStatus(LegalityStatus); // Format status string
 
-        // Append legality information to the builder
-        Builder.AppendFormat('<div class="format-name">%s</div>' +
-          '<div class="status"><span class="%s">%s</span></div>',
+        // Append a row with the legality format and its status
+        Builder.AppendFormat('<tr>' +
+          '<td class="format-name">%s</td>' + // Format Name (e.g., "Modern")
+          '<td class="status"><span class="%s">%s</span></td>' + // Status with CSS class
+          '</tr>',
           [EncodeHTML(CapitalizeFirstLetter(LegalityName)), StatusClass,
           EncodeHTML(LegalityStatus)]);
       end;
     end;
 
-    Builder.Append('</div>');
+    // Replace the {{Legalities}} placeholder with the rows
     AddReplacement(Replacements, '{{Legalities}}', Builder.ToString);
   finally
     Builder.Free;
@@ -757,7 +753,6 @@ begin
 end;
 
 initialization
-
 
 SetIconCache := TDictionary<string, string>.Create;
 LoadSetIconCacheFromFile;

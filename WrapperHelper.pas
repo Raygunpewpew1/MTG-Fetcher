@@ -62,15 +62,14 @@ begin
 
 end;
 
-function GetSafeStringField(const Obj: TJsonObject; const FieldName: string; const Default: string = ''): string;
+function GetSafeStringField(const Obj: TJsonObject; const FieldName: string;
+  const Default: string = ''): string;
 begin
   if Obj.Contains(FieldName) and (Obj.Types[FieldName] = jdtString) then
     Exit(Obj.S[FieldName])
   else
     Exit(Default);
 end;
-
-
 
 procedure ParseAllParts(const JsonObj: TJsonObject;
   out AllParts: TArray<TCardPart>);

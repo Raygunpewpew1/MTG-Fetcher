@@ -49,7 +49,6 @@ type
     procedure CacheResult(const CacheKey: string;
       const JsonResponse: TJsonObject);
 
-
   public
     constructor Create;
     destructor Destroy; override;

@@ -19,7 +19,8 @@ procedure SaveCatalogsToFile(const FileName: string;
   const Catalogs: TDictionary<string, TScryfallCatalog>);
 procedure LoadCatalogsFromFile(const FileName: string;
   var Catalogs: TDictionary<string, TScryfallCatalog>);
-function GetLegalStatus(const Legalities: TCardLegalities; Format: TLegalityFormat): string;
+function GetLegalStatus(const Legalities: TCardLegalities;
+  Format: TLegalityFormat): string;
 procedure ClearListViewItems(ListView: TListView);
 function ConvertColorCodeToName(const Code: string): string;
 function MatchesColors(const CardColors: string;
@@ -54,13 +55,13 @@ end;
 
 function GetAppDirectory: string;
 begin
-  {$IF DEFINED(MSWINDOWS)}
+{$IF DEFINED(MSWINDOWS)}
   Result := TPath.Combine(TPath.GetHomePath, MTGAppRootFolder);
-  {$ELSEIF DEFINED(ANDROID)}
+{$ELSEIF DEFINED(ANDROID)}
   Result := TPath.Combine(TPath.GetHomePath, MTGAppRootFolder);
-  {$ELSE}
+{$ELSE}
   raise Exception.Create('Unsupported platform');
-  {$ENDIF}
+{$ENDIF}
   Result := EnsureDirectoryExists(Result);
 end;
 
@@ -91,7 +92,8 @@ var
   SourcePath, DestinationPath: string;
 begin
   DestinationPath := GetAssetPath('mtgjson', DatabaseFileName);
-  SourcePath := TPath.Combine(TPath.GetDirectoryName(ParamStr(0)), DatabaseFileName);
+  SourcePath := TPath.Combine(TPath.GetDirectoryName(ParamStr(0)),
+    DatabaseFileName);
 
   if not TFile.Exists(DestinationPath) then
   begin
@@ -120,7 +122,8 @@ begin
   try
     for CatalogName in Catalogs.Keys do
     begin
-      var Catalog := Catalogs[CatalogName];
+      var
+      Catalog := Catalogs[CatalogName];
       CatalogData := TJsonArray.Create;
       for var Item in Catalog.Data do
         CatalogData.Add(Item);
@@ -158,13 +161,17 @@ begin
     Catalogs.Clear;
     for var I := 0 to JsonCatalogs.Count - 1 do
     begin
-      var CatalogName := JsonCatalogs.Names[I];
-      var CatalogObj := JsonCatalogs.O[CatalogName];
-      var Catalog: TScryfallCatalog;
+      var
+      CatalogName := JsonCatalogs.Names[I];
+      var
+      CatalogObj := JsonCatalogs.O[CatalogName];
+      var
+        Catalog: TScryfallCatalog;
       Catalog.Name := CatalogObj.S[FieldName];
       Catalog.TotalItems := CatalogObj.I[FieldCount];
 
-      var CatalogDataArray := CatalogObj.A[FieldData];
+      var
+      CatalogDataArray := CatalogObj.A[FieldData];
       SetLength(Catalog.Data, CatalogDataArray.Count);
       for var J := 0 to CatalogDataArray.Count - 1 do
         Catalog.Data[J] := CatalogDataArray.S[J];
@@ -233,12 +240,11 @@ begin
   Result := not Card.CardName.IsEmpty and not Card.SFID.IsEmpty;
 end;
 
-function GetLegalStatus(const Legalities: TCardLegalities; Format: TLegalityFormat): string;
+function GetLegalStatus(const Legalities: TCardLegalities;
+  Format: TLegalityFormat): string;
 begin
   Result := Legalities.GetStatus(Format);
 end;
-
-
 
 function ConvertColorCodeToName(const Code: string): string;
 var
@@ -357,4 +363,3 @@ initialization
 finalization
 
 end.
-

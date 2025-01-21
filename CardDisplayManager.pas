@@ -8,7 +8,7 @@ uses
   FMX.ListView, FMX.WebBrowser,
   ScryfallData, System.Threading, FMX.Dialogs, FMX.ListBox,
   CardDisplayHelpers, Template, Logger, SGlobalsZ, MLogic, APIConstants,
-  ScryfallTypes, ScryfallQueryBuilder, System.SyncObjs;
+  ScryfallTypes, ScryfallQueryBuilder, System.SyncObjs, FMX.StdCtrls, FMX.Types;
 
 type
 
@@ -23,6 +23,8 @@ type
     FHasMorePages: Boolean;
     FCurrentQuery: TScryfallQuery;
     FCriticalSection: TCriticalSection;
+    FListBoxColors: TListBox;
+    FColorCheckBoxes: TObjectList<TCheckBox>;
 
     procedure ClearListViewItems;
     procedure InitializeWebBrowser;
@@ -30,14 +32,19 @@ type
       const OnComplete: TProc<Boolean>);
     procedure HandleSetDetails(const CardDetails: TCardDetails;
       const SetDetails: TSetDetails);
-//    function ApplyLocalFilters(const Cards: TArray<TCardDetails>)
-//      : TArray<TCardDetails>;
+    // function ApplyLocalFilters(const Cards: TArray<TCardDetails>)
+    // : TArray<TCardDetails>;
     procedure SafeFreeAndNil<T: class>(var Obj: T);
 
   public
     constructor Create(AListView: TListView; AWebBrowser: TWebBrowser;
-      AScryfallAPI: TScryfallAPI);
+      AScryfallAPI: TScryfallAPI); overload;
     destructor Destroy; override;
+    procedure PopulateColorListBox;
+    function GetSelectedColors: string;
+
+    // Assign this to link the ListBoxColors from the form
+    property ListBoxColors: TListBox read FListBoxColors write FListBoxColors;
 
     procedure ExecuteQuery(const Query: TScryfallQuery;
       const OnComplete: TProc<Boolean>);
@@ -75,6 +82,7 @@ begin
   FHasMorePages := False;
   FCurrentQuery := TScryfallQuery.Create;
   FCriticalSection := TCriticalSection.Create;
+  FColorCheckBoxes := TObjectList<TCheckBox>.Create(True); // Owns objects
   InitializeWebBrowser;
 end;
 
@@ -83,19 +91,87 @@ begin
   SafeFreeAndNil < TList < TCardDetails >> (FCardDataList);
   SafeFreeAndNil<TScryfallQuery>(FCurrentQuery);
   FCriticalSection.Free;
+  FColorCheckBoxes.Free;
   inherited;
+end;
+
+procedure TCardDisplayManager.PopulateColorListBox;
+  procedure AddColor(const ColorName: string; const TagValue: string);
+  var
+    ListBoxItem: TListBoxItem;
+    CheckBox: TCheckBox;
+  begin
+    Assert(not TagValue.IsEmpty, Format('TagValue for %s must not be empty.',
+      [ColorName]));
+
+    ListBoxItem := TListBoxItem.Create(FListBoxColors);
+    ListBoxItem.Parent := FListBoxColors;
+    ListBoxItem.Height := 20; // Adjust height as needed
+
+    CheckBox := TCheckBox.Create(ListBoxItem);
+    CheckBox.Parent := ListBoxItem;
+    CheckBox.Align := TAlignLayout.Client;
+    CheckBox.Text := ColorName;
+    CheckBox.TagString := TagValue;
+
+    FColorCheckBoxes.Add(CheckBox);
+  end;
+
+begin
+  if not Assigned(FListBoxColors) then
+    raise Exception.Create('FListBoxColors is not assigned.');
+
+  FListBoxColors.Clear;
+  FColorCheckBoxes.Clear;
+
+  AddColor('White', 'W');
+  AddColor('Blue', 'U');
+  AddColor('Black', 'B');
+  AddColor('Red', 'R');
+  AddColor('Green', 'G');
+  AddColor('Colorless', 'C');
+  AddColor('Multicolor', 'M');
+end;
+
+function TCardDisplayManager.GetSelectedColors: string;
+var
+  CheckBox: TCheckBox;
+  Colors: string;
+  IncludeMulticolor: Boolean;
+begin
+  Colors := '';
+  IncludeMulticolor := False;
+
+  for CheckBox in FColorCheckBoxes do
+  begin
+    if CheckBox.IsChecked then
+    begin
+      if CheckBox.TagString = 'M' then
+        IncludeMulticolor := True
+      else
+        Colors := Colors + CheckBox.TagString;
+    end;
+  end;
+
+  if IncludeMulticolor then
+    if Colors.IsEmpty then
+      Result := 'M'
+    else
+      Result := '>' + Colors
+  else
+    Result := Colors;
+
+  LogStuff('TCardDisplayManager.GetSelectedColors Output: ' + Result);
 end;
 
 procedure LogQueryState(Query: TScryfallQuery; const Context: string);
 begin
   if Assigned(Query) then
-    LogStuff(Format('%s - Query State: Options: IncludeExtras: %s, UniqueMode: %s, Sort: %s, Direction: %s, Page: %d',
-      [Context,
-       BoolToStr(Query.Options.IncludeExtras, True),
-       Query.Options.UniqueMode,
-       Query.Options.Sort,
-       Query.Options.Direction,
-       Query.Options.Page]), DEBUG)
+    LogStuff(Format
+      ('%s - Query State: Options: IncludeExtras: %s, UniqueMode: %s, Sort: %s, Direction: %s, Page: %d',
+      [Context, BoolToStr(Query.Options.IncludeExtras, True),
+      Query.Options.UniqueMode, Query.Options.Sort, Query.Options.Direction,
+      Query.Options.Page]), DEBUG)
   else
     LogStuff(Format('%s - Query is nil.', [Context]), ERROR);
 end;
@@ -118,7 +194,8 @@ begin
     FListView.Items.Clear;
 end;
 
-procedure TCardDisplayManager.ExecuteQuery(const Query: TScryfallQuery; const OnComplete: TProc<Boolean>);
+procedure TCardDisplayManager.ExecuteQuery(const Query: TScryfallQuery;
+  const OnComplete: TProc<Boolean>);
 begin
   FCriticalSection.Enter;
   try
@@ -126,7 +203,8 @@ begin
     SafeFreeAndNil<TScryfallQuery>(FCurrentQuery);
     FCurrentQuery := Query.Clone;
     FCurrentPage := 1; // Reset pagination
-    LogStuff(Format('ExecuteQuery - After Cloning - Query State: %s', [FCurrentQuery.Options.ToString]), DEBUG);
+    LogStuff(Format('ExecuteQuery - After Cloning - Query State: %s',
+      [FCurrentQuery.Options.ToString]), DEBUG);
   finally
     FCriticalSection.Leave;
   end;
@@ -135,7 +213,6 @@ begin
   DisplayCardArtworks(FCurrentQuery, OnComplete);
 end;
 
-
 function TCardDisplayManager.GetCurrentQuery: TScryfallQuery;
 begin
   Result := FCurrentQuery;
@@ -143,7 +220,7 @@ end;
 
 procedure TCardDisplayManager.SetupDefaultFilters(Query: TScryfallQuery);
 begin
-//  LogQueryState(Query, 'SetupDefaultFilters - Before');
+  // LogQueryState(Query, 'SetupDefaultFilters - Before');
 
   // Set default sort order if not already specified
   if Query.Options.Sort.IsEmpty then
@@ -153,9 +230,8 @@ begin
   if Query.Options.Page < 1 then
     Query.SetPage(1);
 
-//  LogQueryState(Query, 'SetupDefaultFilters - After');
+  // LogQueryState(Query, 'SetupDefaultFilters - After');
 end;
-
 
 procedure TCardDisplayManager.LoadNextPage(const OnComplete: TProc<Boolean>);
 var
@@ -178,7 +254,8 @@ begin
         if Success then
         begin
           Inc(FCurrentPage); // Increment the page only after successful fetch
-          LogStuff(Format('LoadNextPage: FCurrentPage incremented to %d.', [FCurrentPage]), DEBUG);
+          LogStuff(Format('LoadNextPage: FCurrentPage incremented to %d.',
+            [FCurrentPage]), DEBUG);
         end
         else
           LogStuff('LoadNextPage: Failed to load next page.', ERROR);
@@ -189,15 +266,15 @@ begin
   end;
 end;
 
-
 procedure TCardDisplayManager.DisplayCardArtworks(const Query: TScryfallQuery;
-  const OnComplete: TProc<Boolean>);
+const OnComplete: TProc<Boolean>);
 begin
   FCardDataList.Clear;
   SetupDefaultFilters(Query);
 
   FScryfallAPI.SearchAllCardsAsync(Query,
-    procedure(Success: Boolean; Cards: TArray<TCardDetails>; HasMore: Boolean; ErrorMsg: string)
+    procedure(Success: Boolean; Cards: TArray<TCardDetails>; HasMore: Boolean;
+      ErrorMsg: string)
     begin
       TThread.Synchronize(nil,
         procedure
@@ -220,19 +297,17 @@ begin
     end);
 end;
 
-
-
 procedure TCardDisplayManager.UpdateProgress(Current, Total: Integer);
 begin
   if Assigned(FOnProgressUpdate) then
     FOnProgressUpdate(Round((Current / Total) * 100));
 end;
 
-//function TCardDisplayManager.ApplyLocalFilters(const Cards
-//  : TArray<TCardDetails>): TArray<TCardDetails>;
-//begin
-//  Result := Cards;
-//end;
+// function TCardDisplayManager.ApplyLocalFilters(const Cards
+// : TArray<TCardDetails>): TArray<TCardDetails>;
+// begin
+// Result := Cards;
+// end;
 
 procedure TCardDisplayManager.LoadRandomCard(const OnComplete: TProc<Boolean>);
 begin
@@ -271,11 +346,12 @@ var
 begin
   if not Assigned(FListView) or Card.CardName.IsEmpty or Card.SFID.IsEmpty then
   begin
-    LogStuff(Format('AddCardToListView: Skipping card due to missing data. CardName: %s, SFID: %s',
+    LogStuff(Format
+      ('AddCardToListView: Skipping card due to missing data. CardName: %s, SFID: %s',
       [Card.CardName, Card.SFID]), ERROR);
     Exit;
   end;
-//  FListView.BeginUpdate;
+  // FListView.BeginUpdate;
   RareStr := RarityToString[Card.Rarity];
   RareStr := RareStr.Substring(0, 1).ToUpper + RareStr.Substring(1);
 
@@ -285,9 +361,8 @@ begin
   ListViewItem.Text := Card.CardName;
   ListViewItem.Detail := RareStr;
   ListViewItem.TagObject := CardDetailsObj;
-//  FListView.EndUpdate;
+  // FListView.EndUpdate;
 end;
-
 
 procedure TCardDisplayManager.HandleSetDetails(const CardDetails: TCardDetails;
 const SetDetails: TSetDetails);

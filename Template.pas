@@ -257,19 +257,34 @@ HtmlTemplate: string = '''
     color: #FFD700;
   }
 
-  .legalities-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2px;
-    padding: 5px;
-    margin-top: 5px;
-    border: 1px solid #444;
-    border-radius: 8px;
-    font-size: 90%;
-    line-height: 1.2;
+  .legalities {
+  text-align: center; /* Center-align content within the legalities section */
+  padding: 10px; /* Add padding around the table */
+  border: 2px solid #FFD700; /* Optional: Highlight border for better visibility */
+  border-radius: 10px; /* Rounded corners */
   }
 
-  .legalities-grid td { padding: 3px; }
+  .legalities-grid {
+  margin: auto; /* Center the table horizontally */
+  width: 90%; /* Make the table take up 90% of the container width */
+  max-width: 600px; /* Limit maximum table width */
+  border-collapse: collapse; /* Remove gaps between table cells */
+  }
+
+  .legalities-grid td,
+  .legalities-grid th {
+  text-align: center; /* Center-align text in cells */
+  padding: 8px; /* Add spacing inside cells */
+  border: 1px solid #444; /* Add a border between cells */
+  }
+
+  .legalities h2 {
+  margin-bottom: 10px; /* Add spacing between the header and the table */
+  }
+  .legalities-grid tr:hover {
+  background-color: #333;
+  }
+
 
   .format-name {
     font-weight: bold;
@@ -352,6 +367,23 @@ HtmlTemplate: string = '''
     padding: 5px 0;
   }
 
+  button {
+  background-color: #444;
+  color: #FFD700;
+  border: 2px solid #FFD700;
+  border-radius: 5px;
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  }
+
+  button:hover {
+  background-color: #FFD700;
+  color: #20262F;
+  }
+
+
   @media (max-width: 400px) {
     body { font-size: 90%; }
     h1 { font-size: 22px; }
@@ -433,11 +465,13 @@ HtmlTemplate: string = '''
       </table>
     </div>
 
-    <div class="legalities">
-      <h2>Legalities</h2>
-      <table class="legalities-grid">{{Legalities}}</table>
-    </div>
-
+  <div class="legalities">
+  <h2>Legalities</h2>
+  <button onclick="toggleLegalities()" style="margin-bottom: 10px;">Toggle Legalities</button>
+  <table id="legalities-grid" class="legalities-grid" style="display: none;">
+    {{Legalities}}
+  </table>
+  </div>
 
 
     <div class="additional-details">
@@ -469,11 +503,22 @@ HtmlTemplate: string = '''
     });
     });
 
+    function toggleLegalities() {
+    const legalitiesGrid = document.getElementById("legalities-grid");
+    if (legalitiesGrid.style.display === "none") {
+      legalitiesGrid.style.display = "table"; // Show the table
+    } else {
+      legalitiesGrid.style.display = "none"; // Hide the table
+    }
+    }
+
     ''';
 
-  SVG_TEMPLATE =
+  SVG_TEMPLATE1 =
     '<img style="display:inline-block; width:16px; height:16px; vertical-align:text-bottom; margin:0 2px;" ' +
     'src="data:image/svg+xml;base64,%s" alt="%s">';
+  SVG_TEMPLATE =
+  '<span style="display:inline-block; width:16px; height:16px; vertical-align:text-bottom; margin:0 2px;">%s</span>';
 
 
 implementation

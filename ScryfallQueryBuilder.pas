@@ -13,8 +13,12 @@ type
   private
     FFilters: TList<TScryfallFilter>;
     FOptions: TScryfallQueryOptions;
-//    FLock: TCriticalSection;
+    // FLock: TCriticalSection;
     procedure AddFilterInternal(const Filter: TScryfallFilter);
+    function AddFilterIfNotEmpty(FilterType: TScryfallFilterType;
+      const Value: string; Operator: TScryfallOperator = opEquals)
+      : TScryfallQuery;
+    procedure LogState(const Context: string);
     // function GetCacheKey: string;
   public
     constructor Create;
@@ -24,7 +28,7 @@ type
     function GetFilters: TList<TScryfallFilter>;
     procedure SetFilters(const Value: TList<TScryfallFilter>);
     property Filters: TList<TScryfallFilter> read GetFilters write SetFilters;
-    procedure LogQueryState(const Context: string);
+    // procedure LogQueryState(const Context: string);
     // Basic filter methods
     function BuildOptionsString: string;
     function AddFilter(FilterType: TScryfallFilterType; const Value: string;
@@ -36,7 +40,7 @@ type
     function ClearFilters: TScryfallQuery;
     function Page(const PageNum: Integer): TScryfallQuery;
     function Clone: TScryfallQuery;
-    function ValidateFilters: Boolean;
+    // function ValidateFilters: Boolean;
     function AreFiltersValid: Boolean;
 
     // Common search patterns
@@ -143,6 +147,16 @@ begin
   inherited;
 end;
 
+function TScryfallQuery.AddFilterIfNotEmpty(FilterType: TScryfallFilterType;
+  const Value: string; Operator: TScryfallOperator = opEquals): TScryfallQuery;
+begin
+  if Value.IsEmpty then
+    Exit(Self); // Do nothing if value is empty
+
+  Result := AddFilter(FilterType, Value, Operator);
+  // Add filter if value is not empty
+end;
+
 function TScryfallQuery.GetFilterCount: Integer;
 begin
   if Assigned(FFilters) then
@@ -151,15 +165,15 @@ begin
     Result := 0;
 end;
 
-procedure TScryfallQuery.LogQueryState(const Context: string);
-begin
-  var
-  FilterCount := IfThen(Assigned(FFilters), FFilters.Count, 0);
-  LogStuff(Format
-    ('%s - Query State: Options: IncludeExtras: %s, UniqueMode: %s, Sort: %s, Direction: %s, Page: %d, Filters Count: %d',
-    [Context, BoolToStr(FOptions.IncludeExtras, True), FOptions.UniqueMode,
-    FOptions.Sort, FOptions.Direction, FOptions.Page, FilterCount]), DEBUG);
-end;
+// procedure TScryfallQuery.LogQueryState(const Context: string);
+// begin
+// var
+// FilterCount := IfThen(Assigned(FFilters), FFilters.Count, 0);
+// LogStuff(Format
+// ('%s - Query State: Options: IncludeExtras: %s, UniqueMode: %s, Sort: %s, Direction: %s, Page: %d, Filters Count: %d',
+// [Context, BoolToStr(FOptions.IncludeExtras, True), FOptions.UniqueMode,
+// FOptions.Sort, FOptions.Direction, FOptions.Page, FilterCount]), DEBUG);
+// end;
 
 function TScryfallQuery.GetFilters: TList<TScryfallFilter>;
 begin
@@ -175,58 +189,39 @@ begin
   end;
 end;
 
-function TScryfallQuery.ValidateFilters: Boolean;
+// function TScryfallQuery.ValidateFilters: Boolean;
+// begin
+// if not Assigned(FFilters) then
+// begin
+// LogStuff('Error: FFilters is nil in ValidateFilters. Initializing to an empty list.',
+// WARNING);
+// FFilters := TList<TScryfallFilter>.Create; // Initialize FFilters
+// end;
+//
+// // Further validation logic for filters
+// for var Filter in FFilters do
+// begin
+// if (Filter.Values = nil) or (Length(Filter.Values) = 0) then
+// begin
+// LogStuff('Error: A filter in FFilters has empty or nil Values.', ERROR);
+// Exit(False);
+// end;
+// end;
+//
+// Result := True; // Filters are valid
+// end;
+
+function TScryfallQuery.AreFiltersValid: Boolean;
 begin
   if not Assigned(FFilters) then
-  begin
-    LogStuff('Error: FFilters is nil in ValidateFilters. Initializing to an empty list.',
-      WARNING);
-    FFilters := TList<TScryfallFilter>.Create; // Initialize FFilters
-  end;
+    Exit(False);
 
-  // Further validation logic for filters
   for var Filter in FFilters do
   begin
     if (Filter.Values = nil) or (Length(Filter.Values) = 0) then
     begin
-      LogStuff('Error: A filter in FFilters has empty or nil Values.', ERROR);
+      LogStuff('Invalid filter detected: Empty or nil Values.', ERROR);
       Exit(False);
-    end;
-  end;
-
-  Result := True; // Filters are valid
-end;
-
-function TScryfallQuery.AreFiltersValid: Boolean;
-var
-  Filter: TScryfallFilter;
-  FilterIndex: Integer;
-begin
-  if not Assigned(FFilters) then
-  begin
-    LogStuff('AreFiltersValid: FFilters is nil.', ERROR);
-    Exit(False);
-  end;
-
-  if FFilters.Count = 0 then
-  begin
-    LogStuff('AreFiltersValid: FFilters is empty.', ERROR);
-    Exit(False);
-  end;
-
-  for FilterIndex := 0 to FFilters.Count - 1 do
-  begin
-    try
-      Filter := FFilters[FilterIndex];
-      LogStuff(Format('AreFiltersValid: Checking filter [%d], Type: [%s]',
-        [FilterIndex, ScryfallFilterPrefix[Filter.FilterType]]), DEBUG);
-    except
-      on E: Exception do
-      begin
-        LogStuff(Format('AreFiltersValid: Error accessing filter [%d]: %s',
-          [FilterIndex, E.Message]), ERROR);
-        Exit(False);
-      end;
     end;
   end;
 
@@ -248,12 +243,12 @@ begin
     // Copy all options to the cloned query
     Result.FOptions := FOptions;
 
-    LogStuff(Format
-      ('Clone - After Cloning - Query State: Options: IncludeExtras: %s, UniqueMode: %s, Sort: %s, Direction: %s, Page: %d, Filters Count: %d',
-      [BoolToStr(Result.FOptions.IncludeExtras, True),
-      Result.FOptions.UniqueMode, Result.FOptions.Sort,
-      Result.FOptions.Direction, Result.FOptions.Page,
-      IfThen(Assigned(Result.FFilters), Result.FFilters.Count, 0)]), DEBUG);
+    // LogStuff(Format
+    // ('Clone - After Cloning - Query State: Options: IncludeExtras: %s, UniqueMode: %s, Sort: %s, Direction: %s, Page: %d, Filters Count: %d',
+    // [BoolToStr(Result.FOptions.IncludeExtras, True),
+    // Result.FOptions.UniqueMode, Result.FOptions.Sort,
+    // Result.FOptions.Direction, Result.FOptions.Page,
+    // IfThen(Assigned(Result.FFilters), Result.FFilters.Count, 0)]), DEBUG);
   except
     Result.Free;
     raise;
@@ -269,6 +264,9 @@ end;
 function TScryfallQuery.AddFilter(FilterType: TScryfallFilterType;
   const Value: string; Operator: TScryfallOperator): TScryfallQuery;
 begin
+  // LogStuff(Format('Filter Added: Type=%s, Value=%s',
+  // [ScryfallFilterPrefix[FilterType], Value]));
+
   AddFilterInternal(TScryfallFilter.Create(FilterType, Value, Operator));
   Result := Self;
 end;
@@ -276,7 +274,8 @@ end;
 procedure TScryfallQuery.AddFilterInternal(const Filter: TScryfallFilter);
 begin
   if not Assigned(FFilters) then
-    raise Exception.Create('FFilters is not initialized');
+    FFilters := TList<TScryfallFilter>.Create; // Initialize FFilters if nil
+
   FFilters.Add(Filter);
 end;
 
@@ -294,10 +293,7 @@ end;
 
 function TScryfallQuery.WithSet(const SetCode: string): TScryfallQuery;
 begin
-  if SetCode.IsEmpty then
-    Result := Self
-  else
-    Result := AddFilter(ftSet, SetCode.ToLower);
+  Result := AddFilterIfNotEmpty(ftSet, SetCode.ToLower);
 end;
 
 function TScryfallQuery.WithRarity(const Rarity: TRarity): TScryfallQuery;
@@ -310,13 +306,27 @@ end;
 
 function TScryfallQuery.WithColors(const Colors: string; ExactMatch: Boolean)
   : TScryfallQuery;
+var
+  NormalizedColors: string;
 begin
   if Colors.IsEmpty then
-    Result := Self
-  else if ExactMatch then
-    Result := AddFilter(ftColor, Colors, opExact)
+    Exit(Self); // No colors selected, skip adding a filter
+
+  if Colors.Contains('M') then
+  begin
+    if not Colors.StartsWith('>') then
+      NormalizedColors := '>' + Colors // Ensure multicolor starts with '>'
+    else
+      NormalizedColors := Colors;
+  end
   else
-    Result := AddFilter(ftColor, Colors);
+    NormalizedColors := Colors;
+
+  // LogStuff('WithColors Input: ' + Colors);
+  // LogStuff('WithColors Normalized: ' + NormalizedColors);
+
+  // Add the color filter
+  Result := AddFilter(ftColor, NormalizedColors, opEquals);
 end;
 
 function TScryfallQuery.WithPrice(PriceType: TScryfallPriceType;
@@ -349,6 +359,14 @@ begin
     raise Exception.Create('BuildQuery: FFilters is not initialized.');
   end;
 
+  if Filter.FilterType = ftColor then
+  begin
+    if not Filter.Values[0].Value.StartsWith('>') and
+      (Filter.Values[0].Value.Length > 5) then
+      raise Exception.Create('Invalid color filter format: ' + Filter.Values
+        [0].Value);
+  end;
+
   SB := TStringBuilder.Create;
   try
     for Filter in FFilters do
@@ -368,10 +386,17 @@ begin
   finally
     SB.Free;
   end;
+
+  // LogStuff('BuildQuery Final Query: ' + Result);
 end;
 
-
-
+procedure TScryfallQuery.LogState(const Context: string);
+begin
+  LogStuff(Format
+    ('%s - Options: IncludeExtras=%s, UniqueMode=%s, Sort=%s, Direction=%s, Page=%d, Filters=%d',
+    [Context, BoolToStr(FOptions.IncludeExtras, True), FOptions.UniqueMode,
+    FOptions.Sort, FOptions.Direction, FOptions.Page, GetFilterCount]), DEBUG);
+end;
 
 function TScryfallQuery.BuildURL: string;
 var
@@ -380,8 +405,11 @@ begin
   Query := BuildQuery;
   Result := Format(StandardSStr, [EndpointSearch,
     TNetEncoding.URL.Encode(Query)]);
-  LogStuff('Built URL: ' + Result);
+  LogStuff('Built URL: ' + Result); // Log the full URL for debugging
 end;
+
+
+
 
 // function TScryfallQuery.GetCacheKey: string;
 // begin
@@ -401,8 +429,8 @@ end;
 
 function TScryfallQuery.BuildOptionsString: string;
 begin
-  LogStuff(Format('BuildOptionsString - Options: %s',
-    [FOptions.ToString]), DEBUG);
+  // LogStuff(Format('BuildOptionsString - Options: %s',
+  // [FOptions.ToString]), DEBUG);
   Result := '';
   if FOptions.UniqueMode <> '' then
     Result := Result + '&unique=' + FOptions.UniqueMode;
@@ -415,8 +443,6 @@ begin
   if FOptions.Page > 1 then
     Result := Result + '&page=' + FOptions.Page.ToString;
 end;
-
-
 
 
 // API Compatibility Methods
@@ -520,12 +546,10 @@ end;
 function TScryfallQuery.WithColorIdentity(const Colors: string;
   ExactMatch: Boolean = False): TScryfallQuery;
 begin
-  if Colors.IsEmpty then
-    Result := Self
-  else if ExactMatch then
-    Result := AddFilter(ftColorId, Colors, opExact)
+  if ExactMatch then
+    Result := AddFilterIfNotEmpty(ftColorId, Colors, opExact)
   else
-    Result := AddFilter(ftColorId, Colors);
+    Result := AddFilterIfNotEmpty(ftColorId, Colors);
 end;
 
 function TScryfallQuery.WithType(const TypeLine: string): TScryfallQuery;
@@ -577,17 +601,35 @@ end;
 
 function TScryfallQuery.OrderBy(const Field: string;
   const Direction: string = 'auto'): TScryfallQuery;
+const
+  VALID_SORT_FIELDS: array [0 .. 9] of string = ('name', 'set', 'released',
+    'rarity', 'color', 'usd', 'tix', 'eur', 'cmc', 'power');
+  VALID_DIRECTIONS: array [0 .. 2] of string = ('auto', 'asc', 'desc');
 begin
+  // Ensure the Field parameter is not empty
   if Field.Trim.IsEmpty then
     raise Exception.Create('Sort field cannot be empty in OrderBy.');
-  if not MatchText(Direction.ToLower, ['auto', 'asc', 'desc']) then
-    raise Exception.Create('Invalid Direction value in OrderBy.');
 
+  // Validate the sort Field (case-insensitive)
+  if not MatchText(Field.ToLower, VALID_SORT_FIELDS) then
+    raise Exception.CreateFmt('Invalid sort field "%s". Allowed fields are: %s',
+      [Field, String.Join(', ', VALID_SORT_FIELDS)]);
+
+  // Validate the Direction parameter
+  if not MatchText(Direction.ToLower, VALID_DIRECTIONS) then
+    raise Exception.CreateFmt
+      ('Invalid direction "%s". Allowed directions are: auto, asc, desc.',
+      [Direction]);
+
+  // Assign the validated options
   FOptions.Sort := Field.ToLower;
   FOptions.Direction := Direction.ToLower;
 
+  // Optional: Log the changes for debugging purposes
   LogStuff(Format('OrderBy set - Sort: %s, Direction: %s',
     [FOptions.Sort, FOptions.Direction]), DEBUG);
+
+  // Return the current instance for method chaining
   Result := Self;
 end;
 
@@ -628,10 +670,10 @@ begin
   Result.WithPrice(ptUSD, MaxPrice, opLessEqual);
 
   // Log the query state for debugging
-  Result.LogQueryState('CreateBudgetQuery');
+  Result.LogState('CreateBudgetQuery');
 
   // Validate the filters and options
-  if not Result.ValidateFilters then
+  if not Result.AreFiltersValid then
   begin
     LogStuff('CreateBudgetQuery: Filters validation failed.', ERROR);
     FreeAndNil(Result); // Clean up the query if invalid

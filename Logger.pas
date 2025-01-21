@@ -2,19 +2,18 @@
 
 interface
 
-
 {$IFDEF ANDROID}
+
 uses
   APIConstants, System.Classes, System.IOUtils, System.SyncObjs,
   System.SysUtils, System.Generics.Collections, Androidapi.Log;
 {$ENDIF}
 {$IFDEF MSWINDOWS}
+
 uses
   APIConstants, System.Classes, System.IOUtils, System.SyncObjs,
   System.SysUtils, System.Generics.Collections;
 {$ENDIF}
-
-
 
 type
   TLogLevel = (DEBUG, INFO, WARNING, ERROR);
@@ -37,10 +36,14 @@ const
 function LogLevelToString(Level: TLogLevel): string;
 begin
   case Level of
-    DEBUG: Result := 'DEBUG';
-    INFO: Result := 'INFO';
-    WARNING: Result := 'WARNING';
-    ERROR: Result := 'ERROR';
+    DEBUG:
+      Result := 'DEBUG';
+    INFO:
+      Result := 'INFO';
+    WARNING:
+      Result := 'WARNING';
+    ERROR:
+      Result := 'ERROR';
   else
     Result := 'UNKNOWN';
   end;
@@ -101,7 +104,8 @@ begin
       while LogQueue.Count > 0 do
       begin
         try
-          TFile.AppendAllText(LogFilePath, LogQueue.Dequeue + sLineBreak, TEncoding.UTF8);
+          TFile.AppendAllText(LogFilePath, LogQueue.Dequeue + sLineBreak,
+            TEncoding.UTF8);
         except
           on E: Exception do
             Writeln('Error writing to log file: ' + E.Message);
@@ -119,18 +123,16 @@ var
   LogEntry: string;
 begin
 
-
-
   if not Assigned(LogCriticalSection) then
     Exit;
 
   LogEntry := Format('[%s] [%s] [Thread %d] %s',
     [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), LogLevelToString(Level),
     TThread.CurrentThread.ThreadID, Msg]);
-  {$IFDEF ANDROID}
-  __android_log_write(ANDROID_LOG_DEBUG, 'MTG-Fetcher', PAnsiChar(AnsiString(LogEntry)));
-  {$ENDIF}
-
+{$IFDEF ANDROID}
+  __android_log_write(ANDROID_LOG_DEBUG, 'MTG-Fetcher',
+    PAnsiChar(AnsiString(LogEntry)));
+{$ENDIF}
   LogCriticalSection.Enter;
   try
     if TFile.Exists(LogFilePath) and
@@ -163,4 +165,3 @@ FreeAndNil(LogQueue);
 FreeAndNil(LogCriticalSection);
 
 end.
-

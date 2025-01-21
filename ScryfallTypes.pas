@@ -3,7 +3,8 @@
 interface
 
 uses
-  System.SysUtils, System.Generics.Collections, SGlobalsZ, APIConstants, Logger,System.NetEncoding;
+  System.SysUtils, System.Generics.Collections, SGlobalsZ, APIConstants, Logger,
+  System.NetEncoding;
 
 type
   EScryfallFilterError = class(Exception);
@@ -158,7 +159,6 @@ begin
   Result := Result.Replace('%20', '+');
 end;
 
-
 function FormatPriceValue(const Value: Currency): string;
 begin
   Result := FormatFloat('0.00', Value);
@@ -224,11 +224,13 @@ begin
       if i > 0 then
         SB.Append(' OR '); // Scryfall supports "OR" for multiple values
 
-      // Append the filter prefix and the escaped + encoded value
-      SB.Append(Prefix).Append(GetOperatorStr(Values[i].Operator))
-        .Append(EscapeQueryValue(Values[i].Value));
+      if (FilterType = ftColor) and (Pos('M', Values[i].Value) > 0) then
+        SB.Append(Prefix).Append(GetOperatorStr(Values[i].Operator)).Append('m')
+        // Ensure multicolor is encoded as `m`
+      else
+        SB.Append(Prefix).Append(GetOperatorStr(Values[i].Operator))
+          .Append(EscapeQueryValue(Values[i].Value));
 
-      // Handle range queries with ExtraValue
       if Values[i].ExtraValue <> '' then
         SB.Append(' ').Append(Prefix).Append(GetOperatorStr(opLessEqual))
           .Append(EscapeQueryValue(Values[i].ExtraValue));
@@ -239,8 +241,6 @@ begin
     SB.Free;
   end;
 end;
-
-
 
 function TScryfallFilter.Clone: TScryfallFilter;
 begin

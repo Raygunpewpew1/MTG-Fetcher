@@ -105,7 +105,8 @@ begin
       end;
     end
     else
-      raise Exception.CreateFmt('Failed to fetch symbols from Scryfall. HTTP status: %d. %s',
+      raise Exception.CreateFmt
+        ('Failed to fetch symbols from Scryfall. HTTP status: %d. %s',
         [Response.StatusCode, Response.StatusText]);
   finally
     HttpClient.Free;
@@ -127,7 +128,8 @@ begin
     if Response.StatusCode = 200 then
       Result := Response.ContentAsString(TEncoding.UTF8)
     else
-      LogStuff(Format('Failed to fetch SVG content from %s. HTTP status: %d. %s',
+      LogStuff(Format
+        ('Failed to fetch SVG content from %s. HTTP status: %d. %s',
         [SVG_URL, Response.StatusCode, Response.StatusText]), ERROR);
   finally
     HttpClient.Free;
@@ -169,7 +171,8 @@ begin
         end
         else
         begin
-          LogStuff(Format('No SVG content retrieved for mana symbol [%s] from URL [%s]',
+          LogStuff(Format
+            ('No SVG content retrieved for mana symbol [%s] from URL [%s]',
             [Symbol, SVGUrl]), WARNING);
         end;
       end;
@@ -185,28 +188,27 @@ end;
 
 /// <summary>
 /// Replaces all recognized mana symbols in <paramref name="OracleText"/> with
-/// inline base64-encoded SVG images using an <img> tag.
 /// If the cache is empty, attempts to populate it first.
 /// </summary>
 function ReplaceManaSymbolsWithImages(const OracleText: string): string;
 var
-  Symbol, InlineSVG, EncodedSVG: string;
+  Symbol, InlineSVG, RawSVG: string;
 begin
   Result := OracleText;
 
-  // If the symbol cache is empty, attempt to populate from Scryfall
+  // If the symbol cache is empty, attempt to populate it
   if SymbolCache.Count = 0 then
     PopulateSymbolCache;
 
-  // Perform string replacements
+  // Replace each mana symbol with its raw inline SVG
   for Symbol in SymbolCache.Keys do
   begin
-    EncodedSVG := TNetEncoding.Base64.Encode(SymbolCache[Symbol]);
-    InlineSVG := Format(SVG_TEMPLATE, [EncodedSVG, Symbol]);
-
+    RawSVG := SymbolCache[Symbol]; // Get the raw SVG content from the cache
+    InlineSVG := Format(SVG_TEMPLATE, [RawSVG]); // Embed raw SVG into the template
     Result := Result.Replace(Symbol, InlineSVG, [rfReplaceAll]);
   end;
 end;
+
 
 initialization
 
@@ -223,4 +225,3 @@ finally
 end;
 
 end.
-

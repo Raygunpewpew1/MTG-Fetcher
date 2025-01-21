@@ -194,7 +194,6 @@ end
 = ((Code: 'W'; Name: 'White'), (Code: 'U'; Name: 'Blue'), (Code: 'B';
   Name: 'Black'), (Code: 'R'; Name: 'Red'), (Code: 'G'; Name: 'Green'));
 
-
 SAboutBlank = 'about:blank';
 SCatalogsJson = 'catalogs.json';
 TemplateFileName = 'card_template.html';
