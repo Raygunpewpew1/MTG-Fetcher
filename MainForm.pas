@@ -11,7 +11,7 @@ uses
   System.Threading, FMX.Controls.Presentation, FMX.ListView.Types,
   FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
   FMX.ListBox, MLogic, FMX.ComboEdit, CardDisplayManager,
-  ScryfallQueryBuilder,
+  ScryfallQuery,
   System.IOUtils, System.StrUtils, FMX.MultiView, FMX.Platform;
 
 type
@@ -180,6 +180,8 @@ begin
 
     ComboBoxRarity.ItemIndex := 0;
   end;
+
+
   // ColorCheckBoxes := TObjectList<TCheckBox>.Create(True);
   // PopulateColorListBox;
   DelayTimer.Enabled := True;
@@ -336,11 +338,11 @@ end;
 
 procedure TForm1.WebBrowser1DidFinishLoad(ASender: TObject);
 begin
-  if Assigned(WebBrowser1) and (WebBrowser1.URL <> '') then
+  if Assigned(WebBrowser1) then
   begin
 
     WebBrowserInitialized := True;
-    WebBrowser1.EvaluateJavaScript(JScript);
+   // WebBrowser1.EvaluateJavaScript(JScript);
 
   end;
 end;

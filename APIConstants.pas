@@ -55,6 +55,7 @@ const
 
   // JSON Field Names
   FieldAllParts = 'all_parts';
+  FieldRulingsUri = 'rulings_uri';
   FieldEDHRank = 'edhrec_rank';
   FieldArena = 'arena_id';
   FieldData = 'data';

@@ -63,8 +63,9 @@ inherited Form1_Windows: TForm1_Windows
       inherited ListBoxColors: TListBox
         Position.Y = 258.000000000000000000
         Size.Width = 257.000000000000000000
+        Size.Height = 151.000000000000000000
         Viewport.Width = 253.000000000000000000
-        Viewport.Height = 125.000000000000000000
+        Viewport.Height = 147.000000000000000000
       end
     end
   end

@@ -3,8 +3,63 @@
 interface
 
 uses
-  System.Net.HttpClient, System.Classes, JsonDataObjects, System.SysUtils,
-  System.Generics.Collections, System.IOUtils, Logger, Template, MLogic;
+  System.Classes,
+  System.SysUtils,
+  System.Generics.Collections,
+  System.IOUtils,
+  System.Net.HttpClient,
+  System.NetEncoding,
+  JsonDataObjects,
+  Logger,
+  Template,
+  MLogic,
+  APIConstants; // Ensure this unit contains necessary constants and functions
+
+type
+  TManaSymbolManager = class
+  private
+    FSymbolCache: TDictionary<string, string>;
+    FCacheFilePath: string;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    /// <summary>
+    /// Initializes the symbol manager by loading the cache and populating it if necessary.
+    /// </summary>
+    procedure Initialize;
+
+    /// <summary>
+    /// Replaces mana symbols in the given Oracle text with inlined SVG images.
+    /// </summary>
+    function ReplaceManaSymbolsWithImages(const OracleText: string): string;
+
+  private
+    /// <summary>
+    /// Loads the symbol cache from the cache file.
+    /// </summary>
+    procedure LoadCacheFromFile;
+
+    /// <summary>
+    /// Saves the symbol cache to the cache file.
+    /// </summary>
+    procedure SaveCacheToFile;
+
+    /// <summary>
+    /// Fetches all mana symbols from Scryfall.
+    /// </summary>
+    function FetchAllSymbols: TJsonArray;
+
+    /// <summary>
+    /// Fetches the SVG content from a given URL.
+    /// </summary>
+    function FetchSVGContent(const SVG_URL: string): string;
+
+    /// <summary>
+    /// Populates the symbol cache by fetching symbols not already cached.
+    /// </summary>
+    procedure PopulateSymbolCache;
+  end;
 
 /// <summary>
 /// Replaces mana symbols in the given Oracle text with inlined SVG images.
@@ -13,44 +68,81 @@ function ReplaceManaSymbolsWithImages(const OracleText: string): string;
 
 implementation
 
-uses
-  System.NetEncoding, APIConstants;
+{ TManaSymbolManager }
 
 var
-  SymbolCache: TDictionary<string, string>;
-  CacheFilePath: string;
+  ManaSymbolManager: TManaSymbolManager;
 
-  /// <summary>
-  /// Loads the symbol cache from SymbolCache.json if it exists.
-  /// If the cache file is corrupt, it is deleted and the cache is cleared.
-  /// </summary>
-procedure LoadCacheFromFile;
+constructor TManaSymbolManager.Create;
+begin
+  inherited Create;
+  FSymbolCache := TDictionary<string, string>.Create;
+  FCacheFilePath := GetCacheFilePath(SymbolCacheFile);
+end;
+
+destructor TManaSymbolManager.Destroy;
+begin
+  try
+    SaveCacheToFile;
+  except
+    on E: Exception do
+      LogStuff('Error saving mana symbol cache during destruction: ' + E.Message, ERROR);
+  end;
+  FSymbolCache.Free;
+  inherited Destroy;
+end;
+
+procedure TManaSymbolManager.Initialize;
+begin
+  LoadCacheFromFile;
+  if FSymbolCache.Count = 0 then
+    PopulateSymbolCache;
+end;
+
+function TManaSymbolManager.ReplaceManaSymbolsWithImages(const OracleText: string): string;
+var
+  Symbol, InlineSVG, RawSVG: string;
+begin
+  Result := OracleText;
+
+  // Replace each mana symbol with its inline SVG
+  for Symbol in FSymbolCache.Keys do
+  begin
+    RawSVG := FSymbolCache[Symbol];
+    InlineSVG := Format(SVG_TEMPLATE, [RawSVG]);
+    Result := Result.Replace(Symbol, InlineSVG, [rfReplaceAll]);
+  end;
+end;
+
+procedure TManaSymbolManager.LoadCacheFromFile;
 var
   CacheJson: TJsonObject;
   I: Integer;
   Key: string;
 begin
-  if not TFile.Exists(CacheFilePath) then
-    Exit; // Nothing to load
+  if not TFile.Exists(FCacheFilePath) then
+    Exit; // No cache to load
 
   CacheJson := TJsonObject.Create;
   try
     try
-      CacheJson.LoadFromFile(CacheFilePath);
+      CacheJson.LoadFromFile(FCacheFilePath);
 
       // Populate the symbol cache
       for I := 0 to CacheJson.Count - 1 do
       begin
         Key := CacheJson.Names[I];
-        SymbolCache.AddOrSetValue(Key, CacheJson.S[Key]);
+        if not FSymbolCache.ContainsKey(Key) then
+          FSymbolCache.Add(Key, CacheJson.S[Key]);
       end;
+      LogStuff('Symbol cache loaded from file.', DEBUG);
     except
       on E: Exception do
       begin
         LogStuff('Error loading mana symbol cache: ' + E.Message, ERROR);
-        LogStuff('Deleting corrupt cache file: ' + CacheFilePath);
-        SymbolCache.Clear; // Clear any partial cache
-        TFile.Delete(CacheFilePath); // Remove corrupt file
+        LogStuff('Deleting corrupt cache file: ' + FCacheFilePath, WARNING);
+        FSymbolCache.Clear;
+        TFile.Delete(FCacheFilePath);
       end;
     end;
   finally
@@ -58,37 +150,29 @@ begin
   end;
 end;
 
-/// <summary>
-/// Saves the in-memory symbol cache to SymbolCache.json on disk.
-/// </summary>
-procedure SaveCacheToFile;
+procedure TManaSymbolManager.SaveCacheToFile;
 var
   CacheJson: TJsonObject;
   Pair: TPair<string, string>;
 begin
   CacheJson := TJsonObject.Create;
   try
-    for Pair in SymbolCache do
+    for Pair in FSymbolCache do
       CacheJson.S[Pair.Key] := Pair.Value;
 
-    CacheJson.SaveToFile(CacheFilePath, False, TEncoding.UTF8, False);
+    CacheJson.SaveToFile(FCacheFilePath, False, TEncoding.UTF8, False);
+    LogStuff('Symbol cache saved to disk.', DEBUG);
   finally
     CacheJson.Free;
-    LogStuff('Symbol cache saved to disk.', DEBUG);
   end;
 end;
 
-/// <summary>
-/// Fetches the entire list of mana symbols from Scryfall, returning them as a JSON array.
-/// Raises an exception if the request fails.
-/// </summary>
-procedure FetchAllSymbols(var SymbolsJSON: TJsonArray);
+function TManaSymbolManager.FetchAllSymbols: TJsonArray;
 var
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
   JsonResponse: TJsonObject;
 begin
-  SymbolsJSON := nil;
 
   HttpClient := THTTPClient.Create;
   try
@@ -98,25 +182,22 @@ begin
       JsonResponse := TJsonObject.Create;
       try
         JsonResponse.LoadFromStream(Response.ContentStream);
-        SymbolsJSON := JsonResponse.A[FieldData].Clone as TJsonArray;
+        Result := JsonResponse.A[FieldData].Clone as TJsonArray;
         LogStuff('Successfully fetched symbol list from Scryfall.', INFO);
       finally
         JsonResponse.Free;
       end;
     end
     else
-      raise Exception.CreateFmt
-        ('Failed to fetch symbols from Scryfall. HTTP status: %d. %s',
+      raise Exception.CreateFmt(
+        'Failed to fetch symbols from Scryfall. HTTP status: %d. %s',
         [Response.StatusCode, Response.StatusText]);
   finally
     HttpClient.Free;
   end;
 end;
 
-/// <summary>
-/// Fetches the SVG file content from the given URL. Returns an empty string on error.
-/// </summary>
-function FetchSVGContent(const SVG_URL: string): string;
+function TManaSymbolManager.FetchSVGContent(const SVG_URL: string): string;
 var
   HttpClient: THTTPClient;
   Response: IHTTPResponse;
@@ -128,19 +209,15 @@ begin
     if Response.StatusCode = 200 then
       Result := Response.ContentAsString(TEncoding.UTF8)
     else
-      LogStuff(Format
-        ('Failed to fetch SVG content from %s. HTTP status: %d. %s',
+      LogStuff(Format(
+        'Failed to fetch SVG content from %s. HTTP status: %d. %s',
         [SVG_URL, Response.StatusCode, Response.StatusText]), ERROR);
   finally
     HttpClient.Free;
   end;
 end;
 
-/// <summary>
-/// Fetches all mana symbols from Scryfall, then for each symbol not in our cache,
-/// fetches its SVG content. Updates cache and saves to file if new symbols are added.
-/// </summary>
-procedure PopulateSymbolCache;
+procedure TManaSymbolManager.PopulateSymbolCache;
 var
   SymbolsJSON: TJsonArray;
   I: Integer;
@@ -151,8 +228,9 @@ begin
   SymbolsJSON := nil;
   CacheUpdated := False;
   try
-    // Pull the entire symbol list
-    FetchAllSymbols(SymbolsJSON);
+    SymbolsJSON := FetchAllSymbols;
+    if not Assigned(SymbolsJSON) then
+      Exit;
 
     for I := 0 to SymbolsJSON.Count - 1 do
     begin
@@ -160,25 +238,23 @@ begin
       Symbol := SymbolObj.S[FieldSymbol];
       SVGUrl := SymbolObj.S[FieldSVGUri];
 
-      if not SymbolCache.ContainsKey(Symbol) then
+      if not FSymbolCache.ContainsKey(Symbol) then
       begin
-        // Attempt to fetch the SVG content
+        // Fetch and store the SVG content
         SVGContent := FetchSVGContent(SVGUrl);
         if not SVGContent.IsEmpty then
         begin
-          SymbolCache.Add(Symbol, SVGContent);
+          FSymbolCache.Add(Symbol, SVGContent);
           CacheUpdated := True;
         end
         else
-        begin
-          LogStuff(Format
-            ('No SVG content retrieved for mana symbol [%s] from URL [%s]',
+          LogStuff(Format(
+            'No SVG content retrieved for mana symbol [%s] from URL [%s]',
             [Symbol, SVGUrl]), WARNING);
-        end;
       end;
     end;
 
-    // Only save if something changed
+    // Save cache if updated
     if CacheUpdated then
       SaveCacheToFile;
   finally
@@ -187,41 +263,20 @@ begin
 end;
 
 /// <summary>
-/// Replaces all recognized mana symbols in <paramref name="OracleText"/> with
-/// If the cache is empty, attempts to populate it first.
+/// Global function to replace mana symbols with images.
 /// </summary>
 function ReplaceManaSymbolsWithImages(const OracleText: string): string;
-var
-  Symbol, InlineSVG, RawSVG: string;
 begin
-  Result := OracleText;
-
-  // If the symbol cache is empty, attempt to populate it
-  if SymbolCache.Count = 0 then
-    PopulateSymbolCache;
-
-  // Replace each mana symbol with its raw inline SVG
-  for Symbol in SymbolCache.Keys do
-  begin
-    RawSVG := SymbolCache[Symbol]; // Get the raw SVG content from the cache
-    InlineSVG := Format(SVG_TEMPLATE, [RawSVG]); // Embed raw SVG into the template
-    Result := Result.Replace(Symbol, InlineSVG, [rfReplaceAll]);
-  end;
+  Result := ManaSymbolManager.ReplaceManaSymbolsWithImages(OracleText);
 end;
 
 
 initialization
-
-SymbolCache := TDictionary<string, string>.Create;
-CacheFilePath := GetCacheFilePath(SymbolCacheFile);
-LoadCacheFromFile;
+  ManaSymbolManager := TManaSymbolManager.Create;
+  ManaSymbolManager.Initialize;
 
 finalization
-
-try
-  SaveCacheToFile;
-finally
-  SymbolCache.Free;
-end;
+  ManaSymbolManager.Free;
 
 end.
+

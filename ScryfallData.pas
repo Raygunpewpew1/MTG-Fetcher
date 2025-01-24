@@ -6,7 +6,8 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.Threading, JsonDataObjects, SGlobalsZ,
   System.Net.HttpClient, Logger, System.SyncObjs, MLogic, System.IOUtils,
-  ScryfallTypes, ScryfallQueryBuilder;
+  ScryfallTypes, ScryfallQuery,System.Diagnostics;
+
 
 type
   EScryfallAPIError = class(Exception);
@@ -352,8 +353,11 @@ begin
           begin
             // Success: Parse JSON and return
             try
-              Result := TJsonObject.Parse(ResponseStream.DataString)
+
+
+             Result := TJsonObject.Parse(ResponseStream.DataString)
                 as TJsonObject;
+
               Exit; // Exit immediately if successful
             except
               on E: Exception do
@@ -497,70 +501,76 @@ begin
   end;
 end;
 
-function TScryfallAPI.ParseSearchResult(const JsonResponse: TJsonObject)
-  : TSearchResult;
+function TScryfallAPI.ParseSearchResult(const JsonResponse: TJsonObject): TSearchResult;
 var
   CardsArray: TJSONArray;
-  i: Integer;
-  CardObj: TJsonObject;
+  Stopwatch: TStopwatch;
+  LResult: TSearchResult;
 begin
-  SetLength(Result.Cards, 0);
-  Result.HasMore := False;
-  Result.NextPageURL := '';
-  Result.TotalCards := 0;
+  // Initialize LResult with default values
+  LResult := Default(TSearchResult);
 
   if not Assigned(JsonResponse) then
-    Exit;
+    Exit; // LResult remains default
 
   try
-    if JsonResponse.Contains(FieldData) then
+    if JsonResponse.Contains('data') then
     begin
-      CardsArray := JsonResponse.A[FieldData];
-      LogStuff('ParseSearchResult -> Data Array Count: ' +
-        CardsArray.Count.ToString);
-      SetLength(Result.Cards, CardsArray.Count);
+      CardsArray := JsonResponse.A['data'];
+      LogStuff('ParseSearchResult -> Data Array Count: ' + CardsArray.Count.ToString, DEBUG);
 
-      for i := 0 to CardsArray.Count - 1 do
-      begin
-        try
-          if CardsArray.Types[i] = jdtObject then
+      SetLength(LResult.Cards, CardsArray.Count);
+
+      // Start timing the parsing process
+      Stopwatch := TStopwatch.StartNew;
+
+      // Parallel parsing of cards
+      TParallel.For(0, CardsArray.Count - 1,
+        procedure(index: Integer)
+        var
+          CardObj: TJsonObject;
+        begin
+          if CardsArray.Types[index] = jdtObject then
           begin
-            CardObj := CardsArray.O[i];
-            FillCardDetailsFromJson(CardObj, Result.Cards[i]);
+            CardObj := CardsArray.O[index];
+            // Parse and fill the card details into LResult.Cards[index]
+            WrapperHelper.TWrapperHelper.FillCardDetailsFromJson(CardObj, LResult.Cards[index]);
           end
           else
           begin
-            LogStuff(Format('Skipping non-object element at index %d', [i]));
-            Result.Cards[i].Clear;
+            LogStuff(Format('Skipping non-object element at index %d', [index]), WARNING);
+            LResult.Cards[index].Clear;
           end;
-        except
-          on E: Exception do
-          begin
-            LogStuff(Format('Error parsing card at index %d: %s', [i, E.Message]
-              ), WARNING);
-            Result.Cards[i].Clear;
-          end;
-        end;
-      end;
+        end);
+
+      Stopwatch.Stop;
+      LogStuff(Format('Parallel Parsing Time: %d ms', [Stopwatch.ElapsedMilliseconds]), DEBUG);
+
+      // Assign additional fields
+      LResult.HasMore := JsonResponse.B['has_more'];
+      LResult.NextPageURL := JsonResponse.S['next_page'];
+      LResult.TotalCards := JsonResponse.I['total_cards'];
+
+      // Assign the local result to the function's Result
+      Result := LResult;
     end
     else
     begin
-      LogStuff(ErrorMissingDataKey);
-      Exit;
+      LogStuff('ParseSearchResult -> Missing "data" key in JSON response.', ERROR);
+      Exit; // LResult remains default
     end;
-
-    Result.HasMore := JsonResponse.B[FieldHasMore];
-    Result.NextPageURL := JsonResponse.S[FieldNextPage];
-    Result.TotalCards := JsonResponse.i[FieldTotalCards];
 
   except
     on E: Exception do
     begin
-      LogStuff('Error in ParseSearchResult: ' + E.Message);
+      LogStuff('Error in ParseSearchResult: ' + E.Message, ERROR);
       raise;
     end;
   end;
 end;
+
+
+
 
 function TScryfallAPI.InternalSearchCards(const Query, SetCode, Rarity,
   Colors: string; Fuzzy, Unique: Boolean; Page: Integer): TSearchResult;
@@ -579,7 +589,7 @@ begin
     TMonitor.Exit(FCache);
   end;
 
-  SearchUrl := ConstructSearchUrl(Query, SetCode, Rarity, Colors, Fuzzy,
+  SearchUrl := TWrapperHelper.ConstructSearchUrl(Query, SetCode, Rarity, Colors, Fuzzy,
     Unique, Page);
   JsonResponse := ExecuteRequest(SearchUrl);
   try
@@ -604,7 +614,7 @@ var
 begin
   JsonResponse := ExecuteRequest(EndpointRandomCard);
   try
-    FillCardDetailsFromJson(JsonResponse, Result);
+    TWrapperHelper.FillCardDetailsFromJson(JsonResponse, Result);
   finally
     JsonResponse.Free;
   end;
@@ -674,7 +684,7 @@ begin
       SetsArray := JsonResponse.A[FieldData];
       SetLength(Result, SetsArray.Count);
       for i := 0 to SetsArray.Count - 1 do
-        FillSetDetailsFromJson(SetsArray.O[i], Result[i]);
+        TWrapperHelper.FillSetDetailsFromJson(SetsArray.O[i], Result[i]);
     end
     else
       raise EScryfallAPIError.Create('API response is missing set data.');
@@ -721,7 +731,7 @@ begin
   try
     if Assigned(JsonResponse) then
     begin
-      FillSetDetailsFromJson(JsonResponse, Result);
+      TWrapperHelper.FillSetDetailsFromJson(JsonResponse, Result);
       LogStuff(Format('Set details for "%s" fetched from API.', [SetCode]));
 
       // Save the fetched details to the cache
@@ -750,7 +760,7 @@ begin
 
   JsonResponse := ExecuteRequest(Endpoint);
   try
-    FillCardDetailsFromJson(JsonResponse, Result);
+    TWrapperHelper.FillCardDetailsFromJson(JsonResponse, Result);
   finally
     JsonResponse.Free;
   end;
@@ -845,7 +855,7 @@ begin
   Endpoint := Format('cards/%s', [UUID]);
   JsonResponse := ExecuteRequest(Endpoint);
   try
-    FillCardDetailsFromJson(JsonResponse, Result);
+    TWrapperHelper.FillCardDetailsFromJson(JsonResponse, Result);
   finally
     JsonResponse.Free;
   end;
@@ -862,7 +872,7 @@ begin
   Endpoint := Format('cards/arena/%d', [UArenaID]);
   JsonResponse := ExecuteRequest(Endpoint);
   try
-    FillCardDetailsFromJson(JsonResponse, Result);
+    TWrapperHelper.FillCardDetailsFromJson(JsonResponse, Result);
   finally
     JsonResponse.Free;
   end;
@@ -942,7 +952,7 @@ begin
 
         for i := 0 to CardsArray.Count - 1 do
         begin
-          FillCardDetailsFromJson(CardsArray.O[i], Result[i]);
+          TWrapperHelper.FillCardDetailsFromJson(CardsArray.O[i], Result[i]);
         end;
       end
       else

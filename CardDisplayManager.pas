@@ -8,7 +8,7 @@ uses
   FMX.ListView, FMX.WebBrowser,
   ScryfallData, System.Threading, FMX.Dialogs, FMX.ListBox,
   CardDisplayHelpers, Template, Logger, SGlobalsZ, MLogic, APIConstants,
-  ScryfallTypes, ScryfallQueryBuilder, System.SyncObjs, FMX.StdCtrls, FMX.Types;
+  ScryfallTypes, ScryfallQuery, System.SyncObjs, FMX.StdCtrls, FMX.Types;
 
 type
 
@@ -185,7 +185,8 @@ end;
 procedure TCardDisplayManager.InitializeWebBrowser;
 begin
   if Assigned(FWebBrowser) then
-    FWebBrowser.LoadFromStrings('', '');
+    FWebBrowser.LoadFromStrings('<html><head></head><body></body></html>',
+                            'file:///android_asset/');
 end;
 
 procedure TCardDisplayManager.ClearListViewItems;
@@ -444,11 +445,20 @@ begin
           Replacements.Free;
         end;
 
+        var
+          FinalHTML: string;
+
+
+        FinalHTML := Template + '<script>' + JScript + '</script>';
+
+        // WebBrowser1.LoadFromStrings(FinalHTML, '');
+        //WebBrowser1.LoadFromStrings(FinalHTML, 'file:///android_asset/');
         TThread.Queue(nil,
           procedure
           begin
             if Assigned(FWebBrowser) then
-              FWebBrowser.LoadFromStrings(Template, '');
+              FWebBrowser.LoadFromStrings(FinalHTML, 'file:///android_asset/');
+          //    FWebBrowser.Navigate;
           end);
       except
         on E: Exception do

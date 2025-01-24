@@ -6,18 +6,22 @@ uses
   System.Classes, System.SysUtils, System.Generics.Collections, System.StrUtils;
 
 type
-  TRarity = (rAll, rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus,
+  // Enumeration for Card Rarity
+  TRarity = (
+    rAll, rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus,
     rTimeshifted, rMasterpiece, rToken, rDoubleFacedToken, rDraft,
-    rPlaneshifted, rUnique, rBasic, rPromo);
+    rPlaneshifted, rUnique, rBasic, rPromo
+  );
 
-  TLegalityFormat = (lfStandard, lfFuture, lfHistoric, lfGladiator, lfPioneer,
-    lfExplorer, lfModern, lfLegacy, lfPauper, lfVintage, lfPenny, lfCommander,
-    lfAlchemy, lfBrawl, lfPauperCommander, lfDuel, lfOldschool, lfPremodern,
-    lfOathbreaker);
+  // Enumeration for Legality Formats
+  TLegalityFormat = (
+    lfStandard, lfFuture, lfHistoric, lfGladiator, lfPioneer,
+    lfExplorer, lfModern, lfLegacy, lfPauper, lfVintage, lfPenny,
+    lfCommander, lfAlchemy, lfBrawl, lfPauperCommander, lfDuel,
+    lfOldschool, lfPremodern, lfOathbreaker
+  );
 
-  // TCardColor = (ccWhite, ccBlue, ccBlack, ccRed, ccGreen, ccColorless);
-
-  // Prices for different currencies
+  // Record for Card Prices in Different Currencies
   TCardPrices = record
     USD: Currency;
     USD_Foil: Currency;
@@ -26,7 +30,7 @@ type
     procedure Clear;
   end;
 
-  // Image URIs for different resolutions
+  // Record for Image URIs at Different Resolutions
   TImageUris = record
     Small: string;
     Normal: string;
@@ -38,16 +42,17 @@ type
     procedure Clear;
   end;
 
-  // Legalities for different formats
-type
+  // Record for Card Legalities Across Different Formats
   TCardLegalities = record
     Status: array [TLegalityFormat] of string;
     procedure Clear;
+    // Retrieves the status for a specific format
     function GetStatus(Format: TLegalityFormat): string;
-    procedure SetStatus(Format: TLegalityFormat; const Status: string);
+    // Sets the status for a specific format
+    procedure SetStatus(Format: TLegalityFormat; const StatusStr: string);
   end;
 
-  // Card Face for multi-faced cards
+  // Record for a Single Card Face (e.g., for Double-Faced Cards)
   TCardFace = record
     Name: string;
     FlavorText: string;
@@ -62,6 +67,7 @@ type
     procedure Clear;
   end;
 
+  // Record for a Part of a Melded Card
   TCardPart = record
     ObjectType: string;
     ID: string;
@@ -71,19 +77,23 @@ type
     URI: string;
   end;
 
+  // Record for Meld Details, including parts and result
   TMeldDetails = record
     MeldParts: TArray<TCardPart>;
     MeldResult: TCardPart;
+    procedure Clear;
   end;
 
+  // Record for Related URIs
   TRelatedURIs = record
     Gatherer: string;
-    Tcgplayerinfinitearticles: string;
-    Tcgplayerinfinitedecks: string;
+    TcgplayerInfiniteArticles: string;
+    TcgplayerInfiniteDecks: string;
     Edhrec: string;
     procedure Clear;
   end;
 
+  // Record for Purchase URIs
   TPurchaseURIs = record
     Tcgplayer: string;
     Cardmarket: string;
@@ -91,7 +101,7 @@ type
     procedure Clear;
   end;
 
-  // Main Card Details structure
+  // Main Record for Card Details
   TCardDetails = record
     // Core Identifiers
     SFID: string;
@@ -166,11 +176,10 @@ type
     ScryfallID: string;
     ScryfallIllustrationID: string;
     ScryfallOracleID: string;
-
     procedure Clear;
   end;
 
-  // Set Details
+  // Record for Set Details
   TSetDetails = record
     SFID: string;
     Code: string;
@@ -190,7 +199,7 @@ type
     procedure Clear;
   end;
 
-  // Ruling Details
+  // Record for Ruling Details
   TRuling = record
     Source: string;
     PublishedAt: string;
@@ -198,7 +207,7 @@ type
     procedure Clear;
   end;
 
-  // Bulk Data Details
+  // Record for Bulk Data Details
   TBulkData = record
     ID: string;
     DataType: string;
@@ -207,7 +216,7 @@ type
     procedure Clear;
   end;
 
-  // Symbol Details
+  // Record for Symbol Details
   TSymbol = record
     Symbol: string;
     English: string;
@@ -215,7 +224,7 @@ type
     procedure Clear;
   end;
 
-  // Catalog for Scryfall
+  // Record for Scryfall Catalog
   TScryfallCatalog = record
     Name: string;
     Data: TArray<string>;
@@ -225,7 +234,7 @@ type
     procedure Clear;
   end;
 
-  // Search Result
+  // Record for Search Result
   TSearchResult = record
     Cards: TArray<TCardDetails>;
     HasMore: Boolean;
@@ -234,8 +243,7 @@ type
     procedure Clear;
   end;
 
-  // TCardDetailsObject
-type
+  // Class to Wrap TCardDetails as an Object
   TCardDetailsObject = class
   public
     CardDetails: TCardDetails;
@@ -243,7 +251,9 @@ type
   end;
 
 const
-  RarityToString: array [TRarity] of string = ('', // rAll
+  // Mapping of TRarity to String
+  RarityToString: array [TRarity] of string = (
+    '', // rAll
     'common', // rCommon
     'uncommon', // rUncommon
     'rare', // rRare
@@ -259,18 +269,24 @@ const
     'unique', // rUnique
     'basic', // rBasic
     'promo' // rPromo
-    );
+  );
 
 const
-  LegalityToString: array [TLegalityFormat] of string = ('standard', 'future',
-    'historic', 'gladiator', 'pioneer', 'explorer', 'modern', 'legacy',
-    'pauper', 'vintage', 'penny', 'commander', 'alchemy', 'brawl',
-    'paupercommander', 'duel', 'oldschool', 'premodern', 'oathbreaker');
+  // Mapping of TLegalityFormat to String
+  LegalityToString: array [TLegalityFormat] of string = (
+    'standard', 'future', 'historic', 'gladiator', 'pioneer',
+    'explorer', 'modern', 'legacy', 'pauper', 'vintage', 'penny',
+    'commander', 'alchemy', 'brawl', 'paupercommander', 'duel',
+    'oldschool', 'premodern', 'oathbreaker'
+  );
 
-  LegalitiesArray: array [0 .. 18] of string = ('standard', 'future',
-    'historic', 'gladiator', 'pioneer', 'explorer', 'modern', 'legacy',
-    'pauper', 'vintage', 'penny', 'commander', 'alchemy', 'brawl',
-    'paupercommander', 'duel', 'oldschool', 'premodern', 'oathbreaker');
+  // Array for Legalities (for backward compatibility or other uses)
+  LegalitiesArray: array [0 .. 18] of string = (
+    'standard', 'future', 'historic', 'gladiator', 'pioneer',
+    'explorer', 'modern', 'legacy', 'pauper', 'vintage', 'penny',
+    'commander', 'alchemy', 'brawl', 'paupercommander', 'duel',
+    'oldschool', 'premodern', 'oathbreaker'
+  );
 
 var
   AppClose: Boolean;
@@ -278,6 +294,7 @@ var
 implementation
 
 { TCardDetailsObject }
+
 constructor TCardDetailsObject.Create(const ACardDetails: TCardDetails);
 begin
   inherited Create;
@@ -294,24 +311,29 @@ begin
   Tix := 0;
 end;
 
+{ TPurchaseURIs }
+
 procedure TPurchaseURIs.Clear;
 begin
-  Self := Default (TPurchaseURIs);
+  Self := Default(TPurchaseURIs);
 end;
+
+{ TRelatedURIs }
 
 procedure TRelatedURIs.Clear;
 begin
-  Self := Default (TRelatedURIs);
+  Self := Default(TRelatedURIs);
 end;
 
 { TImageUris }
 
 procedure TImageUris.Clear;
 begin
-  Self := Default (TImageUris);
+  Self := Default(TImageUris);
 end;
 
 { TCardLegalities }
+
 procedure TCardLegalities.Clear;
 var
   Format: TLegalityFormat;
@@ -325,145 +347,138 @@ begin
   Result := Status[Format];
 end;
 
-procedure TCardLegalities.SetStatus(Format: TLegalityFormat;
-  const Status: string);
+procedure TCardLegalities.SetStatus(Format: TLegalityFormat; const StatusStr: string);
 begin
-  Self.Status[Format] := Status;
+  Self.Status[Format] := StatusStr;
 end;
 
+// Function to Convert String to TLegalityFormat
 function StringToLegalityFormat(const FormatName: string): TLegalityFormat;
 begin
-  case IndexText(FormatName.ToLower, LegalityToString) of
-    0:
-      Result := lfStandard;
-    1:
-      Result := lfFuture;
-    2:
-      Result := lfHistoric;
-    3:
-      Result := lfGladiator;
-    4:
-      Result := lfPioneer;
-    5:
-      Result := lfExplorer;
-    6:
-      Result := lfModern;
-    7:
-      Result := lfLegacy;
-    8:
-      Result := lfPauper;
-    9:
-      Result := lfVintage;
-    10:
-      Result := lfPenny;
-    11:
-      Result := lfCommander;
-    12:
-      Result := lfAlchemy;
-    13:
-      Result := lfBrawl;
-    14:
-      Result := lfPauperCommander;
-    15:
-      Result := lfDuel;
-    16:
-      Result := lfOldschool;
-    17:
-      Result := lfPremodern;
-    18:
-      Result := lfOathbreaker;
+  case IndexText(LowerCase(FormatName), LegalityToString) of
+    0: Result := lfStandard;
+    1: Result := lfFuture;
+    2: Result := lfHistoric;
+    3: Result := lfGladiator;
+    4: Result := lfPioneer;
+    5: Result := lfExplorer;
+    6: Result := lfModern;
+    7: Result := lfLegacy;
+    8: Result := lfPauper;
+    9: Result := lfVintage;
+    10: Result := lfPenny;
+    11: Result := lfCommander;
+    12: Result := lfAlchemy;
+    13: Result := lfBrawl;
+    14: Result := lfPauperCommander;
+    15: Result := lfDuel;
+    16: Result := lfOldschool;
+    17: Result := lfPremodern;
+    18: Result := lfOathbreaker;
   else
     raise Exception.CreateFmt('Unknown legality format: %s', [FormatName]);
   end;
 end;
 
-
-
-// procedure TCardLegalities.SetStatus(const FormatName, Status: string);
-// begin
-// case IndexText(FormatName.ToLower, LegalitiesArray) of
-// 0: Standard := Status;
-// 1: Future := Status;
-// 2: Historic := Status;
-// 3: Gladiator := Status;
-// 4: Pioneer := Status;
-// 5: Explorer := Status;
-// 6: Modern := Status;
-// 7: Legacy := Status;
-// 8: Pauper := Status;
-// 9: Vintage := Status;
-// 10: Penny := Status;
-// 11: Commander := Status;
-// 12: Alchemy := Status;
-// 13: Brawl := Status;
-// 14: PauperCommander := Status;
-// 15: Duel := Status;
-// 16: Oldschool := Status;
-// 17: Premodern := Status;
-// 18: Oathbreaker := Status;
-// else
-// raise Exception.CreateFmt('Unknown format: %s', [FormatName]);
-// end;
-// end;
-//
-// function TCardLegalities.GetStatus(const FormatName: string): string;
-// begin
-// case IndexText(FormatName.ToLower, LegalitiesArray) of
-// 0: Result := Standard;
-// 1: Result := Future;
-// 2: Result := Historic;
-// 3: Result := Gladiator;
-// 4: Result := Pioneer;
-// 5: Result := Explorer;
-// 6: Result := Modern;
-// 7: Result := Legacy;
-// 8: Result := Pauper;
-// 9: Result := Vintage;
-// 10: Result := Penny;
-// 11: Result := Commander;
-// 12: Result := Alchemy;
-// 13: Result := Brawl;
-// 14: Result := PauperCommander;
-// 15: Result := Duel;
-// 16: Result := Oldschool;
-// 17: Result := Premodern;
-// 18: Result := Oathbreaker;
-// else
-// Result := '';
-// end;
-// end;
-
 { TCardFace }
 
 procedure TCardFace.Clear;
 begin
-  Self := Default (TCardFace);
+  Self := Default(TCardFace);
+end;
+
+{ TMeldDetails }
+
+procedure TMeldDetails.Clear;
+begin
+  MeldParts := nil;
+  MeldResult := Default(TCardPart);
 end;
 
 { TCardDetails }
 
 procedure TCardDetails.Clear;
 begin
-  Self := Default (TCardDetails);
+  // Core Identifiers
+  SFID := '';
+  OracleID := '';
+  CardName := '';
+  Lang := '';
+  ReleasedAt := '';
+  Layout := '';
+  ArenaID := 0;
+  EDHRank := 0;
 
+  // Visuals and Presentation
+  TypeLine := '';
+  SetLength(ColorIdentity, 0);
+  ManaCost := '';
+  OracleText := '';
+  FlavorText := '';
+  Power := '';
+  Toughness := '';
+  Loyalty := '';
+  SetIconURI := '';
+  Artist := '';
+  CollectorNumber := '';
+  BorderColor := '';
+  Frame := '';
+  SecurityStamp := '';
+  SetLength(Keywords, 0);
+  SetLength(AllParts, 0);
+  IsMeld := False;
+  MeldDetails.Clear;
+
+  // Legalities and Rules
   Legalities.Clear;
+  PrintsSearchUri := '';
+  RulingsUri := '';
+
+  // Pricing Information
   Prices.Clear;
+
+  // Images and Data
   ImageUris.Clear;
+  SetLength(ImageData, 0);
+
+  // Set and Rarity Information
+  SetCode := '';
+  SetName := '';
+  Rarity := TRarity.rAll;
+
+  // Additional Attributes
+  CMC := 0.0;
+  Reserved := False;
+  Foil := False;
+  NonFoil := False;
+  Oversized := False;
+  Promo := False;
+  Reprint := False;
+  Digital := False;
+  FullArt := False;
+  Textless := False;
+  StorySpotlight := False;
+  SetLength(Games, 0);
+
+  // Card Faces
+  SetLength(CardFaces, 0);
+
+  // External Links
+  ScryfallURI := '';
+  URI := '';
   RelatedURIs.Clear;
   PurchaseURIs.Clear;
-
-  SetLength(ColorIdentity, 0);
-  SetLength(Keywords, 0);
-  SetLength(Games, 0);
-  SetLength(AllParts, 0);
-  SetLength(CardFaces, 0);
+  ScryfallCardBackID := '';
+  ScryfallID := '';
+  ScryfallIllustrationID := '';
+  ScryfallOracleID := '';
 end;
 
 { TSetDetails }
 
 procedure TSetDetails.Clear;
 begin
-  Self := Default (TSetDetails);
+  Self := Default(TSetDetails);
 end;
 
 { TRuling }
@@ -499,10 +514,10 @@ end;
 procedure TScryfallCatalog.Clear;
 begin
   Name := '';
-  URI := '';
-  ObjectType := '';
   SetLength(Data, 0);
   TotalItems := 0;
+  URI := '';
+  ObjectType := '';
 end;
 
 { TSearchResult }
@@ -516,3 +531,4 @@ begin
 end;
 
 end.
+
