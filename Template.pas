@@ -468,7 +468,7 @@ HtmlTemplate: string = '''
   <div class="legalities">
   <h2>Legalities</h2>
   <button onclick="toggleLegalities()" style="margin-bottom: 10px;">Toggle Legalities</button>
-  <table id="legalities-grid" class="legalities-grid" style="display: none;">
+  <table id="legalities-grid" class="legalities-grid">
     {{Legalities}}
   </table>
   </div>
