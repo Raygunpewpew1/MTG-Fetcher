@@ -184,7 +184,7 @@ begin
 
   // ColorCheckBoxes := TObjectList<TCheckBox>.Create(True);
   // PopulateColorListBox;
-  DelayTimer.Enabled := True;
+ // DelayTimer.Enabled := True;
 end;
 
 // function TForm1.GetSelectedColors: string;
@@ -293,27 +293,52 @@ end;
 
 procedure TForm1.FormShow(Sender: TObject);
 begin
-  // WebBrowser1.Navigate(HtmlTemplate);
-  // TTask.Run(
-  // procedure
-  // begin
-  // TThread.Sleep(500);
-  // TThread.Queue(nil,
-  // procedure
-  // begin
-  // if not WebBrowserInitialized then
-  // begin
-  // WebBrowserInitialized := True;
-  // LogStuff('WebBrowser initialized via fallback.', WARNING);
-  // end;
-  // end);
-  // end);
 
   WebBrowser1.Navigate('about:blank');
-
   MultiViewFilters.ShowMaster;
+ TTask.Run(
+    procedure
+    var
+      RandomCard: TCardDetails;
+    begin
+      try
+        RandomCard := FScryfallAPI.GetRandomCard;
+        TThread.Queue(nil,
+          procedure
+          begin
+            if Assigned(FCardDisplayManager) then
+            begin
 
+              FCardDisplayManager.AddCardToListView(RandomCard);
+              BrIsLoaded := True;
+              DelayTimer.Enabled := False;
+
+              if ListViewCards.Items.Count > 0 then
+              begin
+                ListViewCards.Selected := ListViewCards.Items[0];
+                FCardDisplayManager.ShowCardDetails(TCardDetailsObject
+                  (ListViewCards.Items[0].TagObject).CardDetails);
+              end;
+            end;
+          end);
+      except
+        on E: Exception do
+          TThread.Queue(nil,
+            procedure
+            begin
+              ShowMessage(S_ERROR_FETCHING_RANDOM_CARD + E.Message);
+              LogStuff('Failed to fetch random card: ' + E.Message, ERROR);
+              DelayTimer.Enabled := False;
+              Exit;
+            end);
+      end;
+    end).Start;
 end;
+
+
+
+
+//end;
 
 procedure TForm1.ListViewCardsItemClick(const Sender: TObject;
   const AItem: TListViewItem);

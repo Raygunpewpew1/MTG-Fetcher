@@ -270,8 +270,7 @@
         <DCCReference Include="Template.pas"/>
         <DCCReference Include="CardDisplayManager.pas"/>
         <DCCReference Include="ScryfallTypes.pas"/>
-        <DCCReference Include="ScryfallQuery.pas">
-        </DCCReference>
+        <DCCReference Include="ScryfallQuery.pas"/>
         <DCCReference Include="CardDetailsHelper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -294,10 +293,8 @@
                     <Source Name="MainSource">mtgfetchV2.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclIndyCore290.bpl">Indy 10 Core Design Time</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclIndyProtocols290.bpl">Indy 10 Protocols Design Time</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclsoapmidas290.bpl">Embarcadero SOAP Midas Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclsoap290.bpl">Embarcadero SOAP Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclsoapserver290.bpl">Embarcadero SOAP Server Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp290.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
