@@ -1,4 +1,4 @@
-﻿unit WrapperHelper;
+﻿unit ScryfallDataHelper;
 
 interface
 

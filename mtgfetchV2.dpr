@@ -11,7 +11,7 @@ uses
   MLogic in 'MLogic.pas',
   JsonDataObjects in 'JsonDataObjects.pas',
   CardDisplayHelpers in 'CardDisplayHelpers.pas',
-  WrapperHelper in 'WrapperHelper.pas',
+  ScryfallDataHelper in 'ScryfallDataHelper.pas',
   APIConstants in 'APIConstants.pas',
   mana in 'mana.pas',
   Logger in 'Logger.pas',

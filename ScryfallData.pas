@@ -104,7 +104,7 @@ type
 implementation
 
 uses
-  WrapperHelper,
+  ScryfallDataHelper,
   APIConstants,
   System.NetEncoding,
   CardDisplayHelpers,
@@ -746,7 +746,7 @@ begin
           if CardsArray.Types[Index] = jdtObject then
           begin
             CardObj := CardsArray.O[Index];
-            WrapperHelper.TWrapperHelper.FillCardDetailsFromJson(CardObj, LResult.Cards[Index]);
+            ScryfallDataHelper.TWrapperHelper.FillCardDetailsFromJson(CardObj, LResult.Cards[Index]);
           end
           else
           begin

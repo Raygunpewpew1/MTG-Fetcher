@@ -263,7 +263,7 @@
         <DCCReference Include="MLogic.pas"/>
         <DCCReference Include="JsonDataObjects.pas"/>
         <DCCReference Include="CardDisplayHelpers.pas"/>
-        <DCCReference Include="WrapperHelper.pas"/>
+        <DCCReference Include="ScryfallDataHelper.pas"/>
         <DCCReference Include="APIConstants.pas"/>
         <DCCReference Include="mana.pas"/>
         <DCCReference Include="Logger.pas"/>
