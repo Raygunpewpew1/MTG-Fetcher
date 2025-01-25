@@ -37,6 +37,7 @@ function LoadSetDetailsFromJson(const FileName: string): TArray<TSetDetails>;
 
 procedure SaveSetDetailsToJson(const FileName: string;
   const SetDetailsArray: TArray<TSetDetails>);
+function EncodeHTML(const HtmlText: string): string;
 
 implementation
 

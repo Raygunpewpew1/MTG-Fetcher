@@ -415,6 +415,7 @@ HtmlTemplate: string = '''
 
 
   <div class="card-details">
+
   <div class="card-container">
   <div class="card-name">
   {{CardName}}
@@ -424,6 +425,7 @@ HtmlTemplate: string = '''
 
 
    <div class="type-set-row">
+    {{Rulings}}
       <div class="type-line">{{TypeLine}}</div>
       <div class="set-details">
 
@@ -477,6 +479,7 @@ HtmlTemplate: string = '''
 
 
     <div class="additional-details">
+
       <p><strong>Artist:</strong> {{Artist}}</p>
       <p><strong>Collector Number:</strong> {{CollectorNumber}}</p>
       <p><strong>Release Date:</strong> {{ReleasedAt}}</p>

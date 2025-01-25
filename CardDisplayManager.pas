@@ -58,6 +58,7 @@ type
     procedure LoadRandomCard(const OnComplete: TProc<Boolean>);
     procedure SetupDefaultFilters(Query: TScryfallQuery);
     procedure UpdateProgress(Current, Total: Integer);
+    function GetCardRulings(const UUID: string): TArray<TRuling>;
 
     property OnProgressUpdate: TProc<Integer> read FOnProgressUpdate
       write FOnProgressUpdate;
@@ -67,6 +68,8 @@ type
   end;
 
 implementation
+uses
+ScryfallDataHelper;
 
 { TCardDisplayManager }
 
@@ -186,7 +189,7 @@ procedure TCardDisplayManager.InitializeWebBrowser;
 begin
   if Assigned(FWebBrowser) then
     FWebBrowser.LoadFromStrings('<html><head></head><body></body></html>',
-                            'file:///android_asset/');
+      'file:///android_asset/');
 end;
 
 procedure TCardDisplayManager.ClearListViewItems;
@@ -304,12 +307,6 @@ begin
     FOnProgressUpdate(Round((Current / Total) * 100));
 end;
 
-// function TCardDisplayManager.ApplyLocalFilters(const Cards
-// : TArray<TCardDetails>): TArray<TCardDetails>;
-// begin
-// Result := Cards;
-// end;
-
 procedure TCardDisplayManager.LoadRandomCard(const OnComplete: TProc<Boolean>);
 begin
   TTask.Run(
@@ -339,6 +336,12 @@ begin
     end);
 end;
 
+function TCardDisplayManager.GetCardRulings(const UUID: string)
+  : TArray<TRuling>;
+begin
+  Result := FScryfallAPI.GetCardRulings(UUID);
+end;
+
 procedure TCardDisplayManager.AddCardToListView(const Card: TCardDetails);
 var
   ListViewItem: TListViewItem;
@@ -361,6 +364,7 @@ begin
   ListViewItem := FListView.Items.Add;
   ListViewItem.Text := Card.CardName;
   ListViewItem.Detail := RareStr;
+  ListViewItem.ButtonText := 'Rulings';
   ListViewItem.TagObject := CardDetailsObj;
   // FListView.EndUpdate;
 end;
@@ -369,7 +373,7 @@ procedure TCardDisplayManager.HandleSetDetails(const CardDetails: TCardDetails;
 const SetDetails: TSetDetails);
 begin
   var
-  RawSvg: string;
+    RawSvg: string;
   RawSvg := GetSetIconAsRawSVG(SetDetails.IconSVGURI, SetDetails.Code);
   var
   UpdatedCard := CardDetails;
@@ -429,11 +433,13 @@ begin
     var
       Template: string;
       Replacements: TDictionary<string, string>;
+      RulingsHtml: string;
     begin
       try
         Template := HtmlTemplate;
         Replacements := TDictionary<string, string>.Create;
         try
+          // Add core card replacements
           AddCoreReplacements(Replacements, CardDetails);
           AddImageReplacements(Replacements, CardDetails);
           AddLegalitiesReplacements(Replacements, CardDetails);
@@ -441,6 +447,33 @@ begin
           AddBadgesReplacements(Replacements, CardDetails);
           AddKeywordsReplacement(Replacements, CardDetails);
 
+          // Add rulings if exist
+          RulingsHtml := '<div class="rulings-section">';
+          RulingsHtml := RulingsHtml + '<h3>Card Rulings</h3>';
+          var Comments:string;
+          if Length(Rulings) > 0 then
+
+          begin
+            for var Ruling in Rulings do
+            begin
+             Comments := TWrapperHelper.GetUtf8String(Ruling.Comment);
+              RulingsHtml := RulingsHtml + Format('<div class="ruling-item">' +
+                '<p><strong>Source:</strong> %s</p>' +
+                '<p><strong>Date:</strong> %s</p>' + '<p>%s</p>' + '</div>',
+                [EncodeHTML(Ruling.Source), EncodeHTML(Ruling.PublishedAt),
+                EncodeHTML(Comments)]);
+            end;
+          end
+          else
+          begin
+            RulingsHtml := RulingsHtml;
+          end;
+          RulingsHtml := RulingsHtml + '</div>';
+
+          // Add rulings to replacements
+          Replacements.AddOrSetValue('{{Rulings}}', RulingsHtml);
+
+          // Replace placeholders in the template
           for var Key in Replacements.Keys do
             Template := Template.Replace(Key, Replacements[Key]);
         finally
@@ -449,18 +482,14 @@ begin
 
         var
           FinalHTML: string;
-
-
         FinalHTML := Template + JScript;
 
-        // WebBrowser1.LoadFromStrings(FinalHTML, '');
-        //WebBrowser1.LoadFromStrings(FinalHTML, 'file:///android_asset/');
+        // Load the final HTML into the browser
         TThread.Queue(nil,
           procedure
           begin
             if Assigned(FWebBrowser) then
               FWebBrowser.LoadFromStrings(FinalHTML, 'file:///android_asset/');
-          //    FWebBrowser.Navigate;
           end);
       except
         on E: Exception do

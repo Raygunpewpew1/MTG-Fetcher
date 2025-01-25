@@ -33,6 +33,7 @@ const
   EndpointSets = 'sets/';
   EndpointBulkData = 'bulk-data';
   EndpointRandomCard = '/cards/random';
+  EndPointRuling = 'cards/%s/rulings';
   // EndPointCreatureTypes = 'catalog/creature-types';
   EndPointSymbology = 'https://api.scryfall.com/symbology';
   // dont use this in the wrapper
@@ -56,6 +57,9 @@ const
   // JSON Field Names
   FieldAllParts = 'all_parts';
   FieldRulingsUri = 'rulings_uri';
+  FieldPublishedAt = 'published_at';
+  FieldSource = 'source';
+  FieldComment = 'comment';
   FieldEDHRank = 'edhrec_rank';
   FieldArena = 'arena_id';
   FieldData = 'data';

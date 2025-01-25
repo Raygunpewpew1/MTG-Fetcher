@@ -49,6 +49,7 @@ type
     function GetCachedResult(const CacheKey: string;
       out JsonResponse: TJsonObject): Boolean;
     procedure CacheResult(const CacheKey: string; const JsonResponse: TJsonObject);
+
     {$ENDREGION}
 
   public
@@ -88,6 +89,7 @@ type
     function GetCardByArenaID(const UArenaID: Integer): TCardDetails;
     function GetCardImageUris(const UUID: string): TImageUris;
     function GetCardImage(const UUID: string; const ImageType: string = 'normal'): string;
+    function GetCardRulings(const UUID: string): TArray<TRuling>;
 
     // Query-based
     function SearchWithQuery(Query: TScryfallQuery): TArray<TCardDetails>;
@@ -277,6 +279,22 @@ begin
     AllCards.Free;
   end;
 end;
+
+function TScryfallAPI.GetCardRulings(const UUID: string): TArray<TRuling>;
+var
+  JsonResponse: TJsonObject;
+begin
+  if UUID.IsEmpty then
+    raise EScryfallAPIError.Create('UUID cannot be empty.');
+
+  JsonResponse := ExecuteRequest(Format(EndPointRuling, [UUID]));
+  try
+   TWrapperHelper.ParseRulings(JsonResponse, Result);
+  finally
+    JsonResponse.Free;
+  end;
+end;
+
 
 {$ENDREGION}
 

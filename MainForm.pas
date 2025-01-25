@@ -53,6 +53,8 @@ type
     procedure ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word;
       var KeyChar: WideChar; Shift: TShiftState);
     procedure Button2Click(Sender: TObject);
+    procedure ListViewCardsButtonClick(const Sender: TObject;
+      const AItem: TListItem; const AObject: TListItemSimpleControl);
 
   private
     WebBrowserInitialized: Boolean;
@@ -267,9 +269,26 @@ begin
 end;
 
 
+procedure TForm1.ListViewCardsButtonClick(const Sender: TObject;
+  const AItem: TListItem; const AObject: TListItemSimpleControl);
+  var
+  Rulings: TArray<TRuling>;
+  CardDetailsObj: TCardDetailsObject;
+begin
+  if AItem.TagObject is TCardDetailsObject then
+  begin
+    CardDetailsObj := TCardDetailsObject(AItem.TagObject);
+    Rulings := FCardDisplayManager.GetCardRulings(CardDetailsObj.CardDetails.SFID);
+    FCardDisplayManager.DisplayCardInBrowser(CardDetailsObj.CardDetails,Rulings);
+    //FCardDisplayManager.ShowCardDetails(CardDetailsObj.CardDetails);
+  end
+  else
+    ShowMessage('TagObject is not TCardDetailsObject');
 
 
-//end;
+end;
+
+
 
 procedure TForm1.ListViewCardsItemClick(const Sender: TObject;
   const AItem: TListViewItem);

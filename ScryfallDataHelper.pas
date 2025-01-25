@@ -37,9 +37,13 @@ type
       const Default: string = ''): string;
     class procedure GetSafeStringArrayField(const Obj: TJsonObject;
       const FieldName: string; out Arr: TArray<string>);
+    class function GetUtf8String(const S: string): string;
+    class procedure ParseRulings(const JsonObj: TJsonObject;
+      out Rulings: TArray<TRuling>); static;
+
 
     // Utility Methods
-    class function GetUtf8String(const S: string): string;
+
   private
 
   end;
@@ -79,6 +83,16 @@ begin
   end;
 
   LogStuff(Result);
+end;
+
+class function TWrapperHelper.GetUtf8String(const S: string): string;
+begin
+  {$IF DEFINED(MSWINDOWS)}
+  // On Windows, convert from ANSI to UTF8.
+  Result := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(S));
+  {$ELSE}
+  Result := S;
+  {$ENDIF}
 end;
 
 class function TWrapperHelper.GetSafeStringField(const Obj: TJsonObject; const FieldName: string;
@@ -434,15 +448,29 @@ begin
   end;
 end;
 
-class function TWrapperHelper.GetUtf8String(const S: string): string;
+class procedure TWrapperHelper.ParseRulings(const JsonObj: TJsonObject;
+  out Rulings: TArray<TRuling>);
+var
+  RulingsArray: TJSONArray;
+  i: Integer;
 begin
-  {$IF DEFINED(MSWINDOWS)}
-  // On Windows, convert from ANSI to UTF8.
-  Result := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(S));
-  {$ELSE}
-  Result := S;
-  {$ENDIF}
+  if JsonObj.Contains(FieldData) then
+  begin
+    RulingsArray := JsonObj.A[FieldData];
+    SetLength(Rulings, RulingsArray.Count);
+    for i := 0 to RulingsArray.Count - 1 do
+    begin
+      Rulings[i].Source := RulingsArray.O[i].S[FieldSource];
+      Rulings[i].PublishedAt := RulingsArray.O[i].S[FieldPublishedAt];
+      Rulings[i].Comment := RulingsArray.O[i].S[FieldComment];
+    end;
+  end
+  else
+    Rulings := [];
 end;
+
+
+
 
 end.
 
