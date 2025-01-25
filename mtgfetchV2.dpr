@@ -18,10 +18,9 @@ uses
   Template in 'Template.pas',
   CardDisplayManager in 'CardDisplayManager.pas',
   ScryfallTypes in 'ScryfallTypes.pas',
-  ScryfallQuery in 'ScryfallQuery.pas',
-  CardDetailsHelper in 'CardDetailsHelper.pas';
+  ScryfallQuery in 'ScryfallQuery.pas';
 
- {$R *.res}
+{$R *.res}
 
 begin
   GlobalUseSkia := True;

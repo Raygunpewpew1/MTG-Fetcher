@@ -182,78 +182,9 @@ begin
   end;
 
 
-  // ColorCheckBoxes := TObjectList<TCheckBox>.Create(True);
-  // PopulateColorListBox;
  // DelayTimer.Enabled := True;
 end;
 
-// function TForm1.GetSelectedColors: string;
-// var
-// CheckBox: TCheckBox;
-// Colors: string;
-// IncludeMulticolor: Boolean;
-// begin
-// Colors := '';
-// IncludeMulticolor := False;
-//
-// for CheckBox in ColorCheckBoxes do
-// begin
-// if CheckBox.IsChecked then
-// begin
-// if CheckBox.TagString = 'M' then
-// IncludeMulticolor := True
-// else
-// Colors := Colors + CheckBox.TagString;
-//
-// end;
-// end;
-//
-// if IncludeMulticolor then
-// begin
-// if Colors.IsEmpty then
-// Result := 'M'
-// else
-// Result := '>' + Colors;
-// end
-// else
-// Result := Colors;
-//
-// end;
-//
-// procedure TForm1.PopulateColorListBox;
-// procedure AddColor(const ColorName: string; const TagValue: string);
-// var
-// ListBoxItem: TListBoxItem;
-// CheckBox: TCheckBox;
-// begin
-// Assert(not TagValue.IsEmpty, Format('TagValue for %s must not be empty.',
-// [ColorName]));
-//
-// ListBoxItem := TListBoxItem.Create(ListBoxColors);
-// ListBoxItem.Parent := ListBoxColors;
-// ListBoxItem.Height := 20;
-//
-// CheckBox := TCheckBox.Create(ListBoxItem);
-// CheckBox.Parent := ListBoxItem;
-// CheckBox.Align := TAlignLayout.Client;
-// CheckBox.Text := ColorName;
-// CheckBox.TagString := TagValue;
-//
-// ColorCheckBoxes.Add(CheckBox);
-// end;
-//
-// begin
-// ListBoxColors.Clear;
-// ColorCheckBoxes.Clear;
-//
-// AddColor('White', 'W');
-// AddColor('Blue', 'U');
-// AddColor('Black', 'B');
-// AddColor('Red', 'R');
-// AddColor('Green', 'G');
-// AddColor('Colorless', 'C');
-// AddColor('Multicolor', 'M');
-// end;
 
 procedure TForm1.OnSearchComplete(Success: Boolean);
 begin

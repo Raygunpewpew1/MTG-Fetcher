@@ -426,7 +426,9 @@ HtmlTemplate: string = '''
    <div class="type-set-row">
       <div class="type-line">{{TypeLine}}</div>
       <div class="set-details">
-        <img src="{{SetIcon}}" class="set-icon" alt="Set Icon">
+
+   <div class="set-icon">{{SetIcon}}</div>
+
         <span>{{SetName}}</span>
       </div>
     </div>
@@ -491,7 +493,7 @@ HtmlTemplate: string = '''
 
   const
   JScript: string = '''
-
+    <script>
     document.addEventListener("contextmenu", function (e) {
     e.preventDefault();
     });
@@ -511,7 +513,7 @@ HtmlTemplate: string = '''
       legalitiesGrid.style.display = "none"; // Hide the table
     }
     }
-
+    </script>
     ''';
 
   SVG_TEMPLATE1 =

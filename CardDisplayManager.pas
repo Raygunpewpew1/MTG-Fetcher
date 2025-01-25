@@ -369,10 +369,12 @@ procedure TCardDisplayManager.HandleSetDetails(const CardDetails: TCardDetails;
 const SetDetails: TSetDetails);
 begin
   var
+  RawSvg: string;
+  RawSvg := GetSetIconAsRawSVG(SetDetails.IconSVGURI, SetDetails.Code);
+  var
   UpdatedCard := CardDetails;
   UpdatedCard.SetName := SetDetails.Name;
-  UpdatedCard.SetIconURI := Format('data:image/svg+xml;base64,%s',
-    [GetSetIconAsBase64(SetDetails.IconSVGURI, SetDetails.Code)]);
+  UpdatedCard.SetIconURI := RawSvg;
 
   DisplayCardInBrowser(UpdatedCard, []);
 end;
@@ -449,7 +451,7 @@ begin
           FinalHTML: string;
 
 
-        FinalHTML := Template + '<script>' + JScript + '</script>';
+        FinalHTML := Template + JScript;
 
         // WebBrowser1.LoadFromStrings(FinalHTML, '');
         //WebBrowser1.LoadFromStrings(FinalHTML, 'file:///android_asset/');

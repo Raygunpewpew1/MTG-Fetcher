@@ -32,7 +32,7 @@ function FormatLegalityStatus(const LegalityStatus: string): string;
 function StringToRarity(const RarityStr: string): TRarity;
 function IsInArray(const Value: string;
   const Candidates: array of string): Boolean;
-function GetSetIconAsBase64(const IconURL, SetCode: string): string;
+function GetSetIconAsRawSVG(const IconURL, SetCode: string): string;
 function LoadSetDetailsFromJson(const FileName: string): TArray<TSetDetails>;
 
 procedure SaveSetDetailsToJson(const FileName: string;
@@ -744,22 +744,57 @@ end;
 ///   Checks if we already have a cached Base64 version of the set icon;
 ///   if not, downloads and caches it.
 /// </summary>
-function GetSetIconAsBase64(const IconURL, SetCode: string): string;
+function GetSetIconAsRawSVG(const IconURL, SetCode: string): string;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  MemoryStream: TMemoryStream;
+  SVGContent: TBytes;
+  RawSvg: string;
 begin
+  // If we've already cached this set code, just return it
   if SetIconCache.ContainsKey(SetCode) then
-  begin
-    Result := SetIconCache[SetCode];
-    Exit;
-  end;
+    Exit(SetIconCache[SetCode]);
 
-  // Not in cache yet, download it
-  Result := FetchSVGAsBase64(IconURL);
-  if not Result.IsEmpty then
-  begin
-    SetIconCache.AddOrSetValue(SetCode, Result);
-    SaveSetIconCacheToFile; // persist the updated cache
+  Result := '';
+  HttpClient := THTTPClient.Create;
+  MemoryStream := TMemoryStream.Create;
+  try
+    try
+      Response := HttpClient.Get(IconURL, MemoryStream);
+      if Response.StatusCode = 200 then
+      begin
+        MemoryStream.Position := 0;
+        SetLength(SVGContent, MemoryStream.Size);
+        MemoryStream.ReadBuffer(SVGContent, MemoryStream.Size);
+
+        // Convert the raw bytes to a UTF8 string (assuming SVG is UTF8-encoded)
+        RawSvg := TEncoding.UTF8.GetString(SVGContent);
+
+        // Store this raw SVG in the cache dictionary
+        SetIconCache.AddOrSetValue(SetCode, RawSvg);
+        Result := RawSvg;
+
+        // Persist the updated cache to disk
+        SaveSetIconCacheToFile;
+      end
+      else
+      begin
+        // Log or handle the error if needed
+        LogStuff(Format('Failed to download SVG. HTTP %d', [Response.StatusCode]), WARNING);
+      end;
+    except
+      on E: Exception do
+      begin
+        LogStuff('Error fetching raw SVG: ' + E.Message, ERROR);
+      end;
+    end;
+  finally
+    HttpClient.Free;
+    MemoryStream.Free;
   end;
 end;
+
 
 {$ENDREGION}
 

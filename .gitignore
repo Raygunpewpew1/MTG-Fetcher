@@ -80,3 +80,5 @@ mtgfetchV2.deployproj
 Neslib.Json/
 .vscode/settings.json
 mtgfetchV2.delphilsp.json
+.vscode/delphi/scripts/mtgfetchV2_run.ps1
+.vscode/delphi/scripts/run.bat
