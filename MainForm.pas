@@ -40,10 +40,11 @@ type
     Switch1: TSwitch;
     Button2: TButton;
     ListBoxColors: TListBox;
+    Button3: TButton;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure DelayTimerTimer(Sender: TObject);
+  //  procedure DelayTimerTimer(Sender: TObject);
     procedure ListViewCardsItemClick(const Sender: TObject;
       const AItem: TListViewItem);
     procedure WebBrowser1DidFinishLoad(ASender: TObject);
@@ -55,6 +56,7 @@ type
     procedure Button2Click(Sender: TObject);
     procedure ListViewCardsButtonClick(const Sender: TObject;
       const AItem: TListItem; const AObject: TListItemSimpleControl);
+    procedure Button3Click(Sender: TObject);
 
   private
     WebBrowserInitialized: Boolean;
@@ -66,6 +68,8 @@ type
     AmOnline: Boolean;
 
     procedure OnSearchComplete(Success: Boolean);
+//  procedure DisplayOracleTextWithIcons(const Parent: TControl; const OracleText: string; IconMap: TDictionary<string, string>);
+ //   procedure ShowCardOracleText;
 
     // procedure PopulateColorListBox;
     // function GetSelectedColors: string;
@@ -83,7 +87,7 @@ implementation
 {$R *.Windows.fmx MSWINDOWS}
 
 uses
-  APIConstants, JsonDataObjects, Logger, Template, CardDisplayHelpers,
+  APIConstants, JsonDataObjects, Logger, CardDisplayHelpers,
   System.NetEncoding;
 
 destructor TCardLayout.Destroy;
@@ -91,6 +95,7 @@ begin
   FreeAndNil(TagObject);
   inherited;
 end;
+
 
 procedure TForm1.FormCreate(Sender: TObject);
 var
@@ -322,59 +327,59 @@ begin
   end;
 end;
 
-procedure TForm1.DelayTimerTimer(Sender: TObject);
-begin
-  if BrIsLoaded or not WebBrowserInitialized then
-  begin
-    Exit;
-  end;
-
-  AmOnline := FScryfallAPI.IsInternetAvailable;
-  if not AmOnline then
-  begin
-    DelayTimer.Enabled := False;
-    ShowMessage('Internet not available');
-    Exit;
-  end;
-
-  TTask.Run(
-    procedure
-    var
-      RandomCard: TCardDetails;
-    begin
-      try
-        RandomCard := FScryfallAPI.GetRandomCard;
-        TThread.Queue(nil,
-          procedure
-          begin
-            if Assigned(FCardDisplayManager) then
-            begin
-
-              FCardDisplayManager.AddCardToListView(RandomCard);
-              BrIsLoaded := True;
-              DelayTimer.Enabled := False;
-
-              if ListViewCards.Items.Count > 0 then
-              begin
-                ListViewCards.Selected := ListViewCards.Items[0];
-                FCardDisplayManager.ShowCardDetails(TCardDetailsObject
-                  (ListViewCards.Items[0].TagObject).CardDetails);
-              end;
-            end;
-          end);
-      except
-        on E: Exception do
-          TThread.Queue(nil,
-            procedure
-            begin
-              ShowMessage(S_ERROR_FETCHING_RANDOM_CARD + E.Message);
-              LogStuff('Failed to fetch random card: ' + E.Message, ERROR);
-              DelayTimer.Enabled := False;
-              Exit;
-            end);
-      end;
-    end).Start;
-end;
+//procedure TForm1.DelayTimerTimer(Sender: TObject);
+//begin
+//  if BrIsLoaded or not WebBrowserInitialized then
+//  begin
+//    Exit;
+//  end;
+//
+//  AmOnline := FScryfallAPI.IsInternetAvailable;
+//  if not AmOnline then
+//  begin
+//    DelayTimer.Enabled := False;
+//    ShowMessage('Internet not available');
+//    Exit;
+//  end;
+//
+//  TTask.Run(
+//    procedure
+//    var
+//      RandomCard: TCardDetails;
+//    begin
+//      try
+//        RandomCard := FScryfallAPI.GetRandomCard;
+//        TThread.Queue(nil,
+//          procedure
+//          begin
+//            if Assigned(FCardDisplayManager) then
+//            begin
+//
+//              FCardDisplayManager.AddCardToListView(RandomCard);
+//              BrIsLoaded := True;
+//              DelayTimer.Enabled := False;
+//
+//              if ListViewCards.Items.Count > 0 then
+//              begin
+//                ListViewCards.Selected := ListViewCards.Items[0];
+//                FCardDisplayManager.ShowCardDetails(TCardDetailsObject
+//                  (ListViewCards.Items[0].TagObject).CardDetails);
+//              end;
+//            end;
+//          end);
+//      except
+//        on E: Exception do
+//          TThread.Queue(nil,
+//            procedure
+//            begin
+//              ShowMessage(S_ERROR_FETCHING_RANDOM_CARD + E.Message);
+//              LogStuff('Failed to fetch random card: ' + E.Message, ERROR);
+//              DelayTimer.Enabled := False;
+//              Exit;
+//            end);
+//      end;
+//    end).Start;
+//end;
 
 function DecodeURL(const EncodedURL: string): string;
 begin
@@ -440,6 +445,41 @@ end;
 procedure TForm1.Button2Click(Sender: TObject);
 begin
   MultiViewFilters.ShowMaster;
+end;
+
+procedure TForm1.Button3Click(Sender: TObject);
+//var
+//  IconMap: TDictionary<string, string>;
+//  Icons: TJsonObject;
+//const
+//  TestOracleText: string =
+//    'Trample\n' +
+//    'Mishra’s Juggernaut attacks each combat if able.\n' +
+//    'Unearth {5}{R} ({5}{R}: Return this card from your graveyard to the battlefield. ' +
+//    'It gains haste. Exile it at the beginning of the next end step or if it would leave the battlefield. ' +
+//    'Unearth only as a sorcery.)\n' +
+//    '{T}: Add {G} or {W} to your mana pool.\n' +
+//    '{1}{U}{U}: Draw two cards, then discard a card. Activate this ability only during your turn.';
+
+begin
+
+
+//  Icons := LoadIconsFromJson('C:\Users\raygu\AppData\Roaming\MTGCardFetch\SymbolCache.json');
+//  try
+//    BuildOracleText(LayoutContent1, TestOracleText, Icons);
+//  finally
+//    Icons.Free;
+//  end;
+
+
+//  IconMap := LoadIconMapFromJson('C:\Users\raygu\AppData\Roaming\MTGCardFetch\SymbolCache.json'); // Load icons from JSON
+//  try
+//    DisplayOracleTextWithIcons(FlowLayout1, TestOracleText, IconMap);
+//  finally
+//    IconMap.Free;
+//  end;
+
+
 end;
 
 procedure TForm1.ButtonNextPageClick(Sender: TObject);

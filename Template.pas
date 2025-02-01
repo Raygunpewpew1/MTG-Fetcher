@@ -422,10 +422,10 @@ HtmlTemplate: string = '''
   </div>
     {{FlipIndicator}}
     {{CardImages}}
-
+     {{Rulings}}
 
    <div class="type-set-row">
-    {{Rulings}}
+
       <div class="type-line">{{TypeLine}}</div>
       <div class="set-details">
 

@@ -51,22 +51,20 @@ uses
   Logger,
   APIConstants;
 
-{$REGION 'Global Cache and Helpers'}
-
 var
   SetIconCache: TDictionary<string, string>;
 
-/// <summary>
-///   Simple HTML-encodes the given text.
-/// </summary>
+  /// <summary>
+  /// Simple HTML-encodes the given text.
+  /// </summary>
 function EncodeHTML(const HtmlText: string): string;
 begin
   Result := TNetEncoding.HTML.Encode(HtmlText);
 end;
 
 /// <summary>
-///   Adds a (Key=Value) pair to the replacements dictionary, but if the Value
-///   is empty, also sets a corresponding "hidden" class.
+/// Adds a (Key=Value) pair to the replacements dictionary, but if the Value
+/// is empty, also sets a corresponding "hidden" class.
 /// </summary>
 procedure AddOrHide(Replacements: TDictionary<string, string>;
   const Key, HideKey, Value: string);
@@ -84,8 +82,8 @@ begin
 end;
 
 /// <summary>
-///   Simple helper to store (Key, Value) in the dictionary, ensuring Value
-///   is properly placed or replaced.
+/// Simple helper to store (Key, Value) in the dictionary, ensuring Value
+/// is properly placed or replaced.
 /// </summary>
 procedure AddReplacement(Replacements: TDictionary<string, string>;
   const Key, Value: string);
@@ -94,7 +92,7 @@ begin
 end;
 
 /// <summary>
-///   Returns a string with only the first letter capitalized (if present).
+/// Returns a string with only the first letter capitalized (if present).
 /// </summary>
 function CapitalizeFirstLetter(const Input: string): string;
 begin
@@ -104,7 +102,7 @@ begin
 end;
 
 /// <summary>
-///   Checks if the given Value is in the specified array of string Candidates.
+/// Checks if the given Value is in the specified array of string Candidates.
 /// </summary>
 function IsInArray(const Value: string;
   const Candidates: array of string): Boolean;
@@ -118,34 +116,49 @@ begin
 end;
 
 /// <summary>
-///   Converts a raw string to a TRarity enumeration. Returns rAll if unknown.
+/// Converts a raw string to a TRarity enumeration. Returns rAll if unknown.
 /// </summary>
 function StringToRarity(const RarityStr: string): TRarity;
 begin
   if RarityStr.IsEmpty then
     Exit(rAll); // Default or fallback
 
-  if      SameText(RarityStr, 'common')            then Result := rCommon
-  else if SameText(RarityStr, 'uncommon')          then Result := rUncommon
-  else if SameText(RarityStr, 'rare')              then Result := rRare
-  else if SameText(RarityStr, 'mythic')            then Result := rMythic
-  else if SameText(RarityStr, 'special')           then Result := rSpecial
-  else if SameText(RarityStr, 'bonus')             then Result := rBonus
-  else if SameText(RarityStr, 'timeshifted')       then Result := rTimeshifted
-  else if SameText(RarityStr, 'masterpiece')       then Result := rMasterpiece
-  else if SameText(RarityStr, 'token')             then Result := rToken
-  else if SameText(RarityStr, 'double_faced_token') then Result := rDoubleFacedToken
-  else if SameText(RarityStr, 'draft')             then Result := rDraft
-  else if SameText(RarityStr, 'planeshifted')      then Result := rPlaneshifted
-  else if SameText(RarityStr, 'unique')            then Result := rUnique
-  else if SameText(RarityStr, 'basic')             then Result := rBasic
-  else if SameText(RarityStr, 'promo')             then Result := rPromo
+  if SameText(RarityStr, 'common') then
+    Result := rCommon
+  else if SameText(RarityStr, 'uncommon') then
+    Result := rUncommon
+  else if SameText(RarityStr, 'rare') then
+    Result := rRare
+  else if SameText(RarityStr, 'mythic') then
+    Result := rMythic
+  else if SameText(RarityStr, 'special') then
+    Result := rSpecial
+  else if SameText(RarityStr, 'bonus') then
+    Result := rBonus
+  else if SameText(RarityStr, 'timeshifted') then
+    Result := rTimeshifted
+  else if SameText(RarityStr, 'masterpiece') then
+    Result := rMasterpiece
+  else if SameText(RarityStr, 'token') then
+    Result := rToken
+  else if SameText(RarityStr, 'double_faced_token') then
+    Result := rDoubleFacedToken
+  else if SameText(RarityStr, 'draft') then
+    Result := rDraft
+  else if SameText(RarityStr, 'planeshifted') then
+    Result := rPlaneshifted
+  else if SameText(RarityStr, 'unique') then
+    Result := rUnique
+  else if SameText(RarityStr, 'basic') then
+    Result := rBasic
+  else if SameText(RarityStr, 'promo') then
+    Result := rPromo
   else
     Result := rAll; // Default fallback
 end;
 
 /// <summary>
-///   Maps a TRarity value to a simple CSS class string (e.g., "common", "rare").
+/// Maps a TRarity value to a simple CSS class string (e.g., "common", "rare").
 /// </summary>
 function GetRarityClass(Rarity: TRarity): string;
 begin
@@ -156,43 +169,48 @@ begin
 end;
 
 /// <summary>
-///   Converts the raw LegalityStatus into a standard CSS class name.
+/// Converts the raw LegalityStatus into a standard CSS class name.
 /// </summary>
 function GetStatusClass(const LegalityStatus: string): string;
 begin
   case AnsiIndexStr(LegalityStatus.ToLower, ['legal', 'not_legal', 'banned',
     'restricted']) of
-    0: Result := 'legal';
-    1: Result := 'not-legal';
-    2: Result := 'banned';
-    3: Result := 'restricted';
+    0:
+      Result := 'legal';
+    1:
+      Result := 'not-legal';
+    2:
+      Result := 'banned';
+    3:
+      Result := 'restricted';
   else
     Result := 'unknown';
   end;
 end;
 
 /// <summary>
-///   Translates Scryfall's legality strings into friendlier display strings.
+/// Translates Scryfall's legality strings into friendlier display strings.
 /// </summary>
 function FormatLegalityStatus(const LegalityStatus: string): string;
 var
   L: string;
 begin
   L := LegalityStatus.ToLower;
-  if      L = 'not_legal' then Result := 'Not Legal'
-  else if L = 'banned'    then Result := 'Banned'
-  else if L = 'restricted'then Result := 'Restricted'
-  else if L = 'legal'     then Result := 'Legal'
-  else                          Result := LegalityStatus;
+  if L = 'not_legal' then
+    Result := 'Not Legal'
+  else if L = 'banned' then
+    Result := 'Banned'
+  else if L = 'restricted' then
+    Result := 'Restricted'
+  else if L = 'legal' then
+    Result := 'Legal'
+  else
+    Result := LegalityStatus;
 end;
 
-{$ENDREGION}
-
-{$REGION 'Oracle / Face Text Processing'}
-
 /// <summary>
-///   Takes Oracle text with mana symbols in braces (e.g., {W}, {U}, etc.)
-///   parses them, and returns HTML that includes images for each symbol.
+/// Takes Oracle text with mana symbols in braces (e.g., {W}, {U}, etc.)
+/// parses them, and returns HTML that includes images for each symbol.
 /// </summary>
 function ProcessOracleText(const OracleText: string): string;
 var
@@ -212,20 +230,20 @@ begin
       else
       begin
         // Avoid unnecessary encoding conversions for Windows-only ifdef
-        {$IFDEF MSWINDOWS}
+{$IFDEF MSWINDOWS}
         try
           EncodedPart := EncodeHTML(Part);
         except
           on E: Exception do
           begin
-            LogStuff('Error encoding part: ' + Part + '. Error: ' + E.Message, ERROR);
+            LogStuff('Error encoding part: ' + Part + '. Error: ' +
+              E.Message, ERROR);
             EncodedPart := ''; // fallback to an empty string
           end;
         end;
-        {$ELSE}
+{$ELSE}
         EncodedPart := EncodeHTML(Part);
-        {$ENDIF}
-
+{$ENDIF}
         // Replace newlines with <br>
         EncodedPart := StringReplace(EncodedPart, #10, '<br>', [rfReplaceAll]);
         Builder.Append(EncodedPart);
@@ -243,8 +261,8 @@ begin
 end;
 
 /// <summary>
-///   Renders the multi-face Oracle text and relevant data (type line, flavor, P/T)
-///   into a grid-like HTML block. Used by AddCoreReplacements if card has multiple faces.
+/// Renders the multi-face Oracle text and relevant data (type line, flavor, P/T)
+/// into a grid-like HTML block. Used by AddCoreReplacements if card has multiple faces.
 /// </summary>
 procedure AddMultiFaceOracleText(const CardDetails: TCardDetails;
   Replacements: TDictionary<string, string>);
@@ -260,38 +278,33 @@ begin
 
     for Face in CardDetails.CardFaces do
     begin
-      {$IFDEF MSWINDOWS}
-      EncTypeLine := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(Face.TypeLine));
-      {$ELSE}
+{$IFDEF MSWINDOWS}
+      EncTypeLine := TEncoding.UTF8.GetString
+        (TEncoding.ANSI.GetBytes(Face.TypeLine));
+{$ELSE}
       EncTypeLine := EncodeHTML(Face.TypeLine);
-      {$ENDIF}
-
+{$ENDIF}
       // Build up lines: Power/Toughness, Flavor, etc.
       ExtraHtml := '';
       if not Face.Power.Trim.IsEmpty and not Face.Toughness.Trim.IsEmpty then
-        ExtraHtml := ExtraHtml + Format('<p><strong>Power/Toughness:</strong> %s/%s</p>',
+        ExtraHtml := ExtraHtml +
+          Format('<p><strong>Power/Toughness:</strong> %s/%s</p>',
           [EncodeHTML(Face.Power), EncodeHTML(Face.Toughness)]);
 
       if not Face.FlavorText.Trim.IsEmpty then
-        ExtraHtml := ExtraHtml + Format('<p>%s</p>', [EncodeHTML(Face.FlavorText)]);
+        ExtraHtml := ExtraHtml + Format('<p>%s</p>',
+          [EncodeHTML(Face.FlavorText)]);
 
       // Combine all details into a single face block
-      Builder.AppendFormat(
-        '<div class="card-face-block">' +
-          '<p><strong>Name:</strong> %s</p>' +
-          '<p><strong>Mana Cost:</strong> %s</p>' +
-          '<p><strong>Type Line:</strong> %s</p>' +
-          '<p><strong>Oracle:</strong> %s</p>' +
-          '%s' + // ExtraHtml for P/T, flavor
-        '</div>',
-        [
-          EncodeHTML(Face.Name),
-          ReplaceManaSymbolsWithImages(Face.ManaCost),
-          EncodeHTML(EncTypeLine),
-          ProcessOracleText(Face.OracleText),
-          ExtraHtml
-        ]
-      );
+      Builder.AppendFormat('<div class="card-face-block">' +
+        '<p><strong>Name:</strong> %s</p>' +
+        '<p><strong>Mana Cost:</strong> %s</p>' +
+        '<p><strong>Type Line:</strong> %s</p>' +
+        '<p><strong>Oracle:</strong> %s</p>' + '%s' +
+        // ExtraHtml for P/T, flavor
+        '</div>', [EncodeHTML(Face.Name),
+        ReplaceManaSymbolsWithImages(Face.ManaCost), EncodeHTML(EncTypeLine),
+        ProcessOracleText(Face.OracleText), ExtraHtml]);
     end;
 
     Builder.Append('</div>'); // End container
@@ -305,14 +318,11 @@ begin
   end;
 end;
 
-{$ENDREGION}
-
-{$REGION 'Meld Logic'}
-
 /// <summary>
-///   Retrieves image URIs for each card part in a meld sequence.
+/// Retrieves image URIs for each card part in a meld sequence.
 /// </summary>
-function FetchMeldPartImages(const MeldParts: TArray<TCardPart>): TArray<TImageUris>;
+function FetchMeldPartImages(const MeldParts: TArray<TCardPart>)
+  : TArray<TImageUris>;
 var
   ScryfallAPI: TScryfallAPI;
   i: Integer;
@@ -339,8 +349,8 @@ begin
 end;
 
 /// <summary>
-///   Adds the HTML block for meld details (meld parts + meld result),
-///   or hides it if the card is not a meld card.
+/// Adds the HTML block for meld details (meld parts + meld result),
+/// or hides it if the card is not a meld card.
 /// </summary>
 procedure AddMeldDetails(const CardDetails: TCardDetails;
   Replacements: TDictionary<string, string>);
@@ -371,44 +381,33 @@ begin
     else
       ImageUri := ''; // fallback
 
-    {$IFDEF MSWINDOWS}
-    var EncodedTypeLine := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(Part.TypeLine));
-    {$ELSE}
-    var EncodedTypeLine := EncodeHTML(Part.TypeLine);
-    {$ENDIF}
-
-    PartHtml := Format(
-      '<div class="meld-part">' +
-        '<p><strong>%s</strong></p>' +
-        '<p>%s</p>' +
-        '<img src="%s" alt="%s">' +
-      '</div>',
-      [
-        EncodeHTML(Part.Name),
-        EncodedTypeLine,
-        EncodeHTML(ImageUri),
-        EncodeHTML(Part.Name)
-      ]
-    );
+{$IFDEF MSWINDOWS}
+    var
+    EncodedTypeLine := TEncoding.UTF8.GetString
+      (TEncoding.ANSI.GetBytes(Part.TypeLine));
+{$ELSE}
+    var
+    EncodedTypeLine := EncodeHTML(Part.TypeLine);
+{$ENDIF}
+    PartHtml := Format('<div class="meld-part">' + '<p><strong>%s</strong></p>'
+      + '<p>%s</p>' + '<img src="%s" alt="%s">' + '</div>',
+      [EncodeHTML(Part.Name), EncodedTypeLine, EncodeHTML(ImageUri),
+      EncodeHTML(Part.Name)]);
     MeldPartsHtml := MeldPartsHtml + PartHtml;
   end;
 
   // Add the meld result if present
   if not CardDetails.MeldDetails.MeldResult.Name.IsEmpty then
   begin
-    var MeldResultImages := FetchMeldPartImages([CardDetails.MeldDetails.MeldResult])[0];
+    var
+    MeldResultImages := FetchMeldPartImages
+      ([CardDetails.MeldDetails.MeldResult])[0];
     ImageUri := MeldResultImages.Small;
-    MeldPartsHtml := MeldPartsHtml + Format(
-      '<div class="meld-result">' +
-        '<p><strong>Meld Result:</strong> %s</p>' +
-        '<img src="%s" alt="%s">' +
-      '</div>',
-      [
-        EncodeHTML(CardDetails.MeldDetails.MeldResult.Name),
-        EncodeHTML(ImageUri),
-        EncodeHTML(CardDetails.MeldDetails.MeldResult.Name)
-      ]
-    );
+    MeldPartsHtml := MeldPartsHtml + Format('<div class="meld-result">' +
+      '<p><strong>Meld Result:</strong> %s</p>' + '<img src="%s" alt="%s">' +
+      '</div>', [EncodeHTML(CardDetails.MeldDetails.MeldResult.Name),
+      EncodeHTML(ImageUri),
+      EncodeHTML(CardDetails.MeldDetails.MeldResult.Name)]);
   end;
 
   MeldPartsHtml := MeldPartsHtml + '</div>';
@@ -416,13 +415,9 @@ begin
   Replacements.AddOrSetValue('{{MeldClass}}', ''); // remove 'hidden'
 end;
 
-{$ENDREGION}
-
-{$REGION 'Primary "AddXxxReplacements" Routines'}
-
 /// <summary>
-///   Builds the single or multi-face Oracle text, flavor text, type line,
-///   collector info, etc., and puts them into the Replacements dictionary.
+/// Builds the single or multi-face Oracle text, flavor text, type line,
+/// collector info, etc., and puts them into the Replacements dictionary.
 /// </summary>
 procedure AddCoreReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
@@ -437,27 +432,38 @@ begin
 
   // If single-faced, show flavor text; multi-face is handled in AddMultiFaceOracleText
   if Length(CardDetails.CardFaces) = 0 then
-    AddReplacement(Replacements, '{{FlavorText}}', EncodeHTML(CardDetails.FlavorText))
+    AddReplacement(Replacements, '{{FlavorText}}',
+      EncodeHTML(CardDetails.FlavorText))
   else
     AddReplacement(Replacements, '{{FlavorText}}', '');
 
   // Core fields
-  AddReplacement(Replacements, '{{CardName}}',       EncodeHTML(CardDetails.CardName));
-  AddReplacement(Replacements, '{{SetName}}',        EncodeHTML(CardDetails.SetName));
-  AddReplacement(Replacements, '{{SetIcon}}',        CardDetails.SetIconURI);
+  AddReplacement(Replacements, '{{CardName}}',
+    EncodeHTML(CardDetails.CardName));
+  AddReplacement(Replacements, '{{SetName}}', EncodeHTML(CardDetails.SetName));
+  AddReplacement(Replacements, '{{SetIcon}}', CardDetails.SetIconURI);
   RarityStr := RarityToString[CardDetails.Rarity];
-  AddReplacement(Replacements, '{{Rarity}}',         EncodeHTML(RarityStr));
-  AddReplacement(Replacements, '{{RarityClass}}',    GetRarityClass(CardDetails.Rarity));
-  AddReplacement(Replacements, '{{TypeLine}}',       EncodeHTML(CardDetails.TypeLine));
-  AddReplacement(Replacements, '{{ManaCost}}',       ReplaceManaSymbolsWithImages(CardDetails.ManaCost));
-  AddReplacement(Replacements, '{{Artist}}',         EncodeHTML(CardDetails.Artist));
-  AddReplacement(Replacements, '{{CollectorNumber}}',EncodeHTML(CardDetails.CollectorNumber));
-  AddReplacement(Replacements, '{{Arena Id}}',       EncodeHTML(CardDetails.ArenaID.ToString));
-  AddReplacement(Replacements, '{{BorderColor}}',    EncodeHTML(CardDetails.BorderColor));
-  AddReplacement(Replacements, '{{ReleasedAt}}',     EncodeHTML(CardDetails.ReleasedAt));
-  AddReplacement(Replacements, '{{StorySpotlight}}', IfThen(CardDetails.StorySpotlight, 'Yes', 'No'));
-  AddReplacement(Replacements, '{{ScryfallURI}}',    EncodeHTML(CardDetails.SFID));
-  AddReplacement(Replacements, '{{PowerToughness}}', BuildPowerToughnessHtml(CardDetails));
+  AddReplacement(Replacements, '{{Rarity}}', EncodeHTML(RarityStr));
+  AddReplacement(Replacements, '{{RarityClass}}',
+    GetRarityClass(CardDetails.Rarity));
+  AddReplacement(Replacements, '{{TypeLine}}',
+    EncodeHTML(CardDetails.TypeLine));
+  AddReplacement(Replacements, '{{ManaCost}}',
+    ReplaceManaSymbolsWithImages(CardDetails.ManaCost));
+  AddReplacement(Replacements, '{{Artist}}', EncodeHTML(CardDetails.Artist));
+  AddReplacement(Replacements, '{{CollectorNumber}}',
+    EncodeHTML(CardDetails.CollectorNumber));
+  AddReplacement(Replacements, '{{Arena Id}}',
+    EncodeHTML(CardDetails.ArenaID.ToString));
+  AddReplacement(Replacements, '{{BorderColor}}',
+    EncodeHTML(CardDetails.BorderColor));
+  AddReplacement(Replacements, '{{ReleasedAt}}',
+    EncodeHTML(CardDetails.ReleasedAt));
+  AddReplacement(Replacements, '{{StorySpotlight}}',
+    IfThen(CardDetails.StorySpotlight, 'Yes', 'No'));
+  AddReplacement(Replacements, '{{ScryfallURI}}', EncodeHTML(CardDetails.SFID));
+  AddReplacement(Replacements, '{{PowerToughness}}',
+    BuildPowerToughnessHtml(CardDetails));
 
   // Oracle text: single vs multi-face
   if Length(CardDetails.CardFaces) > 0 then
@@ -474,8 +480,8 @@ begin
 end;
 
 /// <summary>
-///   Handles generating HTML for card images, including double-faced
-///   or modal cards with a 'flip' container.
+/// Handles generating HTML for card images, including double-faced
+/// or modal cards with a 'flip' container.
 /// </summary>
 procedure AddImageReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
@@ -487,39 +493,33 @@ begin
   FlipIndicatorHtml := '';
 
   // For transform, modal_dfc, etc., we handle multiple faces
-  if IsInArray(LayoutLower, ['transform','modal_dfc','reversible_card',
-                             'art_series','double_faced_token']) then
+  if IsInArray(LayoutLower, ['transform', 'modal_dfc', 'reversible_card',
+    'art_series', 'double_faced_token']) then
   begin
     if Length(CardDetails.CardFaces) > 1 then
     begin
-      FlipIndicatorHtml := '<div class="flip-indicator">Double-Faced Card: Click to Flip</div>';
-      CardImagesHtml := Format(
-        '<div class="flip-card" onclick="flipCard()">' +
-          '<div class="card-face front"><img src="%s" alt="Front Face"></div>' +
-          '<div class="card-face back"><img src="%s" alt="Back Face"></div>' +
-        '</div>',
-        [
-          EncodeHTML(CardDetails.CardFaces[0].ImageUris.Normal),
-          EncodeHTML(CardDetails.CardFaces[1].ImageUris.Normal)
-        ]
-      );
+      FlipIndicatorHtml :=
+        '<div class="flip-indicator">Double-Faced Card: Click to Flip</div>';
+      CardImagesHtml := Format('<div class="flip-card" onclick="flipCard()">' +
+        '<div class="card-face front"><img src="%s" alt="Front Face"></div>' +
+        '<div class="card-face back"><img src="%s" alt="Back Face"></div>' +
+        '</div>', [EncodeHTML(CardDetails.CardFaces[0].ImageUris.Normal),
+        EncodeHTML(CardDetails.CardFaces[1].ImageUris.Normal)]);
     end
     else
     begin
       // Fallback if only one face is actually present
-      CardImagesHtml := Format(
-        '<div class="single-card"><img src="%s" alt="Card Image"></div>',
-        [EncodeHTML(CardDetails.ImageUris.Normal)]
-      );
+      CardImagesHtml :=
+        Format('<div class="single-card"><img src="%s" alt="Card Image"></div>',
+        [EncodeHTML(CardDetails.ImageUris.Normal)]);
     end;
   end
   else
   begin
     // Single-faced card
-    CardImagesHtml := Format(
-      '<div class="single-card"><img src="%s" alt="Card Image"></div>',
-      [EncodeHTML(CardDetails.ImageUris.Normal)]
-    );
+    CardImagesHtml :=
+      Format('<div class="single-card"><img src="%s" alt="Card Image"></div>',
+      [EncodeHTML(CardDetails.ImageUris.Normal)]);
   end;
 
   AddReplacement(Replacements, '{{CardImages}}', CardImagesHtml);
@@ -527,8 +527,8 @@ begin
 end;
 
 /// <summary>
-///   Adds rows to {{Legalities}} placeholder for each known legality format.
-///   Each row has a color-coded label based on its status.
+/// Adds rows to {{Legalities}} placeholder for each known legality format.
+/// Each row has a color-coded label based on its status.
 /// </summary>
 procedure AddLegalitiesReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
@@ -541,25 +541,18 @@ begin
   try
     for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
     begin
-      LegalityName   := LegalityToString[Format];
+      LegalityName := LegalityToString[Format];
       LegalityStatus := CardDetails.Legalities.GetStatus(Format);
 
       if not LegalityStatus.IsEmpty then
       begin
-        StatusClass    := GetStatusClass(LegalityStatus);
+        StatusClass := GetStatusClass(LegalityStatus);
         LegalityStatus := FormatLegalityStatus(LegalityStatus);
 
-        Builder.AppendFormat(
-          '<tr>' +
-            '<td class="format-name">%s</td>' +
-            '<td class="status"><span class="%s">%s</span></td>' +
-          '</tr>',
-          [
-            EncodeHTML(CapitalizeFirstLetter(LegalityName)),
-            StatusClass,
-            EncodeHTML(LegalityStatus)
-          ]
-        );
+        Builder.AppendFormat('<tr>' + '<td class="format-name">%s</td>' +
+          '<td class="status"><span class="%s">%s</span></td>' + '</tr>',
+          [EncodeHTML(CapitalizeFirstLetter(LegalityName)), StatusClass,
+          EncodeHTML(LegalityStatus)]);
       end;
     end;
     AddReplacement(Replacements, '{{Legalities}}', Builder.ToString);
@@ -569,35 +562,36 @@ begin
 end;
 
 /// <summary>
-///   Inserts price data (USD, EUR, Tix) into the placeholders.
+/// Inserts price data (USD, EUR, Tix) into the placeholders.
 /// </summary>
 procedure AddPricesReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
 begin
-  AddReplacement(Replacements, '{{USD}}',       CardDetails.Prices.USD.ToString);
-  AddReplacement(Replacements, '{{USD_Foil}}',  CardDetails.Prices.USD_Foil.ToString);
-  AddReplacement(Replacements, '{{EUR}}',       CardDetails.Prices.EUR.ToString);
-  AddReplacement(Replacements, '{{Tix}}',       CardDetails.Prices.Tix.ToString);
+  AddReplacement(Replacements, '{{USD}}', CardDetails.Prices.USD.ToString);
+  AddReplacement(Replacements, '{{USD_Foil}}',
+    CardDetails.Prices.USD_Foil.ToString);
+  AddReplacement(Replacements, '{{EUR}}', CardDetails.Prices.EUR.ToString);
+  AddReplacement(Replacements, '{{Tix}}', CardDetails.Prices.Tix.ToString);
 end;
 
 /// <summary>
-///   Adds "badge" placeholders like Full Art, Promo, or Reserved.
+/// Adds "badge" placeholders like Full Art, Promo, or Reserved.
 /// </summary>
 procedure AddBadgesReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
 begin
-  AddReplacement(Replacements, '{{FullArt}}',
-    IfThen(CardDetails.FullArt, '<span class="badge full-art">Full Art</span>', ''));
+  AddReplacement(Replacements, '{{FullArt}}', IfThen(CardDetails.FullArt,
+    '<span class="badge full-art">Full Art</span>', ''));
 
-  AddReplacement(Replacements, '{{Promo}}',
-    IfThen(CardDetails.Promo, '<span class="badge promo">Promo</span>', ''));
+  AddReplacement(Replacements, '{{Promo}}', IfThen(CardDetails.Promo,
+    '<span class="badge promo">Promo</span>', ''));
 
-  AddReplacement(Replacements, '{{Reserved}}',
-    IfThen(CardDetails.Reserved, '<span class="badge reserved">Reserved</span>', ''));
+  AddReplacement(Replacements, '{{Reserved}}', IfThen(CardDetails.Reserved,
+    '<span class="badge reserved">Reserved</span>', ''));
 end;
 
 /// <summary>
-///   Joins and adds any known card keywords, or hides that section if none.
+/// Joins and adds any known card keywords, or hides that section if none.
 /// </summary>
 procedure AddKeywordsReplacement(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
@@ -610,43 +604,30 @@ end;
 
 {$ENDREGION}
 
-{$REGION 'Power/Toughness & Helpers'}
-
 /// <summary>
-///   Builds a small HTML snippet to display either Power/Toughness or Loyalty,
-///   whichever is relevant to the card.
+/// Builds a small HTML snippet to display either Power/Toughness or Loyalty,
+/// whichever is relevant to the card.
 /// </summary>
 function BuildPowerToughnessHtml(const CardDetails: TCardDetails): string;
 begin
   Result := '';
   if (CardDetails.Power <> '') and (CardDetails.Toughness <> '') then
   begin
-    Result := Format(
-      '<div class="power-toughness">' +
-        '<span class="label">Power/Toughness:</span>' +
-        '<span class="value">%s/%s</span>' +
-      '</div>',
-      [EncodeHTML(CardDetails.Power), EncodeHTML(CardDetails.Toughness)]
-    );
+    Result := Format('<div class="power-toughness">' +
+      '<span class="label">Power/Toughness:</span>' +
+      '<span class="value">%s/%s</span>' + '</div>',
+      [EncodeHTML(CardDetails.Power), EncodeHTML(CardDetails.Toughness)]);
   end
   else if CardDetails.Loyalty <> '' then
   begin
-    Result := Format(
-      '<div class="power-toughness">' +
-        '<span class="label">Loyalty:</span>' +
-        '<span class="value">%s</span>' +
-      '</div>',
-      [EncodeHTML(CardDetails.Loyalty)]
-    );
+    Result := Format('<div class="power-toughness">' +
+      '<span class="label">Loyalty:</span>' + '<span class="value">%s</span>' +
+      '</div>', [EncodeHTML(CardDetails.Loyalty)]);
   end;
 end;
 
-{$ENDREGION}
-
-{$REGION 'Set Icon Caching'}
-
 /// <summary>
-///   Saves the entire in-memory SetIconCache to a JSON file on disk.
+/// Saves the entire in-memory SetIconCache to a JSON file on disk.
 /// </summary>
 procedure SaveSetIconCacheToFile;
 var
@@ -668,7 +649,7 @@ begin
 end;
 
 /// <summary>
-///   Loads the SetIconCache from a JSON file on disk (if it exists).
+/// Loads the SetIconCache from a JSON file on disk (if it exists).
 /// </summary>
 procedure LoadSetIconCacheFromFile;
 var
@@ -705,7 +686,7 @@ begin
 end;
 
 /// <summary>
-///   Downloads the SVG from IconURL and returns its Base64-encoded content.
+/// Downloads the SVG from IconURL and returns its Base64-encoded content.
 /// </summary>
 function FetchSVGAsBase64(const IconURL: string): string;
 var
@@ -742,8 +723,8 @@ begin
 end;
 
 /// <summary>
-///   Checks if we already have a cached Base64 version of the set icon;
-///   if not, downloads and caches it.
+/// Checks if we already have a cached Base64 version of the set icon;
+/// if not, downloads and caches it.
 /// </summary>
 function GetSetIconAsRawSVG(const IconURL, SetCode: string): string;
 var
@@ -782,7 +763,8 @@ begin
       else
       begin
         // Log or handle the error if needed
-        LogStuff(Format('Failed to download SVG. HTTP %d', [Response.StatusCode]), WARNING);
+        LogStuff(Format('Failed to download SVG. HTTP %d', [Response.StatusCode]
+          ), WARNING);
       end;
     except
       on E: Exception do
@@ -795,11 +777,6 @@ begin
     MemoryStream.Free;
   end;
 end;
-
-
-{$ENDREGION}
-
-{$REGION 'Set JSON Load/Save'}
 
 function LoadSetDetailsFromJson(const FileName: string): TArray<TSetDetails>;
 var
@@ -823,8 +800,8 @@ begin
 
     for i := 0 to JsonArray.Count - 1 do
     begin
-      SetDetails.Code       := JsonArray.O[i].S[FieldCode];
-      SetDetails.Name       := JsonArray.O[i].S[FieldName];
+      SetDetails.Code := JsonArray.O[i].S[FieldCode];
+      SetDetails.Name := JsonArray.O[i].S[FieldName];
       SetDetails.IconSVGURI := JsonArray.O[i].S[FieldIconSvgUri];
       Result[i] := SetDetails;
     end;
@@ -848,8 +825,8 @@ begin
     for SetDetails in SetDetailsArray do
     begin
       JsonSet := TJsonObject.Create;
-      JsonSet.S[FieldCode]       := SetDetails.Code;
-      JsonSet.S[FieldName]       := SetDetails.Name;
+      JsonSet.S[FieldCode] := SetDetails.Code;
+      JsonSet.S[FieldName] := SetDetails.Name;
       JsonSet.S[FieldIconSvgUri] := SetDetails.IconSVGURI;
       JsonArray.AddObject(JsonSet);
     end;
@@ -860,15 +837,14 @@ begin
   end;
 end;
 
-{$ENDREGION}
-
 initialization
-  SetIconCache := TDictionary<string, string>.Create;
-  LoadSetIconCacheFromFile;
+
+SetIconCache := TDictionary<string, string>.Create;
+LoadSetIconCacheFromFile;
 
 finalization
-  SaveSetIconCacheToFile;
-  SetIconCache.Free;
+
+SaveSetIconCacheToFile;
+SetIconCache.Free;
 
 end.
-

@@ -151,6 +151,7 @@ var
   I: Integer;
   PartObj: TJsonObject;
 begin
+
   if JsonObj.Contains(FieldAllParts) and
     (JsonObj.Types[FieldAllParts] = jdtArray) then
   begin
@@ -182,6 +183,7 @@ class procedure TWrapperHelper.ParseRelatedURIs(const JsonObj: TJsonObject;
 var
   RelatedURIsObj: TJsonObject;
 begin
+ RelatedURIs.Clear;
   if JsonObj.Contains(FieldRelatedUris) and
     (JsonObj.Types[FieldRelatedUris] = jdtObject) then
   begin
@@ -201,6 +203,7 @@ class procedure TWrapperHelper.ParsePurchaseURIs(const JsonObj: TJsonObject;
   out PurchaseURIs: TPurchaseURIs);
 var
   PurchaseURIsObj: TJsonObject;
+
 begin
   if JsonObj.Contains(FieldPurchaseUris) and
     (JsonObj.Types[FieldPurchaseUris] = jdtObject) then
@@ -219,6 +222,7 @@ class procedure TWrapperHelper.ParseImageUris(const JsonObj: TJsonObject;
 var
   ImageUrisObj: TJsonObject;
 begin
+  ImageUris.Clear;
   if JsonObj.Contains(FieldImageUris) and
     (JsonObj.Types[FieldImageUris] = jdtObject) then
   begin
@@ -239,6 +243,7 @@ class procedure TWrapperHelper.ParseLegalities(const JsonObj: TJsonObject;
 var
   LegalitiesObj: TJsonObject;
   Format: TLegalityFormat;
+
 begin
   if JsonObj.Contains(FieldLegalities) and
     (JsonObj.Types[FieldLegalities] = jdtObject) then
