@@ -46,8 +46,13 @@ uses
   Logger,
   APIConstants;
 
+{$REGION 'Global Cache and Helpers'}
+
+var
+  SetIconCache: TDictionary<string, string>;
+
 /// <summary>
-/// Simple HTML-encodes the given text.
+///   Simple HTML-encodes the given text.
 /// </summary>
 function EncodeHTML(const HtmlText: string): string;
 begin
@@ -368,19 +373,27 @@ begin
     if i < Length(PartImages) then
       ImageUri := PartImages[i].Small
     else
-      ImageUri := '';
-{$IFDEF MSWINDOWS}
-    var
-    EncodedTypeLine := TEncoding.UTF8.GetString
-      (TEncoding.ANSI.GetBytes(Part.TypeLine));
-{$ELSE}
-    var
-    EncodedTypeLine := EncodeHTML(Part.TypeLine);
-{$ENDIF}
-    PartHtml := Format('<div class="meld-part"><p><strong>%s</strong></p>' +
-      '<p>%s</p><img src="%s" alt="%s"></div>',
-      [EncodeHTML(Part.Name), EncodedTypeLine, EncodeHTML(ImageUri),
-      EncodeHTML(Part.Name)]);
+      ImageUri := ''; // fallback
+
+    {$IFDEF MSWINDOWS}
+    var EncodedTypeLine := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(Part.TypeLine));
+    {$ELSE}
+    var EncodedTypeLine := EncodeHTML(Part.TypeLine);
+    {$ENDIF}
+
+    PartHtml := Format(
+      '<div class="meld-part">' +
+        '<p><strong>%s</strong></p>' +
+        '<p>%s</p>' +
+        '<img src="%s" alt="%s">' +
+      '</div>',
+      [
+        EncodeHTML(Part.Name),
+        EncodedTypeLine,
+        EncodeHTML(ImageUri),
+        EncodeHTML(Part.Name)
+      ]
+    );
     MeldPartsHtml := MeldPartsHtml + PartHtml;
   end;
 
@@ -391,11 +404,17 @@ begin
     MeldResultImages := FetchMeldPartImages
       ([CardDetails.MeldDetails.MeldResult])[0];
     ImageUri := MeldResultImages.Small;
-    MeldPartsHtml := MeldPartsHtml + Format('<div class="meld-result">' +
-      '<p><strong>Meld Result:</strong> %s</p><img src="%s" alt="%s"></div>',
-      [EncodeHTML(CardDetails.MeldDetails.MeldResult.Name),
-      EncodeHTML(ImageUri),
-      EncodeHTML(CardDetails.MeldDetails.MeldResult.Name)]);
+    MeldPartsHtml := MeldPartsHtml + Format(
+      '<div class="meld-result">' +
+        '<p><strong>Meld Result:</strong> %s</p>' +
+        '<img src="%s" alt="%s">' +
+      '</div>',
+      [
+        EncodeHTML(CardDetails.MeldDetails.MeldResult.Name),
+        EncodeHTML(ImageUri),
+        EncodeHTML(CardDetails.MeldDetails.MeldResult.Name)
+      ]
+    );
   end;
 
   MeldPartsHtml := MeldPartsHtml + '</div>';
@@ -420,42 +439,28 @@ begin
     AddReplacement(Replacements, '{{MeldDetails}}', '');
 
   // If single-faced, show flavor text; multi-face is handled in AddMultiFaceOracleText
-  if CardDetails.CardFaces.Count = 0 then
-    AddReplacement(Replacements, '{{FlavorText}}',
-      EncodeHTML(CardDetails.FlavorText))
+  if Length(CardDetails.CardFaces) = 0 then
+    AddReplacement(Replacements, '{{FlavorText}}', EncodeHTML(CardDetails.FlavorText))
   else
     AddReplacement(Replacements, '{{FlavorText}}', '');
 
   // Core fields
-  AddReplacement(Replacements, '{{CardName}}',
-    EncodeHTML(CardDetails.CardName));
-  AddReplacement(Replacements, '{{SetName}}', EncodeHTML(CardDetails.SetName));
-  AddReplacement(Replacements, '{{SetIcon}}', CardDetails.SetIconURI);
-
-  RarityStr := CardDetails.Rarity.ToString;
-  /// /////////
-
-  AddReplacement(Replacements, '{{Rarity}}', EncodeHTML(RarityStr));
-  AddReplacement(Replacements, '{{RarityClass}}',
-    GetRarityClass(CardDetails.Rarity));
-  AddReplacement(Replacements, '{{TypeLine}}',
-    EncodeHTML(CardDetails.TypeLine));
-  AddReplacement(Replacements, '{{ManaCost}}',
-    ReplaceManaSymbolsWithImages(CardDetails.ManaCost));
-  AddReplacement(Replacements, '{{Artist}}', EncodeHTML(CardDetails.Artist));
-  AddReplacement(Replacements, '{{CollectorNumber}}',
-    EncodeHTML(CardDetails.CollectorNumber));
-  AddReplacement(Replacements, '{{Arena Id}}',
-    EncodeHTML(CardDetails.ArenaID.ToString));
-  AddReplacement(Replacements, '{{BorderColor}}',
-    EncodeHTML(CardDetails.BorderColor));
-  AddReplacement(Replacements, '{{ReleasedAt}}',
-    EncodeHTML(CardDetails.ReleasedAt));
-  AddReplacement(Replacements, '{{StorySpotlight}}',
-    IfThen(CardDetails.StorySpotlight, 'Yes', 'No'));
-  AddReplacement(Replacements, '{{ScryfallURI}}', EncodeHTML(CardDetails.SFID));
-  AddReplacement(Replacements, '{{PowerToughness}}',
-    BuildPowerToughnessHtml(CardDetails));
+  AddReplacement(Replacements, '{{CardName}}',       EncodeHTML(CardDetails.CardName));
+  AddReplacement(Replacements, '{{SetName}}',        EncodeHTML(CardDetails.SetName));
+  AddReplacement(Replacements, '{{SetIcon}}',        CardDetails.SetIconURI);
+  RarityStr := RarityToString[CardDetails.Rarity];
+  AddReplacement(Replacements, '{{Rarity}}',         EncodeHTML(RarityStr));
+  AddReplacement(Replacements, '{{RarityClass}}',    GetRarityClass(CardDetails.Rarity));
+  AddReplacement(Replacements, '{{TypeLine}}',       EncodeHTML(CardDetails.TypeLine));
+  AddReplacement(Replacements, '{{ManaCost}}',       ReplaceManaSymbolsWithImages(CardDetails.ManaCost));
+  AddReplacement(Replacements, '{{Artist}}',         EncodeHTML(CardDetails.Artist));
+  AddReplacement(Replacements, '{{CollectorNumber}}',EncodeHTML(CardDetails.CollectorNumber));
+  AddReplacement(Replacements, '{{Arena Id}}',       EncodeHTML(CardDetails.ArenaID.ToString));
+  AddReplacement(Replacements, '{{BorderColor}}',    EncodeHTML(CardDetails.BorderColor));
+  AddReplacement(Replacements, '{{ReleasedAt}}',     EncodeHTML(CardDetails.ReleasedAt));
+  AddReplacement(Replacements, '{{StorySpotlight}}', IfThen(CardDetails.StorySpotlight, 'Yes', 'No'));
+  AddReplacement(Replacements, '{{ScryfallURI}}',    EncodeHTML(CardDetails.SFID));
+  AddReplacement(Replacements, '{{PowerToughness}}', BuildPowerToughnessHtml(CardDetails));
 
   // Oracle text: single vs multi-face
   if CardDetails.CardFaces.Count > 0 then
@@ -534,7 +539,7 @@ begin
   try
     for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
     begin
-      LegalityName := Format.ToString;
+      LegalityName   := LegalityToString[Format];
       LegalityStatus := CardDetails.Legalities.GetStatus(Format);
 
       if not LegalityStatus.IsEmpty then
@@ -595,6 +600,10 @@ begin
   AddOrHide(Replacements, '{{Keywords}}', '{{KeywordsClass}}', KeywordsList);
 end;
 
+{$ENDREGION}
+
+{$REGION 'Power/Toughness & Helpers'}
+
 /// <summary>
 /// Builds a small HTML snippet to display either Power/Toughness or Loyalty,
 /// whichever is relevant to the card.
@@ -611,15 +620,243 @@ begin
   end
   else if CardDetails.Loyalty <> '' then
   begin
-    Result := Format('<div class="power-toughness">' +
-      '<span class="label">Loyalty:</span>' + '<span class="value">%s</span>' +
-      '</div>', [EncodeHTML(CardDetails.Loyalty)]);
+    Result := Format(
+      '<div class="power-toughness">' +
+        '<span class="label">Loyalty:</span>' +
+        '<span class="value">%s</span>' +
+      '</div>',
+      [EncodeHTML(CardDetails.Loyalty)]
+    );
+  end;
+end;
+
+{$ENDREGION}
+
+{$REGION 'Set Icon Caching'}
+
+/// <summary>
+///   Saves the entire in-memory SetIconCache to a JSON file on disk.
+/// </summary>
+procedure SaveSetIconCacheToFile;
+var
+  CacheJson: TJsonObject;
+  Pair: TPair<string, string>;
+  CachePath: string;
+begin
+  CacheJson := TJsonObject.Create;
+  try
+    for Pair in SetIconCache do
+      CacheJson.S[Pair.Key] := Pair.Value;
+
+    CachePath := GetCacheFilePath(SetIconCacheFile);
+    CacheJson.SaveToFile(CachePath, False, TEncoding.UTF8, False);
+    LogStuff('Set icon cache saved to disk: ' + CachePath);
+  finally
+    CacheJson.Free;
+  end;
+end;
+
+/// <summary>
+///   Loads the SetIconCache from a JSON file on disk (if it exists).
+/// </summary>
+procedure LoadSetIconCacheFromFile;
+var
+  CacheJson: TJsonObject;
+  CachePath: string;
+  i: Integer;
+  Key: string;
+begin
+  CachePath := GetCacheFilePath(SetIconCacheFile);
+  if not TFile.Exists(CachePath) then
+    Exit;
+
+  CacheJson := TJsonObject.Create;
+  try
+    try
+      CacheJson.LoadFromFile(CachePath);
+      for i := 0 to CacheJson.Count - 1 do
+      begin
+        Key := CacheJson.Names[i];
+        SetIconCache.AddOrSetValue(Key, CacheJson.S[Key]);
+      end;
+      LogStuff('Set icon cache loaded from disk: ' + CachePath);
+    except
+      on E: Exception do
+      begin
+        LogStuff('Failed to load set icon cache: ' + E.Message);
+        SetIconCache.Clear;
+        TFile.Delete(CachePath);
+      end;
+    end;
+  finally
+    CacheJson.Free;
+  end;
+end;
+
+/// <summary>
+///   Downloads the SVG from IconURL and returns its Base64-encoded content.
+/// </summary>
+function FetchSVGAsBase64(const IconURL: string): string;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  MemoryStream: TMemoryStream;
+  SVGContent: TBytes;
+begin
+  Result := '';
+  HttpClient := THTTPClient.Create;
+  MemoryStream := TMemoryStream.Create;
+  try
+    try
+      Response := HttpClient.Get(IconURL, MemoryStream);
+      if Response.StatusCode = 200 then
+      begin
+        MemoryStream.Position := 0;
+        SetLength(SVGContent, MemoryStream.Size);
+        MemoryStream.ReadBuffer(SVGContent, MemoryStream.Size);
+        Result := TNetEncoding.Base64.EncodeBytesToString(SVGContent);
+        LogStuff('Downloaded and converted SVG to Base64: ' + IconURL);
+      end
+      else
+        LogStuff(Format('Failed to download SVG [%s]. HTTP %d: %s',
+          [IconURL, Response.StatusCode, Response.StatusText]));
+    except
+      on E: Exception do
+        LogStuff('Error fetching SVG: ' + E.Message);
+    end;
+  finally
+    HttpClient.Free;
+    MemoryStream.Free;
+  end;
+end;
+
+/// <summary>
+///   Checks if we already have a cached Base64 version of the set icon;
+///   if not, downloads and caches it.
+/// </summary>
+function GetSetIconAsRawSVG(const IconURL, SetCode: string): string;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  MemoryStream: TMemoryStream;
+  SVGContent: TBytes;
+  RawSvg: string;
+begin
+  // If we've already cached this set code, just return it
+  if SetIconCache.ContainsKey(SetCode) then
+    Exit(SetIconCache[SetCode]);
+
+  Result := '';
+  HttpClient := THTTPClient.Create;
+  MemoryStream := TMemoryStream.Create;
+  try
+    try
+      Response := HttpClient.Get(IconURL, MemoryStream);
+      if Response.StatusCode = 200 then
+      begin
+        MemoryStream.Position := 0;
+        SetLength(SVGContent, MemoryStream.Size);
+        MemoryStream.ReadBuffer(SVGContent, MemoryStream.Size);
+
+        // Convert the raw bytes to a UTF8 string (assuming SVG is UTF8-encoded)
+        RawSvg := TEncoding.UTF8.GetString(SVGContent);
+
+        // Store this raw SVG in the cache dictionary
+        SetIconCache.AddOrSetValue(SetCode, RawSvg);
+        Result := RawSvg;
+
+        // Persist the updated cache to disk
+        SaveSetIconCacheToFile;
+      end
+      else
+      begin
+        // Log or handle the error if needed
+        LogStuff(Format('Failed to download SVG. HTTP %d', [Response.StatusCode]), WARNING);
+      end;
+    except
+      on E: Exception do
+      begin
+        LogStuff('Error fetching raw SVG: ' + E.Message, ERROR);
+      end;
+    end;
+  finally
+    HttpClient.Free;
+    MemoryStream.Free;
   end;
 end;
 
 
+{$ENDREGION}
+
+{$REGION 'Set JSON Load/Save'}
+
+function LoadSetDetailsFromJson(const FileName: string): TArray<TSetDetails>;
+var
+  JsonObject: TJsonObject;
+  JsonArray: TJsonArray;
+  SetDetails: TSetDetails;
+  i: Integer;
+begin
+  if not TFile.Exists(FileName) then
+    Exit(nil);
+
+  JsonObject := TJsonObject.Create;
+  try
+    JsonObject.LoadFromFile(FileName);
+
+    if not JsonObject.Contains('sets') then
+      Exit(nil);
+
+    JsonArray := JsonObject.A['sets'];
+    SetLength(Result, JsonArray.Count);
+
+    for i := 0 to JsonArray.Count - 1 do
+    begin
+      SetDetails.Code       := JsonArray.O[i].S[FieldCode];
+      SetDetails.Name       := JsonArray.O[i].S[FieldName];
+      SetDetails.IconSVGURI := JsonArray.O[i].S[FieldIconSvgUri];
+      Result[i] := SetDetails;
+    end;
+  finally
+    JsonObject.Free;
+  end;
+end;
+
+procedure SaveSetDetailsToJson(const FileName: string;
+  const SetDetailsArray: TArray<TSetDetails>);
+var
+  JsonObject: TJsonObject;
+  JsonArray: TJsonArray;
+  JsonSet: TJsonObject;
+  SetDetails: TSetDetails;
+begin
+  JsonObject := TJsonObject.Create;
+  try
+    JsonArray := JsonObject.A[FieldSets];
+
+    for SetDetails in SetDetailsArray do
+    begin
+      JsonSet := TJsonObject.Create;
+      JsonSet.S[FieldCode]       := SetDetails.Code;
+      JsonSet.S[FieldName]       := SetDetails.Name;
+      JsonSet.S[FieldIconSvgUri] := SetDetails.IconSVGURI;
+      JsonArray.AddObject(JsonSet);
+    end;
+
+    JsonObject.SaveToFile(FileName, False, TEncoding.UTF8, False);
+  finally
+    JsonObject.Free;
+  end;
+end;
+
+{$ENDREGION}
+
 initialization
+  SetIconCache := TDictionary<string, string>.Create;
+  LoadSetIconCacheFromFile;
 
 finalization
+  SaveSetIconCacheToFile;
+  SetIconCache.Free;
 
 end.

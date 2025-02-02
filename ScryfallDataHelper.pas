@@ -148,6 +148,7 @@ var
   I: Integer;
   PartObj: TJsonObject;
 begin
+
   if JsonObj.Contains(FieldAllParts) and
     (JsonObj.Types[FieldAllParts] = jdtArray) then
   begin
@@ -177,13 +178,6 @@ class procedure TWrapperHelper.ParseRelatedURIs(const JsonObj: TJsonObject;
 var
   RelatedURIsObj: TJsonObject;
 begin
-  // Instead of using Default(TRelatedURIs) (which isn’t valid for classes),
-  // we either clear the existing object or allocate a new one.
-  if not Assigned(RelatedURIs) then
-    RelatedURIs := TRelatedURIs.Create
-  else
-    RelatedURIs.Clear;
-
   if JsonObj.Contains(FieldRelatedUris) and
     (JsonObj.Types[FieldRelatedUris] = jdtObject) then
   begin
@@ -201,6 +195,7 @@ class procedure TWrapperHelper.ParsePurchaseURIs(const JsonObj: TJsonObject;
   out PurchaseURIs: TPurchaseURIs);
 var
   PurchaseURIsObj: TJsonObject;
+
 begin
   if not Assigned(PurchaseURIs) then
     PurchaseURIs := TPurchaseURIs.Create;
@@ -222,11 +217,6 @@ class procedure TWrapperHelper.ParseImageUris(const JsonObj: TJsonObject;
 var
   ImageUrisObj: TJsonObject;
 begin
-  if not Assigned(ImageUris) then
-    ImageUris := TImageUris.Create
-  else
-    ImageUris.Clear;
-
   if JsonObj.Contains(FieldImageUris) and
     (JsonObj.Types[FieldImageUris] = jdtObject) then
   begin
@@ -245,6 +235,7 @@ class procedure TWrapperHelper.ParseLegalities(const JsonObj: TJsonObject;
 var
   LegalitiesObj: TJsonObject;
   Format: TLegalityFormat;
+
 begin
   // We assume Legalities is already allocated; if not, the caller should allocate it.
   Legalities.Clear;

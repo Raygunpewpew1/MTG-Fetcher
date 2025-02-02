@@ -31,16 +31,10 @@ type
     Switch1: TSwitch;
     Button2: TButton;
     ListBoxColors: TListBox;
-    LoadingLayout: TLayout;
-    AniIndicator1: TAniIndicator;
-    Label1: TLabel;
-    Button1: TButton;
-    ButtonNextPage: TButton;
-    ComboBoxEditSearch: TComboEdit;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    // procedure DelayTimerTimer(Sender: TObject);
+    procedure DelayTimerTimer(Sender: TObject);
     procedure ListViewCardsItemClick(const Sender: TObject;
       const AItem: TListViewItem);
     procedure WebBrowser1DidFinishLoad(ASender: TObject);
@@ -60,7 +54,7 @@ type
     BrIsLoaded: Boolean;
     AmOnline: Boolean;
 
-    procedure OnSearchComplete(Success: Boolean; const ErrorMsg: string);
+    procedure OnSearchComplete(Success: Boolean);
 
 
   public
@@ -78,10 +72,11 @@ uses
   APIConstants, JsonDataObjects, Logger, CardDisplayHelpers,
   System.NetEncoding;
 
-var
-  FScryfallAPI: TScryfallAPI;
-  FCardDisplayManager: TCardDisplayManager;
-
+destructor TCardLayout.Destroy;
+begin
+  FreeAndNil(TagObject);
+  inherited;
+end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 var
@@ -311,6 +306,60 @@ begin
   end;
 end;
 
+procedure TForm1.DelayTimerTimer(Sender: TObject);
+begin
+  if BrIsLoaded or not WebBrowserInitialized then
+  begin
+    Exit;
+  end;
+
+  AmOnline := FScryfallAPI.IsInternetAvailable;
+  if not AmOnline then
+  begin
+    DelayTimer.Enabled := False;
+    ShowMessage('Internet not available');
+    Exit;
+  end;
+
+  TTask.Run(
+    procedure
+    var
+      RandomCard: TCardDetails;
+    begin
+      try
+        RandomCard := FScryfallAPI.GetRandomCard;
+        TThread.Queue(nil,
+          procedure
+          begin
+            if Assigned(FCardDisplayManager) then
+            begin
+
+              FCardDisplayManager.AddCardToListView(RandomCard);
+              BrIsLoaded := True;
+              DelayTimer.Enabled := False;
+
+              if ListViewCards.Items.Count > 0 then
+              begin
+                ListViewCards.Selected := ListViewCards.Items[0];
+                FCardDisplayManager.ShowCardDetails(TCardDetailsObject
+                  (ListViewCards.Items[0].TagObject).CardDetails);
+              end;
+            end;
+          end);
+      except
+        on E: Exception do
+          TThread.Queue(nil,
+            procedure
+            begin
+              ShowMessage(S_ERROR_FETCHING_RANDOM_CARD + E.Message);
+              LogStuff('Failed to fetch random card: ' + E.Message, ERROR);
+              DelayTimer.Enabled := False;
+              Exit;
+            end);
+      end;
+    end).Start;
+end;
+
 function DecodeURL(const EncodedURL: string): string;
 begin
   Result := TNetEncoding.URL.Decode(EncodedURL);
@@ -387,17 +436,6 @@ end;
 procedure TForm1.Button2Click(Sender: TObject);
 begin
   MultiViewFilters.ShowMaster;
-end;
-
-procedure TForm1.Button3Click(Sender: TObject);
-
-begin
-//LoadingLayout.Visible := True;
-//AniIndicator1.Enabled := True;
-
-FScryfallAPI.GetCardByName('black lotus',True);
- //LoadingLayout.Visible := False;
-//AniIndicator1.Enabled := False;
 end;
 
 procedure TForm1.ButtonNextPageClick(Sender: TObject);
