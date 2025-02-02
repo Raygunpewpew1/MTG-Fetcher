@@ -34,7 +34,6 @@ type
     FHttpClient: THTTPClient;
     FAutocompleteCache: TDictionary<string, TArray<string>>;
 
-    {$REGION 'Private Methods'}
     function ExecuteRequest(const Endpoint: string;
       const Payload: TJsonObject = nil): TJsonObject;
     function ParseSearchResult(const JsonResponse: TJsonObject): TSearchResult;
@@ -47,9 +46,11 @@ type
     function ExecuteQuery(const Query: TScryfallQuery): TSearchResult;
     function GetCachedResult(const CacheKey: string;
       out JsonResponse: TJsonObject): Boolean;
-    procedure CacheResult(const CacheKey: string; const JsonResponse: TJsonObject);
-
-    {$ENDREGION}
+    procedure CacheResult(const CacheKey: string;
+      const JsonResponse: TJsonObject);
+    function MakeRequestWithRetries(const URL: string;
+      const Payload: TJsonObject): string;
+    function GetCardByEndpoint(const Endpoint: string): TCardDetails;
 
   public
 
@@ -160,9 +161,25 @@ begin
   end;
 end;
 
-{$ENDREGION}
-
-{$REGION 'Public: Core Card/Set Endpoints'}
+function TScryfallAPI.GetCardByEndpoint(const Endpoint: string): TCardDetails;
+var
+  JsonResponse: TJsonObject;
+  TempCard: TCardDetails;
+begin
+  JsonResponse := ExecuteRequest(Endpoint);
+  try
+    TempCard := TCardDetails.Create;
+    try
+      TWrapperHelper.FillCardDetailsFromJson(JsonResponse, TempCard);
+      Result := TempCard;
+    except
+      TempCard.Free;
+      raise;
+    end;
+  finally
+    JsonResponse.Free;
+  end;
+end;
 
 function TScryfallAPI.GetSetByCode(const SetCode: string): TSetDetails;
 var
@@ -290,31 +307,6 @@ begin
   // Reuse our general-purpose async query method
   SearchWithQueryAsync(Query, OnComplete);
 end;
-
-procedure TScryfallAPI.SearchAllCardsAsync(const Query, SetCode, Rarity,
-  Colors: string; Fuzzy, Unique: Boolean; Page: Integer;
-  Callback: TOnSearchComplete);
-var
-  Q: TScryfallQuery;
-begin
-  Q := CreateQuery;
-  try
-    Q.WithName(Query, Fuzzy)
-     .WithSet(SetCode)
-     .WithRarity(StringToRarity(Rarity))
-     .WithColors(Colors)
-     .SetPage(Page)
-     .IncludeExtras(False);
-
-    SearchWithQueryAsync(Q, Callback);
-  finally
-    Q.Free;
-  end;
-end;
-
-{$ENDREGION}
-
-{$REGION 'Public: Random & Catalog'}
 
 function TScryfallAPI.GetRandomCard: TCardDetails;
 var
@@ -503,13 +495,24 @@ begin
           end;
         end;
 
-      TThread.Queue(nil,
-        procedure
+        // Then queue up the callback
+        TThread.Queue(nil,
+          procedure
+          begin
+            OnComplete(Success, SearchResult.Cards.ToArray,
+              SearchResult.HasMore, ErrorMsg);
+            SearchResult.Free; // free it on the main thread
+          end);
+
+      except
+        // ensure we eventually free the allocated object
+        on E: Exception do
         begin
-          OnComplete(Success, SearchResult.Cards, SearchResult.HasMore, ErrorMsg);
-        end);
-    end
-  );
+          SearchResult.Free;
+          raise;
+        end;
+      end;
+    end);
 end;
 
 function TScryfallAPI.FetchCardsCollection(const Identifiers: TJSONArray)
@@ -667,8 +670,8 @@ begin
           ('Request failed with status %d for URL %s', [StatusCode, URL]);
       end;
 
-      // Retry if needed
-      if RetryCount < MaxRetries then
+      // If not successful , wait and retry
+      if TryCount < MaxRetries then
         Sleep(RetryDelayMs);
     end;
 
@@ -716,50 +719,15 @@ begin
   end;
 end;
 
-function TScryfallAPI.ExecuteRequest(const Endpoint: string;
-const Payload: TJsonObject): TJsonObject;
-var
-  URL: string;
-  ResponseStr: string;
-begin
-  // 1) Check for internet
-  if not IsInternetAvailable then
-    raise EScryfallAPIError.Create('No internet connection available.');
-
-  // 2) Build full URL
-  if Endpoint.StartsWith('http') then
-    URL := Endpoint
-  else
-  begin
-    if not BaseUrl.EndsWith('/') then
-      URL := BaseUrl + '/'
-    else
-      URL := BaseUrl;
-
-    URL := URL + Endpoint.TrimLeft(['/']);
-  end;
-
-  // 3) Perform the request (GET or POST) with retries
-  ResponseStr := MakeRequestWithRetries(URL, Payload);
-
-  // 4) Parse the JSON text
-  try
-    Result := TJsonObject.Parse(ResponseStr) as TJsonObject;
-  except
-    on E: Exception do
-      raise EScryfallAPIError.CreateFmt('Error parsing JSON: %s', [E.Message]);
-  end;
-end;
-
-function TScryfallAPI.ParseSearchResult(const JsonResponse: TJsonObject)
-  : TSearchResult;
+function TScryfallAPI.ParseSearchResult(const JsonResponse: TJsonObject): TSearchResult;
 var
   CardsArray: TJSONArray;
   Stopwatch: TStopwatch;
   LResult: TSearchResult;            // Final TSearchResult to return
   LocalCards: TList<TCardDetails>;   // Accumulate cards in parallel, then sync once
 begin
-  LResult := Default(TSearchResult);
+  // TSearchResult to start
+  LResult := TSearchResult.Create;
 
   // If there's no JSON at all, just return empty
   if not Assigned(JsonResponse) then
@@ -784,7 +752,7 @@ begin
     // Scryfall puts cards in the "data" array if it’s a valid search result
     if JsonResponse.Contains(FieldData) then
     begin
-      CardsArray := JsonResponse.A['data'];
+      CardsArray := JsonResponse.A[FieldData];
       LogStuff('ParseSearchResult -> Data Array Count: ' + CardsArray.Count.ToString, DEBUG);
 
       // Clear TSearchResult’s list in case there’s leftover data
@@ -793,41 +761,67 @@ begin
       // measure how long it takes to parse
       Stopwatch := TStopwatch.StartNew;
 
-      // Parallel parse
-      TParallel.For(0, CardsArray.Count - 1,
-        procedure(Index: Integer)
-        var
-          CardObj: TJsonObject;
-        begin
-          if CardsArray.Types[Index] = jdtObject then
+      // Prepare a local list to store TCardDetails in the parallel loop
+      LocalCards := TList<TCardDetails>.Create;
+      try
+        // Parallel parse: create TCardDetails for each JSON element
+        TParallel.For(0, CardsArray.Count - 1,
+          procedure(Index: Integer)
+          var
+            CardObj : TJsonObject;
+            TempCard: TCardDetails;
           begin
-            CardObj := CardsArray.O[Index];
-            ScryfallDataHelper.TWrapperHelper.FillCardDetailsFromJson(CardObj, LResult.Cards[Index]);
+            // Only parse objects
+            if CardsArray.Types[Index] = jdtObject then
+            begin
+              CardObj := CardsArray.O[Index];
+              TempCard := TCardDetails.Create;
+              TWrapperHelper.FillCardDetailsFromJson(CardObj, TempCard);
+
+              // Lock the local list for thread-safety
+              TMonitor.Enter(LocalCards);
+              try
+                LocalCards.Add(TempCard);
+              finally
+                TMonitor.Exit(LocalCards);
+              end;
+            end
+            else
+            begin
+              LogStuff(
+                Format('Skipping non-object element at index %d', [Index]),
+                WARNING
+              );
+            end;
           end
-          else
+        );
+
+        // Synchronize once to merge all parsed cards into LResult.Cards
+        TThread.Synchronize(nil,
+          procedure
           begin
-            LogStuff(Format('Skipping non-object element at index %d', [Index]), WARNING);
-            LResult.Cards[Index].Clear;
-          end;
-        end);
+            LResult.Cards.AddRange(LocalCards);
+          end);
 
       finally
         LocalCards.Free;
       end;
 
       Stopwatch.Stop;
-      LogStuff(Format('Parallel Parsing Time: %d ms',
-        [Stopwatch.ElapsedMilliseconds]), DEBUG);
+      LogStuff(Format('Parallel Parsing Time: %d ms', [Stopwatch.ElapsedMilliseconds]), DEBUG);
 
-      LResult.HasMore     := JsonResponse.B['has_more'];
-      LResult.NextPageURL := JsonResponse.S['next_page'];
-      LResult.TotalCards  := JsonResponse.I['total_cards'];
+      // Fill TSearchResult metadata
+      LResult.HasMore     := JsonResponse.B[FieldHasMore];
+      LResult.NextPageURL := JsonResponse.S[FieldNextPage];
+      LResult.TotalCards  := JsonResponse.I[FieldTotalCards];
 
       Result := LResult;
     end
     else
     begin
+      // If there's no "data" field, log an error but return an empty TSearchResult
       LogStuff('ParseSearchResult -> Missing "data" key in JSON response.', ERROR);
+      Result := LResult;
     end;
   except
     on E: Exception do
@@ -839,8 +833,9 @@ begin
   end;
 end;
 
-function TScryfallAPI.InternalSearchCards(const Query, SetCode, Rarity, Colors: string;
-  Fuzzy, Unique: Boolean; Page: Integer): TSearchResult;
+
+function TScryfallAPI.InternalSearchCards(const Query, SetCode, Rarity,
+  Colors: string; Fuzzy, Unique: Boolean; Page: Integer): TSearchResult;
 var
   CacheKey, SearchUrl: string;
   CachedResponse, JsonResponse: TJsonObject;
@@ -962,12 +957,18 @@ begin
 
   with JsonObj.O[FieldImageUris] do
   begin
-    if Contains(FieldSmall)       then Result.Small       := S[FieldSmall];
-    if Contains(FieldNormal)      then Result.Normal      := S[FieldNormal];
-    if Contains(FieldLarge)       then Result.Large       := S[FieldLarge];
-    if Contains(FieldPng)         then Result.Png         := S[FieldPng];
-    if Contains(FieldBorderCrop)  then Result.Art_crop    := S[FieldBorderCrop];
-    if Contains(FieldArtCrop)     then Result.Border_crop := S[FieldArtCrop];
+    if Contains(FieldSmall) then
+      Result.Small := S[FieldSmall];
+    if Contains(FieldNormal) then
+      Result.Normal := S[FieldNormal];
+    if Contains(FieldLarge) then
+      Result.Large := S[FieldLarge];
+    if Contains(FieldPng) then
+      Result.Png := S[FieldPng];
+    if Contains(FieldBorderCrop) then
+      Result.Border_crop := S[FieldBorderCrop];
+    if Contains(FieldArtCrop) then
+      Result.Art_crop := S[FieldArtCrop];
   end;
 end;
 
