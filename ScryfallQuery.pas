@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
 
-  SGlobalsZ, APIConstants, ScryfallTypes, Logger, System.NetEncoding,
+  SGlobalsX, APIConstants, ScryfallTypes, Logger, System.NetEncoding,
   System.Math, System.SyncObjs, System.StrUtils;
 
 type

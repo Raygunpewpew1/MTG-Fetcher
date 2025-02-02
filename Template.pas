@@ -7,7 +7,7 @@ HtmlTemplate: string = '''
   <html lang="en">
   <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes">
   <style>
   html, body {
     text-rendering: optimizeLegibility;
@@ -45,7 +45,7 @@ HtmlTemplate: string = '''
   }
 
   .flip-card:hover, .single-card:hover {
-    transform: scale(1.1);
+    transform: scale(1.5);
     box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
   }
 
@@ -406,6 +406,10 @@ HtmlTemplate: string = '''
   }
 
   .hidden { display: none; }
+  img {
+      width: 100%;
+      height: auto; /* keep aspect ratio */
+    }
   </style>
   </head>
   <body>
@@ -422,10 +426,10 @@ HtmlTemplate: string = '''
   </div>
     {{FlipIndicator}}
     {{CardImages}}
-
+     {{Rulings}}
 
    <div class="type-set-row">
-    {{Rulings}}
+
       <div class="type-line">{{TypeLine}}</div>
       <div class="set-details">
 

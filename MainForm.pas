@@ -7,7 +7,7 @@ uses
   System.Generics.Collections, FMX.Types, FMX.Controls, FMX.Forms,
   FMX.Graphics,
   FMX.Dialogs, FMX.Layouts, FMX.ExtCtrls, FMX.Ani, FMX.Edit, FMX.StdCtrls,
-  FMX.WebBrowser, FMX.Skia, SGlobalsZ, ScryfallData, System.TypInfo, Math,
+  FMX.WebBrowser, FMX.Skia, SGlobalsX, ScryfallData, System.TypInfo, Math,
   System.Threading, FMX.Controls.Presentation, FMX.ListView.Types,
   FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
   FMX.ListBox, MLogic, FMX.ComboEdit, CardDisplayManager,
@@ -15,24 +15,15 @@ uses
   System.IOUtils, System.StrUtils, FMX.MultiView, FMX.Platform;
 
 type
-  TCardLayout = class(TLayout)
-  public
-    destructor Destroy; override;
-  end;
 
   TForm1 = class(TForm)
     DelayTimer: TTimer;
-
-    TimerDebounce: TTimer;
     StyleBook1: TStyleBook;
     MultiViewFilters: TMultiView;
     LayoutFilters: TLayout;
-    ButtonNextPage: TButton;
-    Button1: TButton;
     ComboBoxSetCode: TComboBox;
     ComboBoxRarity: TComboBox;
     ComboBoxAbility: TComboBox;
-    ComboBoxEditSearch: TComboEdit;
     LayoutContent: TLayout;
     ListViewCards: TListView;
     WebBrowser1: TWebBrowser;
@@ -40,10 +31,16 @@ type
     Switch1: TSwitch;
     Button2: TButton;
     ListBoxColors: TListBox;
+    LoadingLayout: TLayout;
+    AniIndicator1: TAniIndicator;
+    Label1: TLabel;
+    Button1: TButton;
+    ButtonNextPage: TButton;
+    ComboBoxEditSearch: TComboEdit;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure DelayTimerTimer(Sender: TObject);
+    // procedure DelayTimerTimer(Sender: TObject);
     procedure ListViewCardsItemClick(const Sender: TObject;
       const AItem: TListViewItem);
     procedure WebBrowser1DidFinishLoad(ASender: TObject);
@@ -55,27 +52,22 @@ type
     procedure Button2Click(Sender: TObject);
     procedure ListViewCardsButtonClick(const Sender: TObject;
       const AItem: TListItem; const AObject: TListItemSimpleControl);
+    procedure Button3Click(Sender: TObject);
 
   private
     WebBrowserInitialized: Boolean;
     FIsProgrammaticChange: Boolean;
-
-    FCardDisplayManager: TCardDisplayManager;
-    FScryfallAPI: TScryfallAPI;
     BrIsLoaded: Boolean;
     AmOnline: Boolean;
 
-    procedure OnSearchComplete(Success: Boolean);
+    procedure OnSearchComplete(Success: Boolean; const ErrorMsg: string);
 
-    // procedure PopulateColorListBox;
-    // function GetSelectedColors: string;
 
   public
   end;
 
 var
   Form1: TForm1;
-  // ColorCheckBoxes: TObjectList<TCheckBox>;
 
 implementation
 
@@ -83,14 +75,13 @@ implementation
 {$R *.Windows.fmx MSWINDOWS}
 
 uses
-  APIConstants, JsonDataObjects, Logger, Template, CardDisplayHelpers,
+  APIConstants, JsonDataObjects, Logger, CardDisplayHelpers,
   System.NetEncoding;
 
-destructor TCardLayout.Destroy;
-begin
-  FreeAndNil(TagObject);
-  inherited;
-end;
+var
+  FScryfallAPI: TScryfallAPI;
+  FCardDisplayManager: TCardDisplayManager;
+
 
 procedure TForm1.FormCreate(Sender: TObject);
 var
@@ -98,11 +89,22 @@ var
   ComboBoxMap: TDictionary<string, TComboBox>;
   CacheFileName: string;
 begin
+//LoadingLayout.Visible := True;
+//AniIndicator1.Enabled := True;
 
-  FScryfallAPI := TScryfallAPI.Create;
 
   try
     AmOnline := FScryfallAPI.IsInternetAvailable;
+    if AmOnline = False then
+    begin
+      ShowMessage('Error checking internet connection, Shutting Down');
+{$IF DEFINED(MSWINDOWS) OR DEFINED(MACOS)}
+      Application.Terminate;
+{$ELSE}
+      Halt;
+{$ENDIF}
+    end;
+
   except
     on E: Exception do
     begin
@@ -117,23 +119,19 @@ begin
 
   WebBrowserInitialized := False;
   FIsProgrammaticChange := False;
-  // WebBrowser1.LoadFromStrings(HtmlTemplate, '');
-  ComboBoxMap := TDictionary<string, TComboBox>.Create;
+
 
   FCardDisplayManager := TCardDisplayManager.Create(ListViewCards, WebBrowser1,
     FScryfallAPI);
 
-  // Link the ListBoxColors to the CardDisplayManager
-  FCardDisplayManager.ListBoxColors := ListBoxColors;
+  //
+  // FCardDisplayManager.OnProgressUpdate := procedure(Progress: Integer)
+  // begin
+  //
+  // end;
 
-  // Populate the color list
-  FCardDisplayManager.PopulateColorListBox;
 
-  FCardDisplayManager.OnProgressUpdate := procedure(Progress: Integer)
-    begin
-
-    end;
-
+  ComboBoxMap := TDictionary<string, TComboBox>.Create;
   try
     ComboBoxMap.Add(CatalogKeywordAbilities, ComboBoxAbility);
     FCardDisplayManager.LoadAllCatalogs(ComboBoxMap);
@@ -141,7 +139,7 @@ begin
     ComboBoxMap.Free;
   end;
 
-  AppClose := False;
+  // AppClose := False;
 
   BrIsLoaded := False;
   ListViewCards.OnItemClick := ListViewCardsItemClick;
@@ -173,28 +171,28 @@ begin
   end;
 
   try
-
     for var SetDetails in SetDetailsArray do
       ComboBoxSetCode.Items.Add(SetDetails.Code + ' - ' + SetDetails.Name);
-
   finally
     ComboBoxSetCode.ItemIndex := 0;
-
     ComboBoxRarity.ItemIndex := 0;
   end;
 
-
- // DelayTimer.Enabled := True;
+//  AniIndicator1.Enabled := False;
+//  LoadingLayout.Visible := False;
+  // DelayTimer.Enabled := True;
 end;
 
-
-procedure TForm1.OnSearchComplete(Success: Boolean);
+procedure TForm1.OnSearchComplete(Success: Boolean; const ErrorMsg: string);
 begin
+  LoadingLayout.Visible := False;
+  AniIndicator1.Enabled := False;
+
   Button1.Enabled := True;
   ButtonNextPage.Enabled := FCardDisplayManager.HasMorePages;
 
   if not Success then
-    ShowMessage('Search failed. Please try again.')
+    ShowMessage('Search failed: ' + ErrorMsg)
   else if ListViewCards.Items.Count = 0 then
     ShowMessage('No cards found.')
   else
@@ -210,12 +208,12 @@ begin
   try
     if Assigned(ListViewCards) then
       ListViewCards.OnItemClick := nil;
-    if Assigned(FScryfallAPI) then
-    begin
-      FScryfallAPI.Free;
-      FScryfallAPI := nil;
-      // ColorCheckBoxes.Free;
-    end;
+    // if Assigned(FScryfallAPI) then
+    // begin
+    // FScryfallAPI.Free;
+    // FScryfallAPI := nil;
+    // // ColorCheckBoxes.Free;
+    // end;
   except
     on E: Exception do
     begin
@@ -225,75 +223,66 @@ begin
 end;
 
 procedure TForm1.FormShow(Sender: TObject);
+// var
+// CardDetailsObj: TCardDetails;
 begin
+
+  // CardDetailsObj := TCardDetails.Create;
+
+  // Link the ListBoxColors to the CardDisplayManager
+  FCardDisplayManager.ListBoxColors := ListBoxColors;
+
+  // Populate the color list
+  FCardDisplayManager.PopulateColorListBox;
 
   WebBrowser1.Navigate('about:blank');
-  MultiViewFilters.ShowMaster;
- TTask.Run(
-    procedure
-    var
-      RandomCard: TCardDetails;
+
+  FCardDisplayManager.LoadRandomCard(
+    procedure(Success: Boolean)
     begin
-      try
-        RandomCard := FScryfallAPI.GetRandomCard;
-        TThread.Queue(nil,
-          procedure
-          begin
-            if Assigned(FCardDisplayManager) then
-            begin
+      if Success then
+      begin
 
-              FCardDisplayManager.AddCardToListView(RandomCard);
-              BrIsLoaded := True;
-              DelayTimer.Enabled := False;
+        if ListViewCards.Items.Count > 0 then
+        begin
+          ListViewCards.Selected := ListViewCards.Items[0];
+          // TagObject is a TCardDetails instance:
+          FCardDisplayManager.ShowCardDetails(TCardDetails(ListViewCards.Items
+            [0].TagObject));
+        end;
 
-              if ListViewCards.Items.Count > 0 then
-              begin
-                ListViewCards.Selected := ListViewCards.Items[0];
-                FCardDisplayManager.ShowCardDetails(TCardDetailsObject
-                  (ListViewCards.Items[0].TagObject).CardDetails);
-              end;
-            end;
-          end);
-      except
-        on E: Exception do
-          TThread.Queue(nil,
-            procedure
-            begin
-              ShowMessage(S_ERROR_FETCHING_RANDOM_CARD + E.Message);
-              LogStuff('Failed to fetch random card: ' + E.Message, ERROR);
-              DelayTimer.Enabled := False;
-              Exit;
-            end);
+      end
+      else
+      begin
+        ShowMessage('Failed to load random card.');
       end;
-    end).Start;
-end;
+    end);
 
+//  MultiViewFilters.ShowMaster;
+end;
 
 procedure TForm1.ListViewCardsButtonClick(const Sender: TObject;
-  const AItem: TListItem; const AObject: TListItemSimpleControl);
-  var
+const AItem: TListItem; const AObject: TListItemSimpleControl);
+var
   Rulings: TArray<TRuling>;
-  CardDetailsObj: TCardDetailsObject;
+  CardDetails: TCardDetails;
 begin
-  if AItem.TagObject is TCardDetailsObject then
+  if AItem.TagObject is TCardDetails then
   begin
-    CardDetailsObj := TCardDetailsObject(AItem.TagObject);
-    Rulings := FCardDisplayManager.GetCardRulings(CardDetailsObj.CardDetails.SFID);
-    FCardDisplayManager.DisplayCardInBrowser(CardDetailsObj.CardDetails,Rulings);
-    //FCardDisplayManager.ShowCardDetails(CardDetailsObj.CardDetails);
+    CardDetails := TCardDetails(AItem.TagObject);
+    Rulings := FCardDisplayManager.GetCardRulings(CardDetails.SFID);
+    FCardDisplayManager.DisplayCardInBrowser(CardDetails, Rulings);
+    // Or, if you prefer:
+    // FCardDisplayManager.ShowCardDetails(CardDetails);
   end
   else
-    ShowMessage('TagObject is not TCardDetailsObject');
-
-
+    ShowMessage('TagObject is not TCardDetails');
 end;
 
-
-
 procedure TForm1.ListViewCardsItemClick(const Sender: TObject;
-  const AItem: TListViewItem);
+const AItem: TListViewItem);
 var
-  CardDetailsObj: TCardDetailsObject;
+  CardDetails: TCardDetails;
 begin
   if not Assigned(AItem) or not Assigned(AItem.TagObject) then
   begin
@@ -301,11 +290,11 @@ begin
     Exit;
   end;
 
-  if AItem.TagObject is TCardDetailsObject then
+  if AItem.TagObject is TCardDetails then
   begin
-    CardDetailsObj := TCardDetailsObject(AItem.TagObject);
+    CardDetails := TCardDetails(AItem.TagObject);
 
-    FCardDisplayManager.ShowCardDetails(CardDetailsObj.CardDetails);
+    FCardDisplayManager.ShowCardDetails(CardDetails);
   end
   else
     ShowMessage('TagObject is not TCardDetailsObject');
@@ -317,63 +306,9 @@ begin
   begin
 
     WebBrowserInitialized := True;
-   // WebBrowser1.EvaluateJavaScript(JScript);
+    // WebBrowser1.EvaluateJavaScript(JScript);
 
   end;
-end;
-
-procedure TForm1.DelayTimerTimer(Sender: TObject);
-begin
-  if BrIsLoaded or not WebBrowserInitialized then
-  begin
-    Exit;
-  end;
-
-  AmOnline := FScryfallAPI.IsInternetAvailable;
-  if not AmOnline then
-  begin
-    DelayTimer.Enabled := False;
-    ShowMessage('Internet not available');
-    Exit;
-  end;
-
-  TTask.Run(
-    procedure
-    var
-      RandomCard: TCardDetails;
-    begin
-      try
-        RandomCard := FScryfallAPI.GetRandomCard;
-        TThread.Queue(nil,
-          procedure
-          begin
-            if Assigned(FCardDisplayManager) then
-            begin
-
-              FCardDisplayManager.AddCardToListView(RandomCard);
-              BrIsLoaded := True;
-              DelayTimer.Enabled := False;
-
-              if ListViewCards.Items.Count > 0 then
-              begin
-                ListViewCards.Selected := ListViewCards.Items[0];
-                FCardDisplayManager.ShowCardDetails(TCardDetailsObject
-                  (ListViewCards.Items[0].TagObject).CardDetails);
-              end;
-            end;
-          end);
-      except
-        on E: Exception do
-          TThread.Queue(nil,
-            procedure
-            begin
-              ShowMessage(S_ERROR_FETCHING_RANDOM_CARD + E.Message);
-              LogStuff('Failed to fetch random card: ' + E.Message, ERROR);
-              DelayTimer.Enabled := False;
-              Exit;
-            end);
-      end;
-    end).Start;
 end;
 
 function DecodeURL(const EncodedURL: string): string;
@@ -394,6 +329,12 @@ begin
 
   Button1.Enabled := False;
   MultiViewFilters.HideMaster;
+
+  LoadingLayout.Visible := True;
+  AniIndicator1.Enabled := True;
+
+
+
 
   SelectedRarity := rAll;
   if ComboBoxRarity.Text <> S_ALL_RARITIES then
@@ -432,14 +373,31 @@ begin
     FCardDisplayManager.ExecuteQuery(Query, OnSearchComplete);
 
   except
+    LoadingLayout.Visible := False;
+    AniIndicator1.Enabled := False;
     Query.Free;
     raise;
   end;
+
+//   LoadingLayout.Visible := False;
+//   AniIndicator1.Enabled := False;
+
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
 begin
   MultiViewFilters.ShowMaster;
+end;
+
+procedure TForm1.Button3Click(Sender: TObject);
+
+begin
+//LoadingLayout.Visible := True;
+//AniIndicator1.Enabled := True;
+
+FScryfallAPI.GetCardByName('black lotus',True);
+ //LoadingLayout.Visible := False;
+//AniIndicator1.Enabled := False;
 end;
 
 procedure TForm1.ButtonNextPageClick(Sender: TObject);
@@ -479,5 +437,11 @@ begin
 end;
 
 initialization
+
+FScryfallAPI := TScryfallAPI.Create;
+
+finalization
+
+FScryfallAPI.Free;
 
 end.

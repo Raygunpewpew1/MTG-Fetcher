@@ -3,7 +3,7 @@
 interface
 
 uses
-  System.SysUtils, System.Generics.Collections, SGlobalsZ, APIConstants, Logger,
+  System.SysUtils, System.Generics.Collections, SGlobalsX, APIConstants, Logger,
   System.NetEncoding;
 
 type
@@ -135,8 +135,9 @@ end;
 
 function MapRarityToString(Rarity: TRarity): string;
 begin
-  Result := RarityToString[Rarity];
+  Result := Rarity.ToString;  // This calls the helper method.
 end;
+
 
 function EscapeQueryValue(const Value: string): string;
 var

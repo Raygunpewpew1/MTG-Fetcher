@@ -4,14 +4,15 @@ interface
 
 uses
   System.SysUtils, System.NetEncoding, System.Classes,
-  JsonDataObjects, SGlobalsZ, Logger, APIConstants, CardDisplayHelpers,System.Generics.Collections;
+  JsonDataObjects, SGlobalsX, Logger, APIConstants, CardDisplayHelpers,
+  System.Generics.Collections;
 
 type
   TWrapperHelper = class
   public
     // URL Construction
-    class function ConstructSearchUrl(const Query, SetCode, Rarity, Colors: string;
-      Fuzzy, Unique: Boolean; Page: Integer): string;
+    class function ConstructSearchUrl(const Query, SetCode, Rarity,
+      Colors: string; Fuzzy, Unique: Boolean; Page: Integer): string;
 
     // Parsing Methods
     class procedure ParseAllParts(const JsonObj: TJsonObject;
@@ -32,11 +33,15 @@ type
       out CardDetails: TCardDetails);
     class procedure ParsePurchaseURIs(const JsonObj: TJsonObject;
       out PurchaseURIs: TPurchaseURIs);
-          // Helper Methods
-    class function GetSafeStringField(const Obj: TJsonObject; const FieldName: string;
-      const Default: string = ''): string;
+    // Helper Methods
+    class function GetSafeStringField(const Obj: TJsonObject;
+      const FieldName: string; const Default: string = ''): string;
+    // class procedure GetSafeStringArrayField(const Obj: TJsonObject;
+    // const FieldName: string; out Arr: TArray<string>);
+
     class procedure GetSafeStringArrayField(const Obj: TJsonObject;
-      const FieldName: string; out Arr: TArray<string>);
+      const FieldName: string; var List: TList<string>);
+
     class function GetUtf8String(const S: string): string;
     class procedure ParseRulings(const JsonObj: TJsonObject;
       out Rulings: TArray<TRuling>); static;
@@ -52,14 +57,15 @@ implementation
 
 { TWrapperHelper }
 
-class function TWrapperHelper.ConstructSearchUrl(const Query, SetCode, Rarity, Colors: string;
-  Fuzzy, Unique: Boolean; Page: Integer): string;
+class function TWrapperHelper.ConstructSearchUrl(const Query, SetCode, Rarity,
+  Colors: string; Fuzzy, Unique: Boolean; Page: Integer): string;
 var
   Params: TStringBuilder;
 begin
   if Fuzzy then
   begin
-    Result := Format(FuzzySStr, [EndpointNamed, TNetEncoding.URL.Encode(Query)]);
+    Result := Format(FuzzySStr, [EndpointNamed,
+      TNetEncoding.URL.Encode(Query)]);
     LogStuff(Result);
     Exit;
   end;
@@ -87,16 +93,16 @@ end;
 
 class function TWrapperHelper.GetUtf8String(const S: string): string;
 begin
-  {$IF DEFINED(MSWINDOWS)}
+{$IF DEFINED(MSWINDOWS)}
   // On Windows, convert from ANSI to UTF8.
   Result := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(S));
-  {$ELSE}
+{$ELSE}
   Result := S;
-  {$ENDIF}
+{$ENDIF}
 end;
 
-class function TWrapperHelper.GetSafeStringField(const Obj: TJsonObject; const FieldName: string;
-  const Default: string): string;
+class function TWrapperHelper.GetSafeStringField(const Obj: TJsonObject;
+  const FieldName: string; const Default: string): string;
 begin
   if Obj.Contains(FieldName) and (Obj.Types[FieldName] = jdtString) then
     Result := Obj.S[FieldName]
@@ -105,44 +111,35 @@ begin
 end;
 
 class procedure TWrapperHelper.GetSafeStringArrayField(const Obj: TJsonObject;
-  const FieldName: string; out Arr: TArray<string>);
+  const FieldName: string; var List: TList<string>);
 var
   JArr: TJsonArray;
   I: Integer;
-  TempList: TList<string>;
 begin
-  // Initialize the output array to empty
-  SetLength(Arr, 0);
+  // Clear the list first.
+  if not Assigned(List) then
+    List := TList<string>.Create
+  else
+    List.Clear;
 
   if Obj.Contains(FieldName) and (Obj.Types[FieldName] = jdtArray) then
   begin
     JArr := Obj.A[FieldName];
-    TempList := TList<string>.Create;
-    try
-      for I := 0 to JArr.Count - 1 do
-      begin
-        if JArr.Types[I] = jdtString then
-        begin
-          TempList.Add(JArr.S[I]);
-        end
-        else
-        begin
-          //log the unexpected type
-          LogStuff(Format('Non-string element at index %d in field "%s" skipped.', [I, FieldName]), WARNING);
-        end;
-      end;
-      Arr := TempList.ToArray;
-    finally
-      TempList.Free;
+    for I := 0 to JArr.Count - 1 do
+    begin
+      if JArr.Types[I] = jdtString then
+        List.Add(JArr.S[I])
+      else
+        LogStuff(Format('Non-string element at index %d in field "%s" skipped.',
+          [I, FieldName]), WARNING);
     end;
   end
   else
   begin
-    // Field not present or not an array; Arr remains empty
-    LogStuff(Format('Field "%s" is missing or not an array.', [FieldName]), DEBUG);
+    LogStuff(Format('Field "%s" is missing or not an array.',
+      [FieldName]), DEBUG);
   end;
 end;
-
 
 class procedure TWrapperHelper.ParseAllParts(const JsonObj: TJsonObject;
   out AllParts: TArray<TCardPart>);
@@ -156,12 +153,12 @@ begin
   begin
     PartsArray := JsonObj.A[FieldAllParts];
     SetLength(AllParts, PartsArray.Count);
-
     for I := 0 to PartsArray.Count - 1 do
     begin
       if PartsArray.Types[I] = jdtObject then
       begin
         PartObj := PartsArray.O[I];
+        AllParts[I] := TCardPart.Create; // Allocate new instance
         AllParts[I].ObjectType := GetSafeStringField(PartObj, FieldObject);
         AllParts[I].ID := GetSafeStringField(PartObj, FieldID);
         AllParts[I].Component := GetSafeStringField(PartObj, FieldComponent);
@@ -172,9 +169,7 @@ begin
     end;
   end
   else
-  begin
     SetLength(AllParts, 0);
-  end;
 end;
 
 class procedure TWrapperHelper.ParseRelatedURIs(const JsonObj: TJsonObject;
@@ -182,6 +177,13 @@ class procedure TWrapperHelper.ParseRelatedURIs(const JsonObj: TJsonObject;
 var
   RelatedURIsObj: TJsonObject;
 begin
+  // Instead of using Default(TRelatedURIs) (which isn’t valid for classes),
+  // we either clear the existing object or allocate a new one.
+  if not Assigned(RelatedURIs) then
+    RelatedURIs := TRelatedURIs.Create
+  else
+    RelatedURIs.Clear;
+
   if JsonObj.Contains(FieldRelatedUris) and
     (JsonObj.Types[FieldRelatedUris] = jdtObject) then
   begin
@@ -192,9 +194,7 @@ begin
     RelatedURIs.TcgplayerInfiniteDecks := GetSafeStringField(RelatedURIsObj,
       FieldTcgplayerInfiniteDecks);
     RelatedURIs.Edhrec := GetSafeStringField(RelatedURIsObj, FieldEdhrec);
-  end
-  else
-    RelatedURIs := Default(TRelatedURIs);
+  end;
 end;
 
 class procedure TWrapperHelper.ParsePurchaseURIs(const JsonObj: TJsonObject;
@@ -202,16 +202,19 @@ class procedure TWrapperHelper.ParsePurchaseURIs(const JsonObj: TJsonObject;
 var
   PurchaseURIsObj: TJsonObject;
 begin
+  if not Assigned(PurchaseURIs) then
+    PurchaseURIs := TPurchaseURIs.Create;
   if JsonObj.Contains(FieldPurchaseUris) and
     (JsonObj.Types[FieldPurchaseUris] = jdtObject) then
   begin
     PurchaseURIsObj := JsonObj.O[FieldPurchaseUris];
-    PurchaseURIs.Tcgplayer := GetSafeStringField(PurchaseURIsObj, FieldTcgplayer);
-    PurchaseURIs.Cardmarket := GetSafeStringField(PurchaseURIsObj, FieldCardmarket);
-    PurchaseURIs.Cardhoarder := GetSafeStringField(PurchaseURIsObj, FieldCardhoarder);
-  end
-  else
-    PurchaseURIs := Default(TPurchaseURIs);
+    PurchaseURIs.Tcgplayer := GetSafeStringField(PurchaseURIsObj,
+      FieldTcgplayer);
+    PurchaseURIs.Cardmarket := GetSafeStringField(PurchaseURIsObj,
+      FieldCardmarket);
+    PurchaseURIs.Cardhoarder := GetSafeStringField(PurchaseURIsObj,
+      FieldCardhoarder);
+  end;
 end;
 
 class procedure TWrapperHelper.ParseImageUris(const JsonObj: TJsonObject;
@@ -219,6 +222,11 @@ class procedure TWrapperHelper.ParseImageUris(const JsonObj: TJsonObject;
 var
   ImageUrisObj: TJsonObject;
 begin
+  if not Assigned(ImageUris) then
+    ImageUris := TImageUris.Create
+  else
+    ImageUris.Clear;
+
   if JsonObj.Contains(FieldImageUris) and
     (JsonObj.Types[FieldImageUris] = jdtObject) then
   begin
@@ -229,9 +237,7 @@ begin
     ImageUris.PNG := GetSafeStringField(ImageUrisObj, FieldPng);
     ImageUris.Border_crop := GetSafeStringField(ImageUrisObj, FieldBorderCrop);
     ImageUris.Art_crop := GetSafeStringField(ImageUrisObj, FieldArtCrop);
-  end
-  else
-    ImageUris := Default(TImageUris);
+  end;
 end;
 
 class procedure TWrapperHelper.ParseLegalities(const JsonObj: TJsonObject;
@@ -240,16 +246,16 @@ var
   LegalitiesObj: TJsonObject;
   Format: TLegalityFormat;
 begin
+  // We assume Legalities is already allocated; if not, the caller should allocate it.
+  Legalities.Clear;
   if JsonObj.Contains(FieldLegalities) and
     (JsonObj.Types[FieldLegalities] = jdtObject) then
   begin
     LegalitiesObj := JsonObj.O[FieldLegalities];
     for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
       Legalities.SetStatus(Format, GetSafeStringField(LegalitiesObj,
-        LegalityToString[Format]));
-  end
-  else
-    Legalities.Clear;
+        Format.ToString));
+  end;
 end;
 
 class procedure TWrapperHelper.ParsePrices(const JsonObj: TJsonObject;
@@ -258,13 +264,13 @@ var
   PricesObj: TJsonObject;
 begin
   Prices.Clear;
-
-  if JsonObj.Contains(FieldPrices) and (JsonObj.Types[FieldPrices] = jdtObject) then
+  if JsonObj.Contains(FieldPrices) and (JsonObj.Types[FieldPrices] = jdtObject)
+  then
   begin
     PricesObj := JsonObj.O[FieldPrices];
-
     Prices.USD := StrToCurrDef(GetSafeStringField(PricesObj, FieldUsd), 0);
-    Prices.USD_Foil := StrToCurrDef(GetSafeStringField(PricesObj, FieldUsdFoil), 0);
+    Prices.USD_Foil := StrToCurrDef(GetSafeStringField(PricesObj,
+      FieldUsdFoil), 0);
     Prices.EUR := StrToCurrDef(GetSafeStringField(PricesObj, FieldEur), 0);
     Prices.Tix := StrToCurrDef(GetSafeStringField(PricesObj, FieldTix), 0);
   end;
@@ -276,32 +282,34 @@ var
   FacesArray: TJsonArray;
   I: Integer;
   FaceObj: TJsonObject;
+  TempImageUris: TImageUris;
 begin
   if JsonObj.Contains(FieldCardFaces) and
     (JsonObj.Types[FieldCardFaces] = jdtArray) then
   begin
     FacesArray := JsonObj.A[FieldCardFaces];
     SetLength(CardFaces, FacesArray.Count);
-
     for I := 0 to FacesArray.Count - 1 do
     begin
       if FacesArray.Types[I] = jdtObject then
       begin
         FaceObj := FacesArray.O[I];
+        CardFaces[I] := TCardFace.Create; // Allocate new instance
         CardFaces[I].Name := GetSafeStringField(FaceObj, FieldName);
         CardFaces[I].ManaCost := GetSafeStringField(FaceObj, FieldManaCost);
         CardFaces[I].TypeLine := GetSafeStringField(FaceObj, FieldTypeLine);
-
         CardFaces[I].OracleText :=
           GetUtf8String(GetSafeStringField(FaceObj, FieldOracleText));
         CardFaces[I].FlavorText :=
           GetUtf8String(GetSafeStringField(FaceObj, FieldFlavorText));
-
         CardFaces[I].Power := GetSafeStringField(FaceObj, FieldPower);
         CardFaces[I].Toughness := GetSafeStringField(FaceObj, FieldToughness);
-        CardFaces[I].Loyalty := GetSafeStringField(FaceObj, FieldCardFaceLoyalty);
-        CardFaces[I].CMC := JsonObj.F[FieldCMC];
-        ParseImageUris(FaceObj, CardFaces[I].ImageUris);
+        CardFaces[I].Loyalty := GetSafeStringField(FaceObj,
+          FieldCardFaceLoyalty);
+        CardFaces[I].CMC := FaceObj.F[FieldCMC];
+        TempImageUris := nil;
+        ParseImageUris(FaceObj, TempImageUris);
+        CardFaces[I].ImageUris := TempImageUris;
       end;
     end;
   end
@@ -309,8 +317,8 @@ begin
     SetLength(CardFaces, 0);
 end;
 
-class procedure TWrapperHelper.FillSetDetailsFromJson(const JsonObj: TJsonObject;
-  out SetDetails: TSetDetails);
+class procedure TWrapperHelper.FillSetDetailsFromJson(const JsonObj
+  : TJsonObject; out SetDetails: TSetDetails);
 begin
   SetDetails.Clear;
 
@@ -335,18 +343,28 @@ begin
   SetDetails.SearchURI := GetSafeStringField(JsonObj, FieldSearchUri);
 end;
 
-class procedure TWrapperHelper.FillCardDetailsFromJson(const JsonObj: TJsonObject;
-  out CardDetails: TCardDetails);
+class procedure TWrapperHelper.FillCardDetailsFromJson(const JsonObj
+  : TJsonObject; out CardDetails: TCardDetails);
 var
   AllParts: TArray<TCardPart>;
   Part: TCardPart;
+  TempGames, TempKeywords, TempColorID: TList<string>;
+  I: Integer;
+  TempImageUris: TImageUris;
+  TempLegalities: TCardLegalities;
+  TempPrices: TCardPrices;
+  TempCardFaces: TArray<TCardFace>;
+  TempRelatedURIs: TRelatedURIs;
+  TempPurchaseURIs: TPurchaseURIs;
 begin
-  // If we already have IDs, clear them out before refilling
+  // If CardDetails already contains data, clear it
   if (not CardDetails.SFID.IsEmpty) or (not CardDetails.OracleID.IsEmpty) then
-    CardDetails.Clear;
+  begin
+   CardDetails.Clear;
+  end;
 
   try
-    // TypeLine
+    // Basic string fields and numbers
     if JsonObj.Contains(FieldTypeLine) and
       (JsonObj.Types[FieldTypeLine] = jdtString) then
       CardDetails.TypeLine := GetUtf8String(JsonObj.S[FieldTypeLine]);
@@ -358,19 +376,25 @@ begin
     CardDetails.CardName := GetUtf8String(GetSafeStringField(JsonObj,
       FieldName));
     CardDetails.ManaCost := GetSafeStringField(JsonObj, FieldManaCost);
-
     CardDetails.OracleText := GetUtf8String(GetSafeStringField(JsonObj,
       FieldOracleText));
 
-    // Games array
-    GetSafeStringArrayField(JsonObj, FieldGames, CardDetails.Games);
+    // Games array (using a temporary variable)
+    TempGames := CardDetails.Games;
+    // local reference to the already allocated list
+    TWrapperHelper.GetSafeStringArrayField(JsonObj, FieldGames, TempGames);
+    CardDetails.Games := TempGames; // reassign if necessary
 
-    // Keywords array
-    GetSafeStringArrayField(JsonObj, FieldKeywords, CardDetails.Keywords);
+    // Keywords array (using a temporary variable)
+    TempKeywords := CardDetails.Keywords;
+    TWrapperHelper.GetSafeStringArrayField(JsonObj, FieldKeywords,
+      TempKeywords);
+    CardDetails.Keywords := TempKeywords;
 
     CardDetails.SetCode := GetSafeStringField(JsonObj, FieldSet);
     CardDetails.SetName := GetSafeStringField(JsonObj, FieldSetName);
-    CardDetails.Rarity := StringToRarity(GetSafeStringField(JsonObj, FieldRarity));
+    CardDetails.Rarity := StringToRarity(GetSafeStringField(JsonObj,
+      FieldRarity));
     CardDetails.Power := GetSafeStringField(JsonObj, FieldPower);
     CardDetails.Toughness := GetSafeStringField(JsonObj, FieldToughness);
     CardDetails.Loyalty := GetSafeStringField(JsonObj, FieldLoyalty);
@@ -384,7 +408,8 @@ begin
     CardDetails.Lang := GetSafeStringField(JsonObj, FieldLang);
     CardDetails.ReleasedAt := GetSafeStringField(JsonObj, FieldReleasedAt);
 
-    if (JsonObj.Contains(FieldCMC)) and (JsonObj.Types[FieldCMC] = jdtFloat) then
+    if (JsonObj.Contains(FieldCMC)) and (JsonObj.Types[FieldCMC] = jdtFloat)
+    then
       CardDetails.CMC := JsonObj.F[FieldCMC];
 
     CardDetails.Reserved := JsonObj.B[FieldReserved];
@@ -405,28 +430,55 @@ begin
     CardDetails.Textless := JsonObj.B[FieldTextless];
     CardDetails.StorySpotlight := JsonObj.B[FieldStorySpotlight];
 
-    GetSafeStringArrayField(JsonObj, FieldColorIdentity,
-      CardDetails.ColorIdentity);
+    // ColorIdentity array (using a temporary variable)
+    TempColorID := CardDetails.ColorIdentity;
+    GetSafeStringArrayField(JsonObj, FieldColorIdentity, TempColorID);
+    CardDetails.ColorIdentity := TempColorID;
 
     // Nested objects
-    ParseImageUris(JsonObj, CardDetails.ImageUris);
-    ParseLegalities(JsonObj, CardDetails.Legalities);
-    ParsePrices(JsonObj, CardDetails.Prices);
-    ParseCardFaces(JsonObj, CardDetails.CardFaces);
-    ParseRelatedURIs(JsonObj, CardDetails.RelatedURIs);
-    ParsePurchaseURIs(JsonObj, CardDetails.PurchaseURIs);
+    TempImageUris := CardDetails.ImageUris;
+    ParseImageUris(JsonObj, TempImageUris);
+    CardDetails.ImageUris := TempImageUris;
 
-    // Parse "all_parts" field
+    TempLegalities := CardDetails.Legalities;
+    ParseLegalities(JsonObj, TempLegalities);
+    CardDetails.Legalities := TempLegalities;
+
+    TempPrices := CardDetails.Prices;
+    ParsePrices(JsonObj, TempPrices);
+    CardDetails.Prices := TempPrices;
+
+    ParseCardFaces(JsonObj, TempCardFaces);
+    CardDetails.CardFaces.Clear;
+    for I := 0 to High(TempCardFaces) do
+      CardDetails.CardFaces.Add(TempCardFaces[I]);
+
+    TempRelatedURIs := CardDetails.RelatedURIs;
+    ParseRelatedURIs(JsonObj, TempRelatedURIs);
+    CardDetails.RelatedURIs := TempRelatedURIs;
+
+    TempPurchaseURIs := CardDetails.PurchaseURIs;
+    ParsePurchaseURIs(JsonObj, TempPurchaseURIs);
+    CardDetails.PurchaseURIs := TempPurchaseURIs;
+
+    // TWrapperHelper.ParseCardFaces(JsonObj, CardDetails.CardFaces);
+    // TWrapperHelper.ParseRelatedURIs(JsonObj, CardDetails.RelatedURIs);
+    // TWrapperHelper.ParsePurchaseURIs(JsonObj, CardDetails.PurchaseURIs);
+
+    // Parse "all_parts" field into a temporary dynamic array
     ParseAllParts(JsonObj, AllParts);
 
+    // Process "all_parts" to set up meld details
     if Length(AllParts) > 0 then
     begin
-      for Part in AllParts do
+      for I := 0 to Length(AllParts) - 1 do
       begin
+        Part := AllParts[I];
         if Part.Component = 'meld_part' then
         begin
-          CardDetails.IsMeld := True; // Set IsMeld to True
-          CardDetails.MeldDetails.MeldParts := CardDetails.MeldDetails.MeldParts + [Part];
+          CardDetails.IsMeld := True; // Mark as meld card
+          // Append the Part to the existing MeldParts list:
+          CardDetails.MeldDetails.MeldParts.Add(Part);
         end
         else if Part.Component = 'meld_result' then
         begin
@@ -435,9 +487,7 @@ begin
       end;
     end
     else
-    begin
       CardDetails.IsMeld := False;
-    end;
 
   except
     on E: Exception do
@@ -451,26 +501,23 @@ end;
 class procedure TWrapperHelper.ParseRulings(const JsonObj: TJsonObject;
   out Rulings: TArray<TRuling>);
 var
-  RulingsArray: TJSONArray;
-  i: Integer;
+  RulingsArray: TJsonArray;
+  I: Integer;
 begin
   if JsonObj.Contains(FieldData) then
   begin
     RulingsArray := JsonObj.A[FieldData];
     SetLength(Rulings, RulingsArray.Count);
-    for i := 0 to RulingsArray.Count - 1 do
+    for I := 0 to RulingsArray.Count - 1 do
     begin
-      Rulings[i].Source := RulingsArray.O[i].S[FieldSource];
-      Rulings[i].PublishedAt := RulingsArray.O[i].S[FieldPublishedAt];
-      Rulings[i].Comment := RulingsArray.O[i].S[FieldComment];
+      Rulings[I] := TRuling.Create; // Allocate new instance
+      Rulings[I].Source := RulingsArray.O[I].S[FieldSource];
+      Rulings[I].PublishedAt := RulingsArray.O[I].S[FieldPublishedAt];
+      Rulings[I].Comment := RulingsArray.O[I].S[FieldComment];
     end;
   end
   else
     Rulings := [];
 end;
 
-
-
-
 end.
-

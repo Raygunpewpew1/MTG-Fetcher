@@ -7,10 +7,12 @@ uses
   FMX.ListView.Types, FMX.ListView.Appearances,
   FMX.ListView, FMX.WebBrowser,
   ScryfallData, System.Threading, FMX.Dialogs, FMX.ListBox,
-  CardDisplayHelpers, Template, Logger, SGlobalsZ, MLogic, APIConstants,
+  CardDisplayHelpers, Template, Logger, SGlobalsX, MLogic, APIConstants,
   ScryfallTypes, ScryfallQuery, System.SyncObjs, FMX.StdCtrls, FMX.Types;
 
 type
+  TOnQueryComplete = reference to procedure(Success: Boolean;
+    const ErrorMsg: string);
 
   TCardDisplayManager = class
   private
@@ -28,10 +30,13 @@ type
 
     procedure ClearListViewItems;
     procedure InitializeWebBrowser;
+
     procedure DisplayCardArtworks(const Query: TScryfallQuery;
-      const OnComplete: TProc<Boolean>);
+      const OnComplete: TOnQueryComplete);
+
     procedure HandleSetDetails(const CardDetails: TCardDetails;
       const SetDetails: TSetDetails);
+
     // function ApplyLocalFilters(const Cards: TArray<TCardDetails>)
     // : TArray<TCardDetails>;
     procedure SafeFreeAndNil<T: class>(var Obj: T);
@@ -47,12 +52,17 @@ type
     property ListBoxColors: TListBox read FListBoxColors write FListBoxColors;
 
     procedure ExecuteQuery(const Query: TScryfallQuery;
-      const OnComplete: TProc<Boolean>);
+      const OnComplete: TOnQueryComplete);
+
+    procedure LoadNextPage(const OnComplete: TOnQueryComplete);
+
     function GetCurrentQuery: TScryfallQuery;
-    procedure LoadNextPage(const OnComplete: TProc<Boolean>);
+
     procedure ShowCardDetails(const CardDetails: TCardDetails);
+
     procedure DisplayCardInBrowser(const CardDetails: TCardDetails;
       const Rulings: TArray<TRuling>);
+
     procedure AddCardToListView(const Card: TCardDetails);
     procedure LoadAllCatalogs(const ComboBoxes: TDictionary<string, TComboBox>);
     procedure LoadRandomCard(const OnComplete: TProc<Boolean>);
@@ -68,8 +78,9 @@ type
   end;
 
 implementation
+
 uses
-ScryfallDataHelper;
+  ScryfallDataHelper;
 
 { TCardDisplayManager }
 
@@ -199,7 +210,7 @@ begin
 end;
 
 procedure TCardDisplayManager.ExecuteQuery(const Query: TScryfallQuery;
-  const OnComplete: TProc<Boolean>);
+  const OnComplete: TOnQueryComplete);
 begin
   FCriticalSection.Enter;
   try
@@ -207,8 +218,8 @@ begin
     SafeFreeAndNil<TScryfallQuery>(FCurrentQuery);
     FCurrentQuery := Query.Clone;
     FCurrentPage := 1; // Reset pagination
-    LogStuff(Format('ExecuteQuery - After Cloning - Query State: %s',
-      [FCurrentQuery.Options.ToString]), DEBUG);
+    // LogStuff(Format('ExecuteQuery - After Cloning - Query State: %s',
+    // [FCurrentQuery.Options.ToString]), DEBUG);
   finally
     FCriticalSection.Leave;
   end;
@@ -237,41 +248,47 @@ begin
   // LogQueryState(Query, 'SetupDefaultFilters - After');
 end;
 
-procedure TCardDisplayManager.LoadNextPage(const OnComplete: TProc<Boolean>);
+procedure TCardDisplayManager.LoadNextPage(const OnComplete: TOnQueryComplete);
 var
   ClonedQuery: TScryfallQuery;
 begin
   if not Assigned(FCurrentQuery) then
   begin
     LogStuff('LoadNextPage: FCurrentQuery is nil.', ERROR);
-    OnComplete(False);
+    OnComplete(False, 'No current query to load next page.');
     Exit;
   end;
 
   ClonedQuery := FCurrentQuery.Clone;
   try
     ClonedQuery.SetPage(FCurrentPage + 1);
-    LogQueryState(ClonedQuery, 'LoadNextPage - Before DisplayCardArtworks');
+   // LogQueryState(ClonedQuery, 'LoadNextPage - Before DisplayCardArtworks');
+
+
     DisplayCardArtworks(ClonedQuery,
-      procedure(Success: Boolean)
+      procedure(Success: Boolean; const ErrorMsg: string)
       begin
         if Success then
         begin
-          Inc(FCurrentPage); // Increment the page only after successful fetch
-          LogStuff(Format('LoadNextPage: FCurrentPage incremented to %d.',
-            [FCurrentPage]), DEBUG);
+          Inc(FCurrentPage); // Only increment on success
+          LogStuff(Format('LoadNextPage: FCurrentPage incremented to %d.', [FCurrentPage]), DEBUG);
+          OnComplete(True, '');
         end
         else
+        begin
           LogStuff('LoadNextPage: Failed to load next page.', ERROR);
-        OnComplete(Success);
+          OnComplete(False, ErrorMsg);
+        end;
       end);
   finally
-    // Do NOT free ClonedQuery here as it is used in DisplayCardArtworks
+    // Do NOT free ClonedQuery here since DisplayCardArtworks is still using it
   end;
 end;
 
+
 procedure TCardDisplayManager.DisplayCardArtworks(const Query: TScryfallQuery;
-const OnComplete: TProc<Boolean>);
+const OnComplete: TOnQueryComplete);
+
 begin
   FCardDataList.Clear;
   SetupDefaultFilters(Query);
@@ -285,7 +302,7 @@ begin
         begin
           if not Success then
           begin
-            OnComplete(False);
+            OnComplete(False, ErrorMsg);
             Exit;
           end;
 
@@ -296,7 +313,7 @@ begin
           end;
 
           FHasMorePages := HasMore;
-          OnComplete(True);
+          OnComplete(True, '');
         end);
     end);
 end;
@@ -345,28 +362,42 @@ end;
 procedure TCardDisplayManager.AddCardToListView(const Card: TCardDetails);
 var
   ListViewItem: TListViewItem;
-  CardDetailsObj: TCardDetailsObject;
+  CardDetailsObj: TCardDetails;
   RareStr: string;
+  rarity: TRarity;
 begin
-  if not Assigned(FListView) or Card.CardName.IsEmpty or Card.SFID.IsEmpty then
+  if (not Assigned(FListView)) or Card.CardName.IsEmpty or Card.SFID.IsEmpty
+  then
   begin
     LogStuff(Format
       ('AddCardToListView: Skipping card due to missing data. CardName: %s, SFID: %s',
       [Card.CardName, Card.SFID]), ERROR);
     Exit;
   end;
-  // FListView.BeginUpdate;
-  RareStr := RarityToString[Card.Rarity];
-  RareStr := RareStr.Substring(0, 1).ToUpper + RareStr.Substring(1);
 
-  CardDetailsObj := TCardDetailsObject.Create(Card);
+  CardDetailsObj := TCardDetails.Create;
+  try
+    // copy data from Card to CardDetailsObj
+    CardDetailsObj.Assign(Card);
 
-  ListViewItem := FListView.Items.Add;
-  ListViewItem.Text := Card.CardName;
-  ListViewItem.Detail := RareStr;
-  ListViewItem.ButtonText := 'Rulings';
-  ListViewItem.TagObject := CardDetailsObj;
-  // FListView.EndUpdate;
+    // Retrieve rarity string
+    rarity := Card.rarity;
+    RareStr := rarity.ToString;
+    RareStr := RareStr.Substring(0, 1).ToUpper + RareStr.Substring(1);
+
+
+    // CardDetailsObj := TCardDetailsObject.Create(Card);
+
+    // Add the item to the list view.
+    ListViewItem := FListView.Items.Add;
+    ListViewItem.Text := Card.CardName;
+    ListViewItem.Detail := RareStr;
+    ListViewItem.ButtonText := 'Rulings';
+    ListViewItem.TagObject := CardDetailsObj;
+  except
+    CardDetailsObj.Free;
+    raise;
+  end;
 end;
 
 procedure TCardDisplayManager.HandleSetDetails(const CardDetails: TCardDetails;
@@ -450,13 +481,14 @@ begin
           // Add rulings if exist
           RulingsHtml := '<div class="rulings-section">';
           RulingsHtml := RulingsHtml + '<h3>Card Rulings</h3>';
-          var Comments:string;
+          var
+            Comments: string;
           if Length(Rulings) > 0 then
 
           begin
             for var Ruling in Rulings do
             begin
-             Comments := TWrapperHelper.GetUtf8String(Ruling.Comment);
+              Comments := TWrapperHelper.GetUtf8String(Ruling.Comment);
               RulingsHtml := RulingsHtml + Format('<div class="ruling-item">' +
                 '<p><strong>Source:</strong> %s</p>' +
                 '<p><strong>Date:</strong> %s</p>' + '<p>%s</p>' + '</div>',
@@ -512,12 +544,12 @@ var
 begin
   FileName := SCatalogsJson;
   Catalogs := TDictionary<string, TScryfallCatalog>.Create;
-
   try
     LoadCatalogsFromFile(FileName, Catalogs);
 
     if Catalogs.Count = 0 then
     begin
+      Catalogs.Free; // Free the initially created dictionary.
       Catalogs := FScryfallAPI.FetchAllCatalogs;
       SaveCatalogsToFile(FileName, Catalogs);
     end;

@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
-  System.RegularExpressions, System.Classes, FMX.Dialogs, SGlobalsZ,
+  System.RegularExpressions, System.Classes, FMX.Dialogs, SGlobalsX,
   FMX.Graphics, System.Net.HttpClient, FMX.StdCtrls, FMX.ListView.Appearances,
   FMX.ListView, JsonDataObjects, Logger;
 
@@ -18,22 +18,22 @@ function IsCardValid(const Card: TCardDetails): Boolean;
 procedure SaveCatalogsToFile(const FileName: string;
   const Catalogs: TDictionary<string, TScryfallCatalog>);
 procedure LoadCatalogsFromFile(const FileName: string;
-  var Catalogs: TDictionary<string, TScryfallCatalog>);
+  Catalogs: TDictionary<string, TScryfallCatalog>);
 function GetLegalStatus(const Legalities: TCardLegalities;
   Format: TLegalityFormat): string;
 procedure ClearListViewItems(ListView: TListView);
 function ConvertColorCodeToName(const Code: string): string;
 function MatchesColors(const CardColors: string;
   const SearchColors: string): Boolean;
-function SafeJsonArrayToJSON(const JsonArray: TJsonArray): string;
-function SafeJsonValue(JsonObject: TJsonObject; const Key: string): string;
-function SafePriceValue(PricesObject: TJsonObject; const Key: string): string;
-function GetJSONStringOrDefault(const JsonObject: TJsonObject;
-  const Key: string; const DefaultValue: string = ''): string;
 function GetCacheFilePath(const FileName: string): string;
+function GetSetIconAsRawSVG(const IconURL, SetCode: string): string;
+procedure LoadSetIconCacheFromFile;
+function LoadSetDetailsFromJson(const FileName: string): TArray<TSetDetails>;
+procedure SaveSetDetailsToJson(const FileName: string;
+  const SetDetailsArray: TArray<TSetDetails>);
 
 var
-  HttpClient: THTTPClient;
+  SetIconCache: TDictionary<string, string>;
 
 implementation
 
@@ -141,10 +141,16 @@ begin
 end;
 
 procedure LoadCatalogsFromFile(const FileName: string;
-  var Catalogs: TDictionary<string, TScryfallCatalog>);
+  Catalogs: TDictionary<string, TScryfallCatalog>);
 var
   JsonCatalogs: TJsonObject;
   FullFilePath: string;
+  CatalogName: string;
+  JsonCatalogObj: TJsonObject;
+  CatalogDataArray: TJsonArray;
+  NewCat: TScryfallCatalog;
+  TempData: TArray<string>;
+  I, J: Integer;
 begin
   FullFilePath := GetAssetPath('', FileName);
 
@@ -159,24 +165,29 @@ begin
     JsonCatalogs.LoadFromFile(FullFilePath);
 
     Catalogs.Clear;
-    for var I := 0 to JsonCatalogs.Count - 1 do
+    for I := 0 to JsonCatalogs.Count - 1 do
     begin
-      var
       CatalogName := JsonCatalogs.Names[I];
-      var
-      CatalogObj := JsonCatalogs.O[CatalogName];
-      var
-        Catalog: TScryfallCatalog;
-      Catalog.Name := CatalogObj.S[FieldName];
-      Catalog.TotalItems := CatalogObj.I[FieldCount];
+      JsonCatalogObj := JsonCatalogs.O[CatalogName];
 
-      var
-      CatalogDataArray := CatalogObj.A[FieldData];
-      SetLength(Catalog.Data, CatalogDataArray.Count);
-      for var J := 0 to CatalogDataArray.Count - 1 do
-        Catalog.Data[J] := CatalogDataArray.S[J];
+      // Create a new instance for this catalog
+      NewCat := TScryfallCatalog.Create;
+      try
+        NewCat.Name := JsonCatalogObj.S[FieldName];
+        NewCat.TotalItems := JsonCatalogObj.I[FieldCount];
 
-      Catalogs.Add(CatalogName, Catalog);
+        CatalogDataArray := JsonCatalogObj.A[FieldData];
+        SetLength(TempData, CatalogDataArray.Count);
+        for J := 0 to CatalogDataArray.Count - 1 do
+          TempData[J] := CatalogDataArray.S[J];
+        NewCat.Data := TempData;
+
+        Catalogs.Add(CatalogName, NewCat);
+        // Do not free NewCat here because it's now owned by the dictionary.
+      except
+        NewCat.Free; // Free if something goes wrong before adding.
+        raise;
+      end;
     end;
   finally
     JsonCatalogs.Free;
@@ -296,70 +307,188 @@ begin
   Result := True;
 end;
 
-function SafeJsonArrayToJSON(const JsonArray: TJsonArray): string;
-begin
-  if Assigned(JsonArray) then
-    Result := JsonArray.ToJSON
-  else
-    Result := '[]';
-end;
-
-function SafeJsonValue(JsonObject: TJsonObject; const Key: string): string;
-begin
-  if JsonObject.Contains(Key) then
-  begin
-    case JsonObject.Types[Key] of
-      jdtString:
-        Result := JsonObject.S[Key];
-      jdtInt:
-        Result := IntToStr(JsonObject.I[Key]);
-      jdtLong:
-        Result := IntToStr(JsonObject.L[Key]);
-      jdtULong:
-        Result := UIntToStr(JsonObject.U[Key]);
-      jdtFloat:
-        Result := FloatToStr(JsonObject.F[Key]);
-      jdtDateTime, jdtUtcDateTime:
-        Result := DateTimeToStr(JsonObject.D[Key]);
-      jdtBool:
-        Result := BoolToStr(JsonObject.B[Key], True);
-      jdtArray:
-        Result := JsonObject.A[Key].ToJSON;
-      jdtObject:
-        Result := JsonObject.O[Key].ToJSON;
-    else
-      Result := '';
-    end;
-  end
-  else
-    Result := '';
-end;
-
-function SafePriceValue(PricesObject: TJsonObject; const Key: string): string;
-begin
-  if Assigned(PricesObject) and PricesObject.Contains(Key) and
-    not PricesObject.Values[Key].IsNull then
-    Result := PricesObject.S[Key]
-  else
-    Result := '0.00';
-end;
-
-function GetJSONStringOrDefault(const JsonObject: TJsonObject;
-  const Key: string; const DefaultValue: string = ''): string;
-begin
-  if JsonObject.Contains(Key) and not JsonObject.Values[Key].IsNull then
-    Result := JsonObject.S[Key]
-  else
-    Result := DefaultValue;
-end;
 
 function GetCacheFilePath(const FileName: string): string;
 begin
   Result := GetAssetPath('', FileName);
 end;
 
+/// <summary>
+/// Saves the entire in-memory SetIconCache to a JSON file on disk.
+/// </summary>
+procedure SaveSetIconCacheToFile;
+var
+  CacheJson: TJsonObject;
+  Pair: TPair<string, string>;
+  CachePath: string;
+begin
+  CacheJson := TJsonObject.Create;
+  try
+    for Pair in SetIconCache do
+      CacheJson.S[Pair.Key] := Pair.Value;
+
+    CachePath := GetCacheFilePath(SetIconCacheFile);
+    CacheJson.SaveToFile(CachePath, False, TEncoding.UTF8, False);
+    LogStuff('Set icon cache saved to disk: ' + CachePath);
+  finally
+    CacheJson.Free;
+  end;
+end;
+
+/// <summary>
+/// Loads the SetIconCache from a JSON file on disk (if it exists).
+/// </summary>
+procedure LoadSetIconCacheFromFile;
+var
+  CacheJson: TJsonObject;
+  CachePath: string;
+  I: Integer;
+  Key: string;
+begin
+  CachePath := GetCacheFilePath(SetIconCacheFile);
+  if not TFile.Exists(CachePath) then
+    Exit;
+
+  CacheJson := TJsonObject.Create;
+  try
+    try
+      CacheJson.LoadFromFile(CachePath);
+      for I := 0 to CacheJson.Count - 1 do
+      begin
+        Key := CacheJson.Names[I];
+        SetIconCache.AddOrSetValue(Key, CacheJson.S[Key]);
+      end;
+      LogStuff('Set icon cache loaded from disk: ' + CachePath);
+    except
+      on E: Exception do
+      begin
+        LogStuff('Failed to load set icon cache: ' + E.Message);
+        SetIconCache.Clear;
+        TFile.Delete(CachePath);
+      end;
+    end;
+  finally
+    CacheJson.Free;
+  end;
+end;
+
+function GetSetIconAsRawSVG(const IconURL, SetCode: string): string;
+var
+  HttpClient: THTTPClient;
+  Response: IHTTPResponse;
+  MemoryStream: TMemoryStream;
+  SVGContent: TBytes;
+  RawSvg: string;
+begin
+  // If we've already cached this set code, just return it
+  if SetIconCache.ContainsKey(SetCode) then
+    Exit(SetIconCache[SetCode]);
+
+  Result := '';
+  HttpClient := THTTPClient.Create;
+  MemoryStream := TMemoryStream.Create;
+  try
+    try
+      Response := HttpClient.Get(IconURL, MemoryStream);
+      if Response.StatusCode = 200 then
+      begin
+        MemoryStream.Position := 0;
+        SetLength(SVGContent, MemoryStream.Size);
+        MemoryStream.ReadBuffer(SVGContent, MemoryStream.Size);
+
+        // Convert the raw bytes to a UTF8 string
+        RawSvg := TEncoding.UTF8.GetString(SVGContent);
+
+        // Store this raw SVG in the cache dictionary
+        SetIconCache.AddOrSetValue(SetCode, RawSvg);
+        Result := RawSvg;
+
+        // Persist the updated cache to disk
+        SaveSetIconCacheToFile;
+      end
+      else
+      begin
+        // Log or handle the error
+        LogStuff(Format('Failed to download SVG. HTTP %d', [Response.StatusCode]
+          ), WARNING);
+      end;
+    except
+      on E: Exception do
+      begin
+        LogStuff('Error fetching raw SVG: ' + E.Message, ERROR);
+      end;
+    end;
+  finally
+    HttpClient.Free;
+    MemoryStream.Free;
+  end;
+end;
+
+function LoadSetDetailsFromJson(const FileName: string): TArray<TSetDetails>;
+var
+  JsonObject: TJsonObject;
+  JsonArray: TJsonArray;
+  SetDetails: TSetDetails;
+  I: Integer;
+begin
+  if not TFile.Exists(FileName) then
+    Exit(nil);
+
+  JsonObject := TJsonObject.Create;
+  try
+    JsonObject.LoadFromFile(FileName);
+    if not JsonObject.Contains('sets') then
+      Exit(nil);
+    JsonArray := JsonObject.A['sets'];
+    SetLength(Result, JsonArray.Count);
+    for I := 0 to JsonArray.Count - 1 do
+    begin
+      SetDetails := TSetDetails.Create; // Allocate a new instance
+      SetDetails.Code := JsonArray.O[I].S[FieldCode];
+      SetDetails.Name := JsonArray.O[I].S[FieldName];
+      SetDetails.IconSVGURI := JsonArray.O[I].S[FieldIconSvgUri];
+      Result[I] := SetDetails;
+    end;
+  finally
+    JsonObject.Free;
+  end;
+end;
+
+procedure SaveSetDetailsToJson(const FileName: string;
+  const SetDetailsArray: TArray<TSetDetails>);
+var
+  JsonObject: TJsonObject;
+  JsonArray: TJsonArray;
+  JsonSet: TJsonObject;
+  SetDetails: TSetDetails;
+begin
+  JsonObject := TJsonObject.Create;
+  try
+    JsonArray := JsonObject.A[FieldSets];
+
+    for SetDetails in SetDetailsArray do
+    begin
+      JsonSet := TJsonObject.Create;
+      JsonSet.S[FieldCode] := SetDetails.Code;
+      JsonSet.S[FieldName] := SetDetails.Name;
+      JsonSet.S[FieldIconSvgUri] := SetDetails.IconSVGURI;
+      JsonArray.AddObject(JsonSet);
+    end;
+
+    JsonObject.SaveToFile(FileName, False, TEncoding.UTF8, False);
+  finally
+    JsonObject.Free;
+  end;
+end;
+
 initialization
 
+SetIconCache := TDictionary<string, string>.Create;
+LoadSetIconCacheFromFile;
+
 finalization
+
+SaveSetIconCacheToFile;
+SetIconCache.Free;
 
 end.

@@ -7,10 +7,6 @@ inherited Form1_Windows: TForm1_Windows
     Left = 800
     Top = 24
   end
-  inherited TimerDebounce: TTimer
-    Left = 690
-    Top = 42
-  end
   inherited StyleBook1: TStyleBook
     Left = 628
     Top = 24
@@ -38,33 +34,31 @@ inherited Form1_Windows: TForm1_Windows
     inherited LayoutFilters: TLayout
       Size.Width = 389.000000000000000000
       Size.Height = 576.000000000000000000
-      inherited ButtonNextPage: TButton
-        Position.X = 281.000000000000000000
-      end
       inherited ComboBoxSetCode: TComboBox
-        Position.Y = 218.000000000000000000
-        Size.Width = 265.000000000000000000
-      end
-      inherited ComboBoxRarity: TComboBox
-        Position.Y = 138.000000000000000000
-        Size.Width = 265.000000000000000000
-      end
-      inherited ComboBoxAbility: TComboBox
+        Position.X = 56.000000000000000000
         Position.Y = 98.000000000000000000
         Size.Width = 265.000000000000000000
       end
-      inherited ComboBoxEditSearch: TComboEdit
-        Size.Width = 353.000000000000000000
+      inherited ComboBoxRarity: TComboBox
+        Position.X = 56.000000000000000000
+        Position.Y = 48.000000000000000000
+        Size.Width = 265.000000000000000000
+      end
+      inherited ComboBoxAbility: TComboBox
+        Position.X = 56.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 265.000000000000000000
       end
       inherited Switch1: TSwitch
-        Position.X = 216.000000000000000000
-        Position.Y = 48.000000000000000000
+        Position.X = 56.000000000000000000
+        Position.Y = 297.000000000000000000
       end
       inherited ListBoxColors: TListBox
-        Position.Y = 258.000000000000000000
-        Size.Width = 257.000000000000000000
+        Position.X = 56.000000000000000000
+        Position.Y = 138.000000000000000000
+        Size.Width = 264.000000000000000000
         Size.Height = 151.000000000000000000
-        Viewport.Width = 253.000000000000000000
+        Viewport.Width = 260.000000000000000000
         Viewport.Height = 147.000000000000000000
       end
     end

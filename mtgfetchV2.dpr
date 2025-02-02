@@ -6,7 +6,6 @@ uses
   FMX.Skia,
   MainForm in 'MainForm.pas' {Form1},
   ScryfallData in 'ScryfallData.pas',
-  SGlobalsZ in 'SGlobalsZ.pas',
   DataModuleUnit in 'DataModuleUnit.pas' {DataModule1: TDataModule},
   MLogic in 'MLogic.pas',
   JsonDataObjects in 'JsonDataObjects.pas',
@@ -18,7 +17,8 @@ uses
   Template in 'Template.pas',
   CardDisplayManager in 'CardDisplayManager.pas',
   ScryfallTypes in 'ScryfallTypes.pas',
-  ScryfallQuery in 'ScryfallQuery.pas';
+  ScryfallQuery in 'ScryfallQuery.pas',
+  SGlobalsX in 'SGlobalsX.pas';
 
 {$R *.res}
 
