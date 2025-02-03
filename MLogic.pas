@@ -9,28 +9,40 @@ uses
   FMX.ListView, JsonDataObjects, Logger;
 
 procedure CopyDatabaseToInternalStorage;
+
 function GetAssetPath(const SubFolder, FileName: string): string;
+
 function GetTemplatePath: string;
+
 function GetAppDirectory: string;
+
 function ParseTextWithSymbolsManual(const Input: string): TArray<string>;
+
 function GetStatusClass(const LegalityStatus: string): string;
+
 function IsCardValid(const Card: TCardDetails): Boolean;
-procedure SaveCatalogsToFile(const FileName: string;
-  const Catalogs: TDictionary<string, TScryfallCatalog>);
-procedure LoadCatalogsFromFile(const FileName: string;
-  Catalogs: TDictionary<string, TScryfallCatalog>);
-function GetLegalStatus(const Legalities: TCardLegalities;
-  Format: TLegalityFormat): string;
+
+procedure SaveCatalogsToFile(const FileName: string; const Catalogs: TDictionary<string, TScryfallCatalog>);
+
+procedure LoadCatalogsFromFile(const FileName: string; Catalogs: TDictionary<string, TScryfallCatalog>);
+
+function GetLegalStatus(const Legalities: TCardLegalities; Format: TLegalityFormat): string;
+
 procedure ClearListViewItems(ListView: TListView);
+
 function ConvertColorCodeToName(const Code: string): string;
-function MatchesColors(const CardColors: string;
-  const SearchColors: string): Boolean;
+
+function MatchesColors(const CardColors: string; const SearchColors: string): Boolean;
+
 function GetCacheFilePath(const FileName: string): string;
+
 function GetSetIconAsRawSVG(const IconURL, SetCode: string): string;
+
 procedure LoadSetIconCacheFromFile;
+
 function LoadSetDetailsFromJson(const FileName: string): TArray<TSetDetails>;
-procedure SaveSetDetailsToJson(const FileName: string;
-  const SetDetailsArray: TArray<TSetDetails>);
+
+procedure SaveSetDetailsToJson(const FileName: string; const SetDetailsArray: TArray<TSetDetails>);
 
 var
   SetIconCache: TDictionary<string, string>;
@@ -92,8 +104,7 @@ var
   SourcePath, DestinationPath: string;
 begin
   DestinationPath := GetAssetPath('mtgjson', DatabaseFileName);
-  SourcePath := TPath.Combine(TPath.GetDirectoryName(ParamStr(0)),
-    DatabaseFileName);
+  SourcePath := TPath.Combine(TPath.GetDirectoryName(ParamStr(0)), DatabaseFileName);
 
   if not TFile.Exists(DestinationPath) then
   begin
@@ -109,8 +120,7 @@ begin
   end;
 end;
 
-procedure SaveCatalogsToFile(const FileName: string;
-  const Catalogs: TDictionary<string, TScryfallCatalog>);
+procedure SaveCatalogsToFile(const FileName: string; const Catalogs: TDictionary<string, TScryfallCatalog>);
 var
   JsonCatalogs: TJsonObject;
   CatalogName: string;
@@ -122,8 +132,7 @@ begin
   try
     for CatalogName in Catalogs.Keys do
     begin
-      var
-      Catalog := Catalogs[CatalogName];
+      var Catalog := Catalogs[CatalogName];
       CatalogData := TJsonArray.Create;
       for var Item in Catalog.Data do
         CatalogData.Add(Item);
@@ -140,8 +149,7 @@ begin
   end;
 end;
 
-procedure LoadCatalogsFromFile(const FileName: string;
-  Catalogs: TDictionary<string, TScryfallCatalog>);
+procedure LoadCatalogsFromFile(const FileName: string; Catalogs: TDictionary<string, TScryfallCatalog>);
 var
   JsonCatalogs: TJsonObject;
   FullFilePath: string;
@@ -251,8 +259,7 @@ begin
   Result := not Card.CardName.IsEmpty and not Card.SFID.IsEmpty;
 end;
 
-function GetLegalStatus(const Legalities: TCardLegalities;
-  Format: TLegalityFormat): string;
+function GetLegalStatus(const Legalities: TCardLegalities; Format: TLegalityFormat): string;
 begin
   Result := Legalities.GetStatus(Format);
 end;
@@ -268,8 +275,7 @@ begin
   Result := '';
 end;
 
-function MatchesColors(const CardColors: string;
-  const SearchColors: string): Boolean;
+function MatchesColors(const CardColors: string; const SearchColors: string): Boolean;
 var
   CardColorArray, SearchColorArray: TArray<string>;
   ConvertedCardColors: TArray<string>;
@@ -278,8 +284,7 @@ var
   Found: Boolean;
 begin
   CardColorArray := CardColors.Split([','], TStringSplitOptions.ExcludeEmpty);
-  SearchColorArray := SearchColors.ToLower.Split([',', ' '],
-    TStringSplitOptions.ExcludeEmpty);
+  SearchColorArray := SearchColors.ToLower.Split([',', ' '], TStringSplitOptions.ExcludeEmpty);
 
   SetLength(ConvertedCardColors, Length(CardColorArray));
   for I := Low(CardColorArray) to High(CardColorArray) do
@@ -306,7 +311,6 @@ begin
 
   Result := True;
 end;
-
 
 function GetCacheFilePath(const FileName: string): string;
 begin
@@ -409,8 +413,7 @@ begin
       else
       begin
         // Log or handle the error
-        LogStuff(Format('Failed to download SVG. HTTP %d', [Response.StatusCode]
-          ), WARNING);
+        LogStuff(Format('Failed to download SVG. HTTP %d', [Response.StatusCode]), WARNING);
       end;
     except
       on E: Exception do
@@ -454,8 +457,7 @@ begin
   end;
 end;
 
-procedure SaveSetDetailsToJson(const FileName: string;
-  const SetDetailsArray: TArray<TSetDetails>);
+procedure SaveSetDetailsToJson(const FileName: string; const SetDetailsArray: TArray<TSetDetails>);
 var
   JsonObject: TJsonObject;
   JsonArray: TJsonArray;
@@ -482,13 +484,13 @@ begin
 end;
 
 initialization
+  SetIconCache := TDictionary<string, string>.Create;
+  LoadSetIconCacheFromFile;
 
-SetIconCache := TDictionary<string, string>.Create;
-LoadSetIconCacheFromFile;
 
 finalization
-
-SaveSetIconCacheToFile;
-SetIconCache.Free;
+  SaveSetIconCacheToFile;
+  SetIconCache.Free;
 
 end.
+

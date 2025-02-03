@@ -3,17 +3,12 @@ unit SGlobalsX;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections, System.StrUtils;
+  System.Classes, System.SysUtils, System.Generics.Collections;
 
 type
-  TRarity = (rAll, rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus,
-    rTimeshifted, rMasterpiece, rToken, rDoubleFacedToken, rDraft,
-    rPlaneshifted, rUnique, rBasic, rPromo);
+  TRarity = (rAll, rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus, rTimeshifted, rMasterpiece, rToken, rDoubleFacedToken, rDraft, rPlaneshifted, rUnique, rBasic, rPromo);
 
-  TLegalityFormat = (lfStandard, lfFuture, lfHistoric, lfGladiator, lfPioneer,
-    lfExplorer, lfModern, lfLegacy, lfPauper, lfVintage, lfPenny, lfCommander,
-    lfAlchemy, lfBrawl, lfPauperCommander, lfDuel, lfOldschool, lfPremodern,
-    lfOathbreaker);
+  TLegalityFormat = (lfStandard, lfFuture, lfHistoric, lfGladiator, lfPioneer, lfExplorer, lfModern, lfLegacy, lfPauper, lfVintage, lfPenny, lfCommander, lfAlchemy, lfBrawl, lfPauperCommander, lfDuel, lfOldschool, lfPremodern, lfOathbreaker);
 
   TCardPrices = class
   private
@@ -53,7 +48,7 @@ type
 
   TCardLegalities = class
   private
-    FStatus: array [TLegalityFormat] of string;
+    FStatus: array[TLegalityFormat] of string;
     procedure Assign(Source: TCardLegalities);
   public
     procedure Clear;
@@ -119,7 +114,7 @@ type
     destructor Destroy; override;
     procedure Clear;
     property MeldParts: TObjectList<TCardPart> read FMeldParts;
-    property MeldResult: TCardPart read FMeldResult write FMeldResult ;
+    property MeldResult: TCardPart read FMeldResult write FMeldResult;
   end;
 
   TRelatedURIs = class
@@ -132,10 +127,8 @@ type
   public
     procedure Clear;
     property Gatherer: string read FGatherer write FGatherer;
-    property TcgplayerInfiniteArticles: string read FTcgplayerInfiniteArticles
-      write FTcgplayerInfiniteArticles;
-    property TcgplayerInfiniteDecks: string read FTcgplayerInfiniteDecks
-      write FTcgplayerInfiniteDecks;
+    property TcgplayerInfiniteArticles: string read FTcgplayerInfiniteArticles write FTcgplayerInfiniteArticles;
+    property TcgplayerInfiniteDecks: string read FTcgplayerInfiniteDecks write FTcgplayerInfiniteDecks;
     property Edhrec: string read FEdhrec write FEdhrec;
   end;
 
@@ -236,8 +229,7 @@ type
     property Loyalty: string read FLoyalty write FLoyalty;
     property SetIconURI: string read FSetIconURI write FSetIconURI;
     property Artist: string read FArtist write FArtist;
-    property CollectorNumber: string read FCollectorNumber
-      write FCollectorNumber;
+    property CollectorNumber: string read FCollectorNumber write FCollectorNumber;
     property BorderColor: string read FBorderColor write FBorderColor;
     property Frame: string read FFrame write FFrame;
     property SecurityStamp: string read FSecurityStamp write FSecurityStamp;
@@ -246,8 +238,7 @@ type
     property IsMeld: Boolean read FIsMeld write FIsMeld;
     property MeldDetails: TMeldDetails read FMeldDetails;
     property Legalities: TCardLegalities read FLegalities write FLegalities;
-    property PrintsSearchUri: string read FPrintsSearchUri
-      write FPrintsSearchUri;
+    property PrintsSearchUri: string read FPrintsSearchUri write FPrintsSearchUri;
     property RulingsUri: string read FRulingsUri write FRulingsUri;
     property Prices: TCardPrices read FPrices write FPrices;
     property ImageUris: TImageUris read FImageUris write FImageUris;
@@ -272,13 +263,10 @@ type
     property URI: string read FURI write FURI;
     property RelatedURIs: TRelatedURIs read FRelatedURIs write FRelatedURIs;
     property PurchaseURIs: TPurchaseURIs read FPurchaseURIs write FPurchaseURIs;
-    property ScryfallCardBackID: string read FScryfallCardBackID
-      write FScryfallCardBackID;
+    property ScryfallCardBackID: string read FScryfallCardBackID write FScryfallCardBackID;
     property ScryfallID: string read FScryfallID write FScryfallID;
-    property ScryfallIllustrationID: string read FScryfallIllustrationID
-      write FScryfallIllustrationID;
-    property ScryfallOracleID: string read FScryfallOracleID
-      write FScryfallOracleID;
+    property ScryfallIllustrationID: string read FScryfallIllustrationID write FScryfallIllustrationID;
+    property ScryfallOracleID: string read FScryfallOracleID write FScryfallOracleID;
   end;
 
 type
@@ -405,6 +393,7 @@ type
 implementation
 
 { TCardPrices }
+
 procedure TCardPrices.Clear;
 begin
   FUSD := 0;
@@ -544,8 +533,7 @@ begin
   Result := FStatus[Format];
 end;
 
-procedure TCardLegalities.SetStatus(Format: TLegalityFormat;
-  const StatusStr: string);
+procedure TCardLegalities.SetStatus(Format: TLegalityFormat; const StatusStr: string);
 begin
   FStatus[Format] := StatusStr;
 end;
@@ -630,7 +618,8 @@ end;
 
 procedure TCardPrices.Assign(Source: TCardPrices);
 begin
-  if Self = Source then Exit;
+  if Self = Source then
+    Exit;
   USD := Source.USD;
   USD_Foil := Source.USD_Foil;
   EUR := Source.EUR;
@@ -639,7 +628,8 @@ end;
 
 procedure TImageUris.Assign(Source: TImageUris);
 begin
-  if Self = Source then Exit;
+  if Self = Source then
+    Exit;
   Small := Source.Small;
   Normal := Source.Normal;
   Large := Source.Large;
@@ -659,7 +649,8 @@ end;
 
 procedure TCardPart.Assign(Source: TCardPart);
 begin
-  if Self = Source then Exit;
+  if Self = Source then
+    Exit;
   ObjectType := Source.ObjectType;
   ID := Source.ID;
   Component := Source.Component;
@@ -668,13 +659,13 @@ begin
   URI := Source.URI;
 end;
 
-
 procedure TMeldDetails.Assign(Source: TMeldDetails);
 var
   i: Integer;
   NewPart: TCardPart;
 begin
-  if not Assigned(Source) then Exit;
+  if not Assigned(Source) then
+    Exit;
 
   // Ensure FMeldParts exists.
   if not Assigned(FMeldParts) then
@@ -698,11 +689,14 @@ begin
   begin
     if Assigned(FMeldResult) then
       FMeldResult.Assign(Source.MeldResult)
-    else begin
+    else
+    begin
       FMeldResult := TCardPart.Create;
       FMeldResult.Assign(Source.MeldResult);
     end;
-  end else begin
+  end
+  else
+  begin
     if Assigned(FMeldResult) then
     begin
       FMeldResult.Free;
@@ -711,7 +705,6 @@ begin
   end;
 end;
 
-
 procedure TCardDetails.Assign(Source: TCardDetails);
 var
   s: string;
@@ -719,7 +712,8 @@ var
   NewPart: TCardPart;
   NewFace: TCardFace;
 begin
-  if Self = Source then Exit;
+  if Self = Source then
+    Exit;
 
   // Copy mandatory (or expected) fields.
   SFID := Source.SFID;
@@ -747,23 +741,28 @@ begin
   RulingsUri := Source.RulingsUri;
 
   // Deep copy list of strings: ColorIdentity.
-  if Assigned(Source.ColorIdentity) then begin
+  if Assigned(Source.ColorIdentity) then
+  begin
     ColorIdentity.Clear;
     for s in Source.ColorIdentity do
       ColorIdentity.Add(s);
-  end else
+  end
+  else
     ColorIdentity.Clear;
 
   // Deep copy Keywords.
-  if Assigned(Source.Keywords) then begin
+  if Assigned(Source.Keywords) then
+  begin
     Keywords.Clear;
     for s in Source.Keywords do
       Keywords.Add(s);
-  end else
+  end
+  else
     Keywords.Clear;
 
   // Deep copy AllParts.
-  if Assigned(Source.AllParts) then begin
+  if Assigned(Source.AllParts) then
+  begin
     AllParts.Clear;
     for i := 0 to Source.AllParts.Count - 1 do
     begin
@@ -771,66 +770,87 @@ begin
       NewPart.Assign(Source.AllParts[i]);
       AllParts.Add(NewPart);
     end;
-  end else
+  end
+  else
     AllParts.Clear;
 
   IsMeld := Source.IsMeld;
 
   // Deep copy MeldDetails (optional).
-  if Assigned(Source.MeldDetails) then begin
+  if Assigned(Source.MeldDetails) then
+  begin
     if Assigned(FMeldDetails) then
       FMeldDetails.Assign(Source.MeldDetails)
-    else begin
+    else
+    begin
       FMeldDetails := TMeldDetails.Create;
       FMeldDetails.Assign(Source.MeldDetails);
     end;
-  end else begin
-    if Assigned(FMeldDetails) then begin
+  end
+  else
+  begin
+    if Assigned(FMeldDetails) then
+    begin
       FMeldDetails.Free;
       FMeldDetails := nil;
     end;
   end;
 
   // Deep copy Legalities.
-  if Assigned(Source.Legalities) then begin
+  if Assigned(Source.Legalities) then
+  begin
     if Assigned(FLegalities) then
       FLegalities.Assign(Source.Legalities)
-    else begin
+    else
+    begin
       FLegalities := TCardLegalities.Create;
       FLegalities.Assign(Source.Legalities);
     end;
-  end else begin
-    if Assigned(FLegalities) then begin
+  end
+  else
+  begin
+    if Assigned(FLegalities) then
+    begin
       FLegalities.Free;
       FLegalities := nil;
     end;
   end;
 
   // Deep copy Prices (optional).
-  if Assigned(Source.Prices) then begin
+  if Assigned(Source.Prices) then
+  begin
     if Assigned(FPrices) then
       FPrices.Assign(Source.Prices)
-    else begin
+    else
+    begin
       FPrices := TCardPrices.Create;
       FPrices.Assign(Source.Prices);
     end;
-  end else begin
-    if Assigned(FPrices) then begin
+  end
+  else
+  begin
+    if Assigned(FPrices) then
+    begin
       FPrices.Free;
       FPrices := nil;
     end;
   end;
 
   // Deep copy ImageUris (optional).
-  if Assigned(Source.ImageUris) then begin
+  if Assigned(Source.ImageUris) then
+  begin
     if Assigned(FImageUris) then
       FImageUris.Assign(Source.ImageUris)
-    else begin
+    else
+    begin
       FImageUris := TImageUris.Create;
       FImageUris.Assign(Source.ImageUris);
     end;
-  end else begin
-    if Assigned(FImageUris) then begin
+  end
+  else
+  begin
+    if Assigned(FImageUris) then
+    begin
       FImageUris.Free;
       FImageUris := nil;
     end;
@@ -855,15 +875,18 @@ begin
   StorySpotlight := Source.StorySpotlight;
 
   // Deep copy Games.
-  if Assigned(Source.Games) then begin
+  if Assigned(Source.Games) then
+  begin
     Games.Clear;
     for s in Source.Games do
       Games.Add(s);
-  end else
+  end
+  else
     Games.Clear;
 
-  // Deep copy CardFaces (optional).
-  if Assigned(Source.CardFaces) then begin
+  // Deep copy CardFaces
+  if Assigned(Source.CardFaces) then
+  begin
     CardFaces.Clear;
     for i := 0 to Source.CardFaces.Count - 1 do
     begin
@@ -871,37 +894,48 @@ begin
       NewFace.Assign(Source.CardFaces[i]);
       CardFaces.Add(NewFace);
     end;
-  end else
+  end
+  else
     CardFaces.Clear;
 
   ScryfallURI := Source.ScryfallURI;
   URI := Source.URI;
 
-  // Deep copy RelatedURIs (optional).
-  if Assigned(Source.RelatedURIs) then begin
+  // Deep copy RelatedURIs
+  if Assigned(Source.RelatedURIs) then
+  begin
     if Assigned(FRelatedURIs) then
       FRelatedURIs.Assign(Source.RelatedURIs)
-    else begin
+    else
+    begin
       FRelatedURIs := TRelatedURIs.Create;
       FRelatedURIs.Assign(Source.RelatedURIs);
     end;
-  end else begin
-    if Assigned(FRelatedURIs) then begin
+  end
+  else
+  begin
+    if Assigned(FRelatedURIs) then
+    begin
       FRelatedURIs.Free;
       FRelatedURIs := nil;
     end;
   end;
 
-  // Deep copy PurchaseURIs (optional).
-  if Assigned(Source.PurchaseURIs) then begin
+  // Deep copy PurchaseURIs
+  if Assigned(Source.PurchaseURIs) then
+  begin
     if Assigned(FPurchaseURIs) then
       FPurchaseURIs.Assign(Source.PurchaseURIs)
-    else begin
+    else
+    begin
       FPurchaseURIs := TPurchaseURIs.Create;
       FPurchaseURIs.Assign(Source.PurchaseURIs);
     end;
-  end else begin
-    if Assigned(FPurchaseURIs) then begin
+  end
+  else
+  begin
+    if Assigned(FPurchaseURIs) then
+    begin
       FPurchaseURIs.Free;
       FPurchaseURIs := nil;
     end;
@@ -913,11 +947,10 @@ begin
   ScryfallOracleID := Source.ScryfallOracleID;
 end;
 
-
-
 procedure TRelatedURIs.Assign(Source: TRelatedURIs);
 begin
-  if Self = Source then Exit;
+  if Self = Source then
+    Exit;
   Gatherer := Source.Gatherer;
   TcgplayerInfiniteArticles := Source.TcgplayerInfiniteArticles;
   TcgplayerInfiniteDecks := Source.TcgplayerInfiniteDecks;
@@ -926,7 +959,8 @@ end;
 
 procedure TPurchaseURIs.Assign(Source: TPurchaseURIs);
 begin
-  if Self = Source then Exit;
+  if Self = Source then
+    Exit;
   Tcgplayer := Source.Tcgplayer;
   Cardmarket := Source.Cardmarket;
   Cardhoarder := Source.Cardhoarder;
@@ -934,7 +968,8 @@ end;
 
 procedure TCardFace.Assign(Source: TCardFace);
 begin
-  if Self = Source then Exit;
+  if Self = Source then
+    Exit;
   Name := Source.Name;
   FlavorText := Source.FlavorText;
   ManaCost := Source.ManaCost;
@@ -947,12 +982,12 @@ begin
   // Deep copy ImageUris:
   if Assigned(FImageUris) then
     FImageUris.Assign(Source.ImageUris)
-  else begin
+  else
+  begin
     FImageUris := TImageUris.Create;
     FImageUris.Assign(Source.ImageUris);
   end;
 end;
-
 
 constructor TCardDetails.CreateFromCard(Source: TCardDetails);
 begin
@@ -1118,8 +1153,7 @@ begin
   end;
 end;
 
-class function TLegalityFormatHelper.FromString(const Value: string)
-  : TLegalityFormat;
+class function TLegalityFormatHelper.FromString(const Value: string): TLegalityFormat;
 var
   L: TLegalityFormat;
 begin
@@ -1129,6 +1163,5 @@ begin
   raise Exception.CreateFmt('Unknown legality format: %s', [Value]);
 end;
 
-// Similar implementations for other classes...
-
 end.
+

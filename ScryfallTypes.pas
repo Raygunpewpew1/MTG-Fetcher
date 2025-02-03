@@ -3,7 +3,7 @@
 interface
 
 uses
-  System.SysUtils, System.Generics.Collections, SGlobalsX, APIConstants, Logger,
+  System.SysUtils, SGlobalsX, Logger,
   System.NetEncoding;
 
 type

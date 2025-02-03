@@ -4,18 +4,15 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
-  System.Generics.Collections, FMX.Types, FMX.Controls, FMX.Forms,
-  FMX.Graphics,
+  System.Generics.Collections, FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics,
   FMX.Dialogs, FMX.Layouts, FMX.ExtCtrls, FMX.Ani, FMX.Edit, FMX.StdCtrls,
   FMX.WebBrowser, FMX.Skia, SGlobalsX, ScryfallData, System.TypInfo, Math,
-  System.Threading, FMX.Controls.Presentation, FMX.ListView.Types,
+  FMX.Controls.Presentation, FMX.ListView.Types,
   FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
-  FMX.ListBox, MLogic, FMX.ComboEdit, CardDisplayManager,
-  ScryfallQuery,
+  FMX.ListBox, MLogic, FMX.ComboEdit, CardDisplayManager, ScryfallQuery,
   System.IOUtils, System.StrUtils, FMX.MultiView, FMX.Platform;
 
 type
-
   TForm1 = class(TForm)
     DelayTimer: TTimer;
     StyleBook1: TStyleBook;
@@ -40,30 +37,24 @@ type
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    // procedure DelayTimerTimer(Sender: TObject);
-    procedure ListViewCardsItemClick(const Sender: TObject;
-      const AItem: TListViewItem);
+    procedure ListViewCardsItemClick(const Sender: TObject; const AItem: TListViewItem);
     procedure WebBrowser1DidFinishLoad(ASender: TObject);
     procedure ButtonNextPageClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
 
-    procedure ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word;
-      var KeyChar: WideChar; Shift: TShiftState);
+    procedure ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
     procedure Button2Click(Sender: TObject);
-    procedure ListViewCardsButtonClick(const Sender: TObject;
-      const AItem: TListItem; const AObject: TListItemSimpleControl);
-    procedure Button3Click(Sender: TObject);
+    procedure ListViewCardsButtonClick(const Sender: TObject; const AItem: TListItem; const AObject: TListItemSimpleControl);
 
   private
     WebBrowserInitialized: Boolean;
     FIsProgrammaticChange: Boolean;
     BrIsLoaded: Boolean;
     AmOnline: Boolean;
-
     procedure OnSearchComplete(Success: Boolean; const ErrorMsg: string);
 
-
   public
+
   end;
 
 var
@@ -75,13 +66,11 @@ implementation
 {$R *.Windows.fmx MSWINDOWS}
 
 uses
-  APIConstants, JsonDataObjects, Logger, CardDisplayHelpers,
-  System.NetEncoding;
+  APIConstants, JsonDataObjects, Logger, CardDisplayHelpers, System.NetEncoding;
 
 var
   FScryfallAPI: TScryfallAPI;
   FCardDisplayManager: TCardDisplayManager;
-
 
 procedure TForm1.FormCreate(Sender: TObject);
 var
@@ -92,44 +81,34 @@ begin
 //LoadingLayout.Visible := True;
 //AniIndicator1.Enabled := True;
 
-
   try
     AmOnline := FScryfallAPI.IsInternetAvailable;
     if AmOnline = False then
     begin
       ShowMessage('Error checking internet connection, Shutting Down');
-{$IF DEFINED(MSWINDOWS) OR DEFINED(MACOS)}
+    {$IF DEFINED(MSWINDOWS) OR DEFINED(MACOS)}
       Application.Terminate;
-{$ELSE}
+    {$ELSE}
       Halt;
-{$ENDIF}
+    {$ENDIF}
     end;
 
   except
     on E: Exception do
     begin
       ShowMessage('Error checking internet connection: ' + E.Message);
-{$IF DEFINED(MSWINDOWS) OR DEFINED(MACOS)}
+    {$IF DEFINED(MSWINDOWS) OR DEFINED(MACOS)}
       Application.Terminate;
-{$ELSE}
+    {$ELSE}
       Halt;
-{$ENDIF}
+    {$ENDIF}
     end;
   end;
 
   WebBrowserInitialized := False;
   FIsProgrammaticChange := False;
 
-
-  FCardDisplayManager := TCardDisplayManager.Create(ListViewCards, WebBrowser1,
-    FScryfallAPI);
-
-  //
-  // FCardDisplayManager.OnProgressUpdate := procedure(Progress: Integer)
-  // begin
-  //
-  // end;
-
+  FCardDisplayManager := TCardDisplayManager.Create(ListViewCards, WebBrowser1, FScryfallAPI);
 
   ComboBoxMap := TDictionary<string, TComboBox>.Create;
   try
@@ -138,8 +117,6 @@ begin
   finally
     ComboBoxMap.Free;
   end;
-
-  // AppClose := False;
 
   BrIsLoaded := False;
   ListViewCards.OnItemClick := ListViewCardsItemClick;
@@ -223,11 +200,7 @@ begin
 end;
 
 procedure TForm1.FormShow(Sender: TObject);
-// var
-// CardDetailsObj: TCardDetails;
 begin
-
-  // CardDetailsObj := TCardDetails.Create;
 
   // Link the ListBoxColors to the CardDisplayManager
   FCardDisplayManager.ListBoxColors := ListBoxColors;
@@ -247,8 +220,7 @@ begin
         begin
           ListViewCards.Selected := ListViewCards.Items[0];
           // TagObject is a TCardDetails instance:
-          FCardDisplayManager.ShowCardDetails(TCardDetails(ListViewCards.Items
-            [0].TagObject));
+          FCardDisplayManager.ShowCardDetails(TCardDetails(ListViewCards.Items[0].TagObject));
         end;
 
       end
@@ -261,8 +233,7 @@ begin
 //  MultiViewFilters.ShowMaster;
 end;
 
-procedure TForm1.ListViewCardsButtonClick(const Sender: TObject;
-const AItem: TListItem; const AObject: TListItemSimpleControl);
+procedure TForm1.ListViewCardsButtonClick(const Sender: TObject; const AItem: TListItem; const AObject: TListItemSimpleControl);
 var
   Rulings: TArray<TRuling>;
   CardDetails: TCardDetails;
@@ -272,15 +243,13 @@ begin
     CardDetails := TCardDetails(AItem.TagObject);
     Rulings := FCardDisplayManager.GetCardRulings(CardDetails.SFID);
     FCardDisplayManager.DisplayCardInBrowser(CardDetails, Rulings);
-    // Or, if you prefer:
     // FCardDisplayManager.ShowCardDetails(CardDetails);
   end
   else
     ShowMessage('TagObject is not TCardDetails');
 end;
 
-procedure TForm1.ListViewCardsItemClick(const Sender: TObject;
-const AItem: TListViewItem);
+procedure TForm1.ListViewCardsItemClick(const Sender: TObject; const AItem: TListViewItem);
 var
   CardDetails: TCardDetails;
 begin
@@ -293,7 +262,6 @@ begin
   if AItem.TagObject is TCardDetails then
   begin
     CardDetails := TCardDetails(AItem.TagObject);
-
     FCardDisplayManager.ShowCardDetails(CardDetails);
   end
   else
@@ -304,10 +272,7 @@ procedure TForm1.WebBrowser1DidFinishLoad(ASender: TObject);
 begin
   if Assigned(WebBrowser1) then
   begin
-
     WebBrowserInitialized := True;
-    // WebBrowser1.EvaluateJavaScript(JScript);
-
   end;
 end;
 
@@ -333,9 +298,6 @@ begin
   LoadingLayout.Visible := True;
   AniIndicator1.Enabled := True;
 
-
-
-
   SelectedRarity := rAll;
   if ComboBoxRarity.Text <> S_ALL_RARITIES then
   begin
@@ -356,8 +318,7 @@ begin
   Query := TScryfallQuery.Create;
   try
 
-    if (ComboBoxSetCode.Selected <> nil) and
-      (ComboBoxSetCode.Selected.Text <> S_ALL_SETS) then
+    if (ComboBoxSetCode.Selected <> nil) and (ComboBoxSetCode.Selected.Text <> S_ALL_SETS) then
       SelectedSetCode := ComboBoxSetCode.Selected.Text.Split([S])[0]
     else
       SelectedSetCode := '';
@@ -366,9 +327,7 @@ begin
 
     UniqueMode := System.StrUtils.IfThen(Switch1.IsChecked, 'prints', '');
 
-    Query.WithName(ComboBoxEditSearch.Text).WithSet(SelectedSetCode)
-      .WithRarity(SelectedRarity).WithColors(SelectedColors).Unique(UniqueMode)
-      .OrderBy('released').IncludeExtras(False);
+    Query.WithName(ComboBoxEditSearch.Text).WithSet(SelectedSetCode).WithRarity(SelectedRarity).WithColors(SelectedColors).Unique(UniqueMode).OrderBy('released').IncludeExtras(False);
 
     FCardDisplayManager.ExecuteQuery(Query, OnSearchComplete);
 
@@ -389,17 +348,6 @@ begin
   MultiViewFilters.ShowMaster;
 end;
 
-procedure TForm1.Button3Click(Sender: TObject);
-
-begin
-//LoadingLayout.Visible := True;
-//AniIndicator1.Enabled := True;
-
-FScryfallAPI.GetCardByName('black lotus',True);
- //LoadingLayout.Visible := False;
-//AniIndicator1.Enabled := False;
-end;
-
 procedure TForm1.ButtonNextPageClick(Sender: TObject);
 begin
   if not FCardDisplayManager.HasMorePages then
@@ -412,8 +360,7 @@ begin
 
 end;
 
-procedure TForm1.ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word;
-var KeyChar: WideChar; Shift: TShiftState);
+procedure TForm1.ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
 begin
   if FIsProgrammaticChange then
     Exit;
@@ -425,23 +372,20 @@ begin
         Button1Click(Sender);
       end;
 
-    vkDown:
-      begin
-
-      end;
-    vkEscape:
-      begin
-
-      end;
+//    vkDown:
+//      begin
+//
+//      end;
+//    vkEscape:
+//      begin
+//
+//      end;
   end;
 end;
 
 initialization
-
-FScryfallAPI := TScryfallAPI.Create;
-
+  FScryfallAPI := TScryfallAPI.Create;
 finalization
-
-FScryfallAPI.Free;
-
+  FScryfallAPI.Free;
 end.
+

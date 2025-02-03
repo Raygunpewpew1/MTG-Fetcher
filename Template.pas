@@ -41,13 +41,26 @@ HtmlTemplate: string = '''
     border-radius: 10px;
     background: #2A2F38;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.8s ease, box-shadow 0.8s ease;
   }
 
-  .flip-card:hover, .single-card:hover {
+
+  /* Hover effect for single cards (non-flip cards) */
+  .single-card:hover {
     transform: scale(1.5);
     box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
   }
+
+    /* Hover effect for flip cards (front side) */
+  .flip-card:hover {
+    transform: scale(1.5);
+   }
+
+   /* Hover effect for flip cards (back side) */
+   .flip-card.show-back:hover {
+    transform: scale(1.5) rotateY(180deg);
+   }
+
 
 
   .flip-indicator {
@@ -64,7 +77,6 @@ HtmlTemplate: string = '''
   .flip-card {
     perspective: 1000px;
     transform-style: preserve-3d;
-    transition: transform 0.8s ease;
     transform-origin: center;
   }
 
@@ -87,7 +99,9 @@ HtmlTemplate: string = '''
     border-radius: 10px;
   }
 
-  .card-face.back { transform: rotateY(180deg); }
+  .card-face.back { transform: rotateY(180deg);
+   pointer-events: auto;
+  }
 
   .card-details {
     width: 90%;

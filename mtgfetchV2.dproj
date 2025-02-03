@@ -234,6 +234,8 @@
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
         <Icon_MainIcon>$(ProjectName).Artwork\Windows\AppIcon.ico</Icon_MainIcon>
         <Icns_MainIcns>$(ProjectName).Artwork\Windows\AppIcon.icns</Icns_MainIcns>
+        <VerInfo_Build>2</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.2;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -292,6 +294,11 @@
                     <Source Name="MainSource">mtgfetchV2.dpr</Source>
                 </Source>
                 <Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgDXE15.bpl">TMS VCL UI Pack</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgExDXE15.bpl">TMS VCL UI Pack Extra</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgDEDXE15.bpl">TMS VCL UI Pack design time support</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgXlsDXE15.bpl">TMS TAdvStringGrid Excel support</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgWizDXE15.bpl">TMS VCL UI Pack Wizards</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclIndyProtocols290.bpl">Indy 10 Protocols Design Time</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclsoapmidas290.bpl">Embarcadero SOAP Midas Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclsoapserver290.bpl">Embarcadero SOAP Server Components</Excluded_Packages>
@@ -1284,6 +1291,12 @@
                 <DeployFile LocalName="Win64\Debug\mtgfetchV2.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>mtgfetchV2.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win64\Debug\mtgfetchV2.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>mtgfetchV2.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

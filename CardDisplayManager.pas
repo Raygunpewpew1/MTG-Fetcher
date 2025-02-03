@@ -4,15 +4,13 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  FMX.ListView.Types, FMX.ListView.Appearances,
-  FMX.ListView, FMX.WebBrowser,
-  ScryfallData, System.Threading, FMX.Dialogs, FMX.ListBox,
-  CardDisplayHelpers, Template, Logger, SGlobalsX, MLogic, APIConstants,
-  ScryfallTypes, ScryfallQuery, System.SyncObjs, FMX.StdCtrls, FMX.Types;
+  FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView, FMX.WebBrowser,
+  ScryfallData, System.Threading, FMX.Dialogs, FMX.ListBox, CardDisplayHelpers,
+  Template, Logger, SGlobalsX, MLogic, APIConstants, ScryfallTypes,
+  ScryfallQuery, System.SyncObjs, FMX.StdCtrls, FMX.Types;
 
 type
-  TOnQueryComplete = reference to procedure(Success: Boolean;
-    const ErrorMsg: string);
+  TOnQueryComplete = reference to procedure(Success: Boolean; const ErrorMsg: string);
 
   TCardDisplayManager = class
   private
@@ -31,19 +29,16 @@ type
     procedure ClearListViewItems;
     procedure InitializeWebBrowser;
 
-    procedure DisplayCardArtworks(const Query: TScryfallQuery;
-      const OnComplete: TOnQueryComplete);
+    procedure DisplayCardArtworks(const Query: TScryfallQuery; const OnComplete: TOnQueryComplete);
 
-    procedure HandleSetDetails(const CardDetails: TCardDetails;
-      const SetDetails: TSetDetails);
+    procedure HandleSetDetails(const CardDetails: TCardDetails; const SetDetails: TSetDetails);
 
     // function ApplyLocalFilters(const Cards: TArray<TCardDetails>)
     // : TArray<TCardDetails>;
     procedure SafeFreeAndNil<T: class>(var Obj: T);
 
   public
-    constructor Create(AListView: TListView; AWebBrowser: TWebBrowser;
-      AScryfallAPI: TScryfallAPI); overload;
+    constructor Create(AListView: TListView; AWebBrowser: TWebBrowser; AScryfallAPI: TScryfallAPI); overload;
     destructor Destroy; override;
     procedure PopulateColorListBox;
     function GetSelectedColors: string;
@@ -51,8 +46,7 @@ type
     // Assign this to link the ListBoxColors from the form
     property ListBoxColors: TListBox read FListBoxColors write FListBoxColors;
 
-    procedure ExecuteQuery(const Query: TScryfallQuery;
-      const OnComplete: TOnQueryComplete);
+    procedure ExecuteQuery(const Query: TScryfallQuery; const OnComplete: TOnQueryComplete);
 
     procedure LoadNextPage(const OnComplete: TOnQueryComplete);
 
@@ -60,8 +54,7 @@ type
 
     procedure ShowCardDetails(const CardDetails: TCardDetails);
 
-    procedure DisplayCardInBrowser(const CardDetails: TCardDetails;
-      const Rulings: TArray<TRuling>);
+    procedure DisplayCardInBrowser(const CardDetails: TCardDetails; const Rulings: TArray<TRuling>);
 
     procedure AddCardToListView(const Card: TCardDetails);
     procedure LoadAllCatalogs(const ComboBoxes: TDictionary<string, TComboBox>);
@@ -70,8 +63,7 @@ type
     procedure UpdateProgress(Current, Total: Integer);
     function GetCardRulings(const UUID: string): TArray<TRuling>;
 
-    property OnProgressUpdate: TProc<Integer> read FOnProgressUpdate
-      write FOnProgressUpdate;
+    property OnProgressUpdate: TProc<Integer> read FOnProgressUpdate write FOnProgressUpdate;
     property CurrentPage: Integer read FCurrentPage;
     property HasMorePages: Boolean read FHasMorePages;
     property CardDataList: TList<TCardDetails> read FCardDataList;
@@ -84,8 +76,12 @@ uses
 
 { TCardDisplayManager }
 
-constructor TCardDisplayManager.Create(AListView: TListView;
-  AWebBrowser: TWebBrowser; AScryfallAPI: TScryfallAPI);
+  // FCardDisplayManager.OnProgressUpdate := procedure(Progress: Integer)
+  // begin
+
+  // end;
+
+constructor TCardDisplayManager.Create(AListView: TListView; AWebBrowser: TWebBrowser; AScryfallAPI: TScryfallAPI);
 begin
   inherited Create;
   FListView := AListView;
@@ -102,21 +98,53 @@ end;
 
 destructor TCardDisplayManager.Destroy;
 begin
-  SafeFreeAndNil < TList < TCardDetails >> (FCardDataList);
+  SafeFreeAndNil<TList<TCardDetails>>(FCardDataList);
   SafeFreeAndNil<TScryfallQuery>(FCurrentQuery);
   FCriticalSection.Free;
   FColorCheckBoxes.Free;
   inherited;
 end;
 
+function ProcessTemplate(const Template: string; const Replacements: TDictionary<string, string>): string;
+var
+  Key, Value: string;
+begin
+  Result := Template;
+  for Key in Replacements.Keys do
+  begin
+    Value := Replacements[Key];
+    Result := StringReplace(Result, Key, Value, [rfReplaceAll]);
+  end;
+end;
+
+procedure AddAllReplacements(Replacements: TDictionary<string, string>; const CardDetails: TCardDetails; const Rulings: TArray<TRuling>);
+begin
+  AddCoreReplacements(Replacements, CardDetails);
+  AddImageReplacements(Replacements, CardDetails);
+  AddLegalitiesReplacements(Replacements, CardDetails);
+  AddPricesReplacements(Replacements, CardDetails);
+  AddBadgesReplacements(Replacements, CardDetails);
+  AddKeywordsReplacement(Replacements, CardDetails);
+
+  // Process rulings into HTML
+  var RulingsHtml := '<div class="rulings-section"><h3>Card Rulings</h3>';
+  if Length(Rulings) > 0 then
+  begin
+    for var Ruling in Rulings do
+      RulingsHtml := RulingsHtml + Format('<div class="ruling-item"><p><strong>Source:</strong> %s</p>' + '<p><strong>Date:</strong> %s</p><p>%s</p></div>', [EncodeHTML(Ruling.Source), EncodeHTML(Ruling.PublishedAt), EncodeHTML(TWrapperHelper.GetUtf8String(Ruling.Comment))]);
+  end;
+  RulingsHtml := RulingsHtml + '</div>';
+  Replacements.AddOrSetValue('{{Rulings}}', RulingsHtml);
+end;
+
 procedure TCardDisplayManager.PopulateColorListBox;
+
   procedure AddColor(const ColorName: string; const TagValue: string);
   var
     ListBoxItem: TListBoxItem;
     CheckBox: TCheckBox;
   begin
-    Assert(not TagValue.IsEmpty, Format('TagValue for %s must not be empty.',
-      [ColorName]));
+    Assert(not TagValue.IsEmpty, Format('TagValue for %s must not be empty.', [ColorName]));
 
     ListBoxItem := TListBoxItem.Create(FListBoxColors);
     ListBoxItem.Parent := FListBoxColors;
@@ -181,11 +209,7 @@ end;
 procedure LogQueryState(Query: TScryfallQuery; const Context: string);
 begin
   if Assigned(Query) then
-    LogStuff(Format
-      ('%s - Query State: Options: IncludeExtras: %s, UniqueMode: %s, Sort: %s, Direction: %s, Page: %d',
-      [Context, BoolToStr(Query.Options.IncludeExtras, True),
-      Query.Options.UniqueMode, Query.Options.Sort, Query.Options.Direction,
-      Query.Options.Page]), DEBUG)
+    LogStuff(Format('%s - Query State: Options: IncludeExtras: %s, UniqueMode: %s, Sort: %s, Direction: %s, Page: %d', [Context, BoolToStr(Query.Options.IncludeExtras, True), Query.Options.UniqueMode, Query.Options.Sort, Query.Options.Direction, Query.Options.Page]), DEBUG)
   else
     LogStuff(Format('%s - Query is nil.', [Context]), ERROR);
 end;
@@ -199,8 +223,7 @@ end;
 procedure TCardDisplayManager.InitializeWebBrowser;
 begin
   if Assigned(FWebBrowser) then
-    FWebBrowser.LoadFromStrings('<html><head></head><body></body></html>',
-      'file:///android_asset/');
+    FWebBrowser.LoadFromStrings('<html><head></head><body><h2>Loading...</h2></body></html>', 'text/html;charset=utf-8');
 end;
 
 procedure TCardDisplayManager.ClearListViewItems;
@@ -209,8 +232,7 @@ begin
     FListView.Items.Clear;
 end;
 
-procedure TCardDisplayManager.ExecuteQuery(const Query: TScryfallQuery;
-  const OnComplete: TOnQueryComplete);
+procedure TCardDisplayManager.ExecuteQuery(const Query: TScryfallQuery; const OnComplete: TOnQueryComplete);
 begin
   FCriticalSection.Enter;
   try
@@ -262,8 +284,7 @@ begin
   ClonedQuery := FCurrentQuery.Clone;
   try
     ClonedQuery.SetPage(FCurrentPage + 1);
-   // LogQueryState(ClonedQuery, 'LoadNextPage - Before DisplayCardArtworks');
-
+    // LogQueryState(ClonedQuery, 'LoadNextPage - Before DisplayCardArtworks');
 
     DisplayCardArtworks(ClonedQuery,
       procedure(Success: Boolean; const ErrorMsg: string)
@@ -285,17 +306,13 @@ begin
   end;
 end;
 
-
-procedure TCardDisplayManager.DisplayCardArtworks(const Query: TScryfallQuery;
-const OnComplete: TOnQueryComplete);
-
+procedure TCardDisplayManager.DisplayCardArtworks(const Query: TScryfallQuery; const OnComplete: TOnQueryComplete);
 begin
   FCardDataList.Clear;
   SetupDefaultFilters(Query);
 
   FScryfallAPI.SearchAllCardsAsync(Query,
-    procedure(Success: Boolean; Cards: TArray<TCardDetails>; HasMore: Boolean;
-      ErrorMsg: string)
+    procedure(Success: Boolean; Cards: TArray<TCardDetails>; HasMore: Boolean; ErrorMsg: string)
     begin
       TThread.Synchronize(nil,
         procedure
@@ -353,8 +370,7 @@ begin
     end);
 end;
 
-function TCardDisplayManager.GetCardRulings(const UUID: string)
-  : TArray<TRuling>;
+function TCardDisplayManager.GetCardRulings(const UUID: string): TArray<TRuling>;
 begin
   Result := FScryfallAPI.GetCardRulings(UUID);
 end;
@@ -364,50 +380,47 @@ var
   ListViewItem: TListViewItem;
   CardDetailsObj: TCardDetails;
   RareStr: string;
-  rarity: TRarity;
+  Rarity: TRarity;
 begin
-  if (not Assigned(FListView)) or Card.CardName.IsEmpty or Card.SFID.IsEmpty
-  then
+  if (not Assigned(FListView)) or Card.CardName.IsEmpty or Card.SFID.IsEmpty then
   begin
-    LogStuff(Format
-      ('AddCardToListView: Skipping card due to missing data. CardName: %s, SFID: %s',
-      [Card.CardName, Card.SFID]), ERROR);
+    LogStuff(Format('AddCardToListView: Skipping card due to missing data. CardName: %s, SFID: %s', [Card.CardName, Card.SFID]), ERROR);
     Exit;
   end;
 
+  // Convert rarity to a formatted string
+  Rarity := Card.Rarity;
+  RareStr := Rarity.ToString;
+  if not RareStr.IsEmpty then
+    RareStr := UpperCase(RareStr[1]) + LowerCase(Copy(RareStr, 2, Length(RareStr) - 1));
+
+  // Create CardDetailsObj safely
   CardDetailsObj := TCardDetails.Create;
   try
-    // copy data from Card to CardDetailsObj
     CardDetailsObj.Assign(Card);
 
-    // Retrieve rarity string
-    rarity := Card.rarity;
-    RareStr := rarity.ToString;
-    RareStr := RareStr.Substring(0, 1).ToUpper + RareStr.Substring(1);
-
-
-    // CardDetailsObj := TCardDetailsObject.Create(Card);
-
-    // Add the item to the list view.
+    // Create ListView item inside try-finally
     ListViewItem := FListView.Items.Add;
-    ListViewItem.Text := Card.CardName;
-    ListViewItem.Detail := RareStr;
-    ListViewItem.ButtonText := 'Rulings';
-    ListViewItem.TagObject := CardDetailsObj;
+    try
+      ListViewItem.Text := Card.CardName;
+      ListViewItem.Detail := RareStr;
+      ListViewItem.ButtonText := 'Rulings';
+      ListViewItem.TagObject := CardDetailsObj;
+    except
+      ListViewItem.Free; // Ensure ListViewItem is freed if an error occurs
+      raise;
+    end;
   except
-    CardDetailsObj.Free;
+    CardDetailsObj.Free; // Free if any issue occurs
     raise;
   end;
 end;
 
-procedure TCardDisplayManager.HandleSetDetails(const CardDetails: TCardDetails;
-const SetDetails: TSetDetails);
+procedure TCardDisplayManager.HandleSetDetails(const CardDetails: TCardDetails; const SetDetails: TSetDetails);
 begin
-  var
-    RawSvg: string;
+  var RawSvg: string;
   RawSvg := GetSetIconAsRawSVG(SetDetails.IconSVGURI, SetDetails.Code);
-  var
-  UpdatedCard := CardDetails;
+  var UpdatedCard := CardDetails;
   UpdatedCard.SetName := SetDetails.Name;
   UpdatedCard.SetIconURI := RawSvg;
 
@@ -456,87 +469,51 @@ begin
       end);
 end;
 
-procedure TCardDisplayManager.DisplayCardInBrowser(const CardDetails
-  : TCardDetails; const Rulings: TArray<TRuling>);
+procedure TCardDisplayManager.DisplayCardInBrowser(const CardDetails: TCardDetails; const Rulings: TArray<TRuling>);
 begin
   TTask.Run(
     procedure
     var
       Template: string;
       Replacements: TDictionary<string, string>;
-      RulingsHtml: string;
+      FinalHTML: string;
     begin
       try
+        // Load base HTML template
         Template := HtmlTemplate;
         Replacements := TDictionary<string, string>.Create;
         try
-          // Add core card replacements
-          AddCoreReplacements(Replacements, CardDetails);
-          AddImageReplacements(Replacements, CardDetails);
-          AddLegalitiesReplacements(Replacements, CardDetails);
-          AddPricesReplacements(Replacements, CardDetails);
-          AddBadgesReplacements(Replacements, CardDetails);
-          AddKeywordsReplacement(Replacements, CardDetails);
+          // Add all required placeholders
+          AddAllReplacements(Replacements, CardDetails, Rulings);
 
-          // Add rulings if exist
-          RulingsHtml := '<div class="rulings-section">';
-          RulingsHtml := RulingsHtml + '<h3>Card Rulings</h3>';
-          var
-            Comments: string;
-          if Length(Rulings) > 0 then
-
-          begin
-            for var Ruling in Rulings do
-            begin
-              Comments := TWrapperHelper.GetUtf8String(Ruling.Comment);
-              RulingsHtml := RulingsHtml + Format('<div class="ruling-item">' +
-                '<p><strong>Source:</strong> %s</p>' +
-                '<p><strong>Date:</strong> %s</p>' + '<p>%s</p>' + '</div>',
-                [EncodeHTML(Ruling.Source), EncodeHTML(Ruling.PublishedAt),
-                EncodeHTML(Comments)]);
-            end;
-          end
+          // Process template with replacements
+          if not Template.Contains('<script>') then
+            FinalHTML := ProcessTemplate(Template, Replacements) + JScript
           else
-          begin
-            RulingsHtml := RulingsHtml;
-          end;
-          RulingsHtml := RulingsHtml + '</div>';
-
-          // Add rulings to replacements
-          Replacements.AddOrSetValue('{{Rulings}}', RulingsHtml);
-
-          // Replace placeholders in the template
-          for var Key in Replacements.Keys do
-            Template := Template.Replace(Key, Replacements[Key]);
+            FinalHTML := ProcessTemplate(Template, Replacements);
         finally
           Replacements.Free;
         end;
 
-        var
-          FinalHTML: string;
-        FinalHTML := Template + JScript;
-
-        // Load the final HTML into the browser
+        // Load the final HTML into the browser on the main UI thread
         TThread.Queue(nil,
           procedure
           begin
             if Assigned(FWebBrowser) then
-              FWebBrowser.LoadFromStrings(FinalHTML, 'file:///android_asset/');
+              FWebBrowser.LoadFromStrings(FinalHTML, 'text/html;charset=utf-8');
           end);
       except
         on E: Exception do
           TThread.Queue(nil,
             procedure
             begin
-              LogStuff('Error displaying card: ' + E.ClassName + ', Message: ' +
-                E.Message, ERROR);
+              LogStuff('Error displaying card: ' + E.ClassName + ', Message: ' + E.Message, ERROR);
             end);
       end;
     end);
 end;
 
-procedure TCardDisplayManager.LoadAllCatalogs(const ComboBoxes
-  : TDictionary<string, TComboBox>);
+procedure TCardDisplayManager.LoadAllCatalogs(const ComboBoxes: TDictionary<string, TComboBox>);
 var
   Catalogs: TDictionary<string, TScryfallCatalog>;
   FileName: string;
@@ -563,8 +540,7 @@ begin
         ComboBoxes[CatalogName].ItemIndex := 0;
       end
       else
-        LogStuff(Format('Catalog "%s" is missing from the fetched data.',
-          [CatalogName]), ERROR);
+        LogStuff(Format('Catalog "%s" is missing from the fetched data.', [CatalogName]), ERROR);
     end;
   finally
     Catalogs.Free;
@@ -572,3 +548,4 @@ begin
 end;
 
 end.
+
