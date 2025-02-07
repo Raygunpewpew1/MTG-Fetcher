@@ -647,6 +647,7 @@ begin
 end;
 
 // Helper class implementations
+// These were made for possible future use and kept for examples.
 
 class function TScryfallQueryHelper.CreateModernLegalQuery: TScryfallQuery;
 begin

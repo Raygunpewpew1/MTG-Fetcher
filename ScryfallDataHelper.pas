@@ -94,9 +94,9 @@ end;
 class function TWrapperHelper.GetUtf8String(const S: string): string;
 begin
 {$IF DEFINED(MSWINDOWS)}
-  // On Windows, convert from ANSI to UTF8.
   Result := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(S));
 {$ELSE}
+  // On other platforms, assume UTF-8.
   Result := S;
 {$ENDIF}
 end;
@@ -163,7 +163,7 @@ begin
         AllParts[I].ID := GetSafeStringField(PartObj, FieldID);
         AllParts[I].Component := GetSafeStringField(PartObj, FieldComponent);
         AllParts[I].Name := GetSafeStringField(PartObj, FieldName);
-        AllParts[I].TypeLine := GetSafeStringField(PartObj, FieldTypeLine);
+        AllParts[I].TypeLine := GetUtf8String(GetSafeStringField(PartObj, FieldTypeLine));
         AllParts[I].URI := GetSafeStringField(PartObj, FieldUri);
       end;
     end;
@@ -297,7 +297,8 @@ begin
         CardFaces[I] := TCardFace.Create; // Allocate new instance
         CardFaces[I].Name := GetSafeStringField(FaceObj, FieldName);
         CardFaces[I].ManaCost := GetSafeStringField(FaceObj, FieldManaCost);
-        CardFaces[I].TypeLine := GetSafeStringField(FaceObj, FieldTypeLine);
+        CardFaces[I].TypeLine :=
+          GetUtf8String(GetSafeStringField(FaceObj, FieldTypeLine));
         CardFaces[I].OracleText :=
           GetUtf8String(GetSafeStringField(FaceObj, FieldOracleText));
         CardFaces[I].FlavorText :=
@@ -360,7 +361,7 @@ begin
   // If CardDetails already contains data, clear it
   if (not CardDetails.SFID.IsEmpty) or (not CardDetails.OracleID.IsEmpty) then
   begin
-   CardDetails.Clear;
+    CardDetails.Clear;
   end;
 
   try
@@ -393,8 +394,8 @@ begin
 
     CardDetails.SetCode := GetSafeStringField(JsonObj, FieldSet);
     CardDetails.SetName := GetSafeStringField(JsonObj, FieldSetName);
-    CardDetails.Rarity := StringToRarity(GetSafeStringField(JsonObj,
-      FieldRarity));
+    CardDetails.Rarity := TRarity.FromString(GetSafeStringField(JsonObj, FieldRarity));
+
     CardDetails.Power := GetSafeStringField(JsonObj, FieldPower);
     CardDetails.Toughness := GetSafeStringField(JsonObj, FieldToughness);
     CardDetails.Loyalty := GetSafeStringField(JsonObj, FieldLoyalty);

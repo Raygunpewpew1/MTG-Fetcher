@@ -23,8 +23,15 @@ type
   EScryfallRateLimitError = class(EScryfallAPIError);
   EScryfallServerError = class(EScryfallAPIError);
 
-  TOnSearchComplete = reference to procedure(Success: Boolean;
-    Cards: TArray<TCardDetails>; HasMore: Boolean; ErrorMsg: string);
+type
+  TOnSearchComplete = reference to procedure(
+    Success: Boolean;
+    Cards: TArray<TCardDetails>;
+    HasMore: Boolean;
+    TotalCards: Integer;
+    ErrorMsg: string
+  );
+
 
   TScryfallAPI = class
   private
@@ -120,8 +127,9 @@ begin
   FHttpClient := THTTPClient.Create;
   FHttpClient.CustomHeaders['User-Agent'] := UserAgent;
   FHttpClient.CustomHeaders['Accept'] := AcceptHeader;
-  FHttpClient.ConnectionTimeout := 5000;
-  FHttpClient.ResponseTimeout := 10000;
+  FHttpClient.ConnectionTimeout := 15000; // 15 seconds
+  FHttpClient.ResponseTimeout := 30000;   // 30 seconds
+
 
   // In-memory autocomplete cache
   FAutocompleteCache := TDictionary < string, TArray < string >>.Create;
@@ -500,7 +508,7 @@ begin
           procedure
           begin
             OnComplete(Success, SearchResult.Cards.ToArray,
-              SearchResult.HasMore, ErrorMsg);
+              SearchResult.HasMore,SearchResult.TotalCards, ErrorMsg);
             SearchResult.Free; // free it on the main thread
           end);
 

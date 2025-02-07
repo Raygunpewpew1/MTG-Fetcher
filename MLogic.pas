@@ -6,9 +6,11 @@ uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
   System.RegularExpressions, System.Classes, FMX.Dialogs, SGlobalsX,
   FMX.Graphics, System.Net.HttpClient, FMX.StdCtrls, FMX.ListView.Appearances,
-  FMX.ListView, JsonDataObjects, Logger;
+  FMX.ListView, JsonDataObjects, Logger,System.Notification;
 
 procedure CopyDatabaseToInternalStorage;
+
+procedure ShowNativeToast(const AMessage: string);
 
 function GetAssetPath(const SubFolder, FileName: string): string;
 
@@ -54,6 +56,32 @@ uses
 
 const
   MTGAppRootFolder = 'MTGCardFetch';
+
+procedure ShowNativeToast(const AMessage: string);
+var
+  NotificationCenter: TNotificationCenter;
+  Notification: TNotification;
+begin
+  NotificationCenter := TNotificationCenter.Create(nil);
+  try
+    if NotificationCenter.Supported then
+    begin
+      Notification := NotificationCenter.CreateNotification;
+      try
+        Notification.Name := 'ToastNotification';
+        Notification.AlertBody := AMessage;
+        Notification.FireDate := Now;
+        NotificationCenter.PresentNotification(Notification);
+      finally
+        Notification.Free;
+      end;
+    end
+    else
+      raise Exception.Create('Toast notifications are not supported on this platform.');
+  finally
+    NotificationCenter.Free;
+  end;
+end;
 
 function EnsureDirectoryExists(const FolderPath: string): string;
 begin

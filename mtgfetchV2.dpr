@@ -18,7 +18,8 @@ uses
   CardDisplayManager in 'CardDisplayManager.pas',
   ScryfallTypes in 'ScryfallTypes.pas',
   ScryfallQuery in 'ScryfallQuery.pas',
-  SGlobalsX in 'SGlobalsX.pas';
+  SGlobalsX in 'SGlobalsX.pas',
+  ISmellToast in 'ISmellToast.pas';
 
 {$R *.res}
 

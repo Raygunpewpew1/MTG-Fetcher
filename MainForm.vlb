@@ -28,9 +28,6 @@ Coordinates=128,276,59,58
 [ComboBoxRarity]
 Coordinates=399,10,111,146
 
-[DelayTimer]
-Coordinates=27,479,80,36
-
 [ListViewCards]
 Coordinates=10,10,107,256
 
@@ -41,6 +38,6 @@ Coordinates=410,276,95,36
 Coordinates=520,10,127,146
 
 []
-Coordinates=197,276,59,58
+Coordinates=27,479,80,36
 Visible=True
 

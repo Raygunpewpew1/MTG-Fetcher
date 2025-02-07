@@ -3,10 +3,6 @@ inherited Form1_Windows: TForm1_Windows
   ClientWidth = 876
   FormFactor.Devices = [Desktop]
   DesignerMasterStyle = 0
-  inherited DelayTimer: TTimer
-    Left = 800
-    Top = 24
-  end
   inherited StyleBook1: TStyleBook
     Left = 628
     Top = 24
@@ -26,6 +22,21 @@ inherited Form1_Windows: TForm1_Windows
   inherited LayoutActions: TLayout
     Position.Y = 576.000000000000000000
     Size.Width = 876.000000000000000000
+    inherited Button1: TButton
+      Position.X = 260.000000000000000000
+    end
+    inherited ButtonNextPage: TButton
+      Position.X = 156.000000000000000000
+      Size.Width = 69.000000000000000000
+    end
+    inherited ComboBoxEditSearch: TComboEdit
+      Position.X = 340.000000000000000000
+    end
+    inherited ButtonPrevPage: TButton
+      Enabled = False
+      Position.X = 79.000000000000000000
+      Size.Width = 69.000000000000000000
+    end
   end
   inherited MultiViewFilters: TMultiView
     Size.Width = 389.000000000000000000

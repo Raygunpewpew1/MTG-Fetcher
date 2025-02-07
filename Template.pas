@@ -47,18 +47,18 @@ HtmlTemplate: string = '''
 
   /* Hover effect for single cards (non-flip cards) */
   .single-card:hover {
-    transform: scale(1.5);
+    transform: scale(1.3);
     box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
   }
 
     /* Hover effect for flip cards (front side) */
   .flip-card:hover {
-    transform: scale(1.5);
+    transform: scale(1.3);
    }
 
    /* Hover effect for flip cards (back side) */
    .flip-card.show-back:hover {
-    transform: scale(1.5) rotateY(180deg);
+    transform: scale(1.3) rotateY(180deg);
    }
 
 

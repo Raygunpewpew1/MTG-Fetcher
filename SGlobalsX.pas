@@ -836,7 +836,7 @@ begin
     end;
   end;
 
-  // Deep copy ImageUris (optional).
+  // Deep copy ImageUris
   if Assigned(Source.ImageUris) then
   begin
     if Assigned(FImageUris) then
@@ -1103,8 +1103,9 @@ begin
   for R := Low(TRarity) to High(TRarity) do
     if SameText(Value, R.ToString) then
       Exit(R);
-  Result := rAll;
+  raise Exception.CreateFmt('Invalid rarity string: "%s"', [Value]);
 end;
+
 
 { TLegalityFormatHelper }
 function TLegalityFormatHelper.ToString: string;
