@@ -401,11 +401,15 @@ begin
 
 //          FTotalCards := TotalCards;
 //          TotalPages := Ceil(FTotalCards / 175);
-
-          for var Card in Cards do
-          begin
-            FCardDataList.Add(Card);
-            AddCardToListView(Card);
+           FListView.BeginUpdate;
+          try
+            for var Card in Cards do
+            begin
+              FCardDataList.Add(Card);
+              AddCardToListView(Card);
+            end;
+          finally
+            FListView.EndUpdate;
           end;
 
           FTotalCards := TotalCards;
@@ -479,8 +483,8 @@ begin
     RareStr := UpperCase(RareStr[1]) +
       LowerCase(Copy(RareStr, 2, Length(RareStr) - 1));
 
-  // Create CardDetailsObj safely
-  CardDetailsObj := TCardDetails.Create;
+  //Create CardDetailsObj safely
+ CardDetailsObj := TCardDetails.Create;
   try
     CardDetailsObj.Assign(Card);
 

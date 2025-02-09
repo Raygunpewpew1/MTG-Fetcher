@@ -312,6 +312,7 @@ var
   SelectedSetCode: string;
   SelectedColors: string;
   UniqueMode: string;
+  SelectedName:string;
 begin
   if ComboBoxEditSearch.Text.Trim.IsEmpty then
     Exit;
@@ -339,6 +340,9 @@ begin
       raise Exception.Create('Invalid rarity selected.');
   end;
 
+
+  SelectedName := ComboBoxEditSearch.Text.Trim;
+
   Query := TScryfallQuery.Create;
   try
 
@@ -352,7 +356,7 @@ begin
 
     UniqueMode := System.StrUtils.IfThen(Switch1.IsChecked, 'prints', '');
 
-    Query.WithName(ComboBoxEditSearch.Text).WithSet(SelectedSetCode)
+    Query.WithName(SelectedName).WithSet(SelectedSetCode)
       .WithRarity(SelectedRarity).WithColors(SelectedColors).Unique(UniqueMode)
       .OrderBy('released').IncludeExtras(False);
    //   .WithKeyword(ComboBoxAbility.Text);

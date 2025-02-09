@@ -23,16 +23,18 @@ type
   EScryfallRateLimitError = class(EScryfallAPIError);
   EScryfallServerError = class(EScryfallAPIError);
 
+  /// <summary>
+  /// Callback type for search completion with success, results, and error details.
+  /// </summary>
 type
-  TOnSearchComplete = reference to procedure(
-    Success: Boolean;
-    Cards: TArray<TCardDetails>;
-    HasMore: Boolean;
-    TotalCards: Integer;
-    ErrorMsg: string
-  );
+  TOnSearchComplete = reference to procedure(Success: Boolean;
+    Cards: TArray<TCardDetails>; HasMore: Boolean; TotalCards: Integer;
+    ErrorMsg: string);
 
-
+  /// <summary>
+  /// Main class for interacting with the Scryfall API.
+  /// Provides methods for fetching cards, sets, catalogs, and related data.
+  /// </summary>
   TScryfallAPI = class
   private
 
@@ -40,23 +42,53 @@ type
     FCacheLock: TCriticalSection;
     FHttpClient: THTTPClient;
     FAutocompleteCache: TDictionary<string, TArray<string>>;
-
+    /// <summary>
+    /// Executes an HTTP request to the specified endpoint.
+    /// Supports GET and POST requests.
+    /// </summary>
     function ExecuteRequest(const Endpoint: string;
       const Payload: TJsonObject = nil): TJsonObject;
+    /// <summary>
+    /// Parses the search result JSON response into a TSearchResult instance.
+    /// </summary>
     function ParseSearchResult(const JsonResponse: TJsonObject): TSearchResult;
+    /// <summary>
+    /// Executes an internal search query for cards with advanced filtering options.
+    /// </summary>
     function InternalSearchCards(const Query, SetCode, Rarity, Colors: string;
       Fuzzy, Unique: Boolean; Page: Integer): TSearchResult;
+    /// <summary>
+    /// Extracts image URIs from a JSON object into a TImageUris instance.
+    /// </summary>
     function ParseImageUris(const JsonObj: TJsonObject): TImageUris;
+    /// <summary>
+    /// Fetches autocomplete suggestions for a partial card name.
+    /// </summary>
     function FetchAutocompleteSuggestions(const PartialQuery: string)
       : TArray<string>;
+    /// <summary>
+    /// Retrieves all available sets from the Scryfall API.
+    /// </summary>
     function FetchAllSetsFromAPI: TArray<TSetDetails>;
+    /// <summary>
+    /// Executes a search query and returns the results as a TSearchResult instance.
+    /// </summary>
     function ExecuteQuery(const Query: TScryfallQuery): TSearchResult;
+    /// <summary>
+    /// Checks the cache for a specific key and retrieves the result if available.
+    /// </summary>
     function GetCachedResult(const CacheKey: string;
       out JsonResponse: TJsonObject): Boolean;
     procedure CacheResult(const CacheKey: string;
       const JsonResponse: TJsonObject);
+    /// <summary>
+    /// Performs an HTTP request with retries for failure handling.
+    /// </summary>
     function MakeRequestWithRetries(const URL: string;
       const Payload: TJsonObject): string;
+    /// <summary>
+    /// Fetches card details using a specific API endpoint.
+    /// </summary>
     function GetCardByEndpoint(const Endpoint: string): TCardDetails;
 
   public
@@ -77,6 +109,10 @@ type
     function SearchAllCards(const Query, SetCode, Rarity, Colors: string;
       Fuzzy, Unique: Boolean): TArray<TCardDetails>;
 
+
+    /// <summary>
+    /// Performs an asynchronous search for all cards using a TScryfallQuery.
+    /// </summary>
     // Async / Parallel
     procedure SearchAllCardsAsync(const Query: TScryfallQuery;
       const OnComplete: TOnSearchComplete); overload;
@@ -128,8 +164,7 @@ begin
   FHttpClient.CustomHeaders['User-Agent'] := UserAgent;
   FHttpClient.CustomHeaders['Accept'] := AcceptHeader;
   FHttpClient.ConnectionTimeout := 15000; // 15 seconds
-  FHttpClient.ResponseTimeout := 30000;   // 30 seconds
-
+  FHttpClient.ResponseTimeout := 30000; // 30 seconds
 
   // In-memory autocomplete cache
   FAutocompleteCache := TDictionary < string, TArray < string >>.Create;
@@ -508,7 +543,7 @@ begin
           procedure
           begin
             OnComplete(Success, SearchResult.Cards.ToArray,
-              SearchResult.HasMore,SearchResult.TotalCards, ErrorMsg);
+              SearchResult.HasMore, SearchResult.TotalCards, ErrorMsg);
             SearchResult.Free; // free it on the main thread
           end);
 
@@ -727,12 +762,14 @@ begin
   end;
 end;
 
-function TScryfallAPI.ParseSearchResult(const JsonResponse: TJsonObject): TSearchResult;
+function TScryfallAPI.ParseSearchResult(const JsonResponse: TJsonObject)
+  : TSearchResult;
 var
   CardsArray: TJSONArray;
   Stopwatch: TStopwatch;
-  LResult: TSearchResult;            // Final TSearchResult to return
-  LocalCards: TList<TCardDetails>;   // Accumulate cards in parallel, then sync once
+  LResult: TSearchResult; // Final TSearchResult to return
+  LocalCards: TList<TCardDetails>;
+  // Accumulate cards in parallel, then sync once
 begin
   // TSearchResult to start
   LResult := TSearchResult.Create;
@@ -745,15 +782,16 @@ begin
   if JsonResponse.S['object'] = 'error' then
   begin
     // Collect fields from Scryfall's error JSON
-    var Code    := JsonResponse.S['code'];
-    var Status  := JsonResponse.I['status'];
-    var Details := JsonResponse.S['details'];
+    var
+    Code := JsonResponse.S['code'];
+    var
+    Status := JsonResponse.i['status'];
+    var
+    Details := JsonResponse.S['details'];
 
     // Raise an exception with that info
-    raise EScryfallAPIError.CreateFmt(
-      'Scryfall error: %s (code: %s, status: %d)',
-      [Details, Code, Status]
-    );
+    raise EScryfallAPIError.CreateFmt
+      ('Scryfall error: %s (code: %s, status: %d)', [Details, Code, Status]);
   end;
 
   try
@@ -761,7 +799,8 @@ begin
     if JsonResponse.Contains(FieldData) then
     begin
       CardsArray := JsonResponse.A[FieldData];
-      LogStuff('ParseSearchResult -> Data Array Count: ' + CardsArray.Count.ToString, DEBUG);
+      LogStuff('ParseSearchResult -> Data Array Count: ' +
+        CardsArray.Count.ToString, DEBUG);
 
       // Clear TSearchResult’s list in case there’s leftover data
       LResult.Cards.Clear;
@@ -776,7 +815,7 @@ begin
         TParallel.For(0, CardsArray.Count - 1,
           procedure(Index: Integer)
           var
-            CardObj : TJsonObject;
+            CardObj: TJsonObject;
             TempCard: TCardDetails;
           begin
             // Only parse objects
@@ -796,13 +835,10 @@ begin
             end
             else
             begin
-              LogStuff(
-                Format('Skipping non-object element at index %d', [Index]),
-                WARNING
-              );
+              LogStuff(Format('Skipping non-object element at index %d',
+                [Index]), WARNING);
             end;
-          end
-        );
+          end);
 
         // Synchronize once to merge all parsed cards into LResult.Cards
         TThread.Synchronize(nil,
@@ -816,19 +852,21 @@ begin
       end;
 
       Stopwatch.Stop;
-      LogStuff(Format('Parallel Parsing Time: %d ms', [Stopwatch.ElapsedMilliseconds]), DEBUG);
+      LogStuff(Format('Parallel Parsing Time: %d ms',
+        [Stopwatch.ElapsedMilliseconds]), DEBUG);
 
       // Fill TSearchResult metadata
-      LResult.HasMore     := JsonResponse.B[FieldHasMore];
+      LResult.HasMore := JsonResponse.B[FieldHasMore];
       LResult.NextPageURL := JsonResponse.S[FieldNextPage];
-      LResult.TotalCards  := JsonResponse.I[FieldTotalCards];
+      LResult.TotalCards := JsonResponse.i[FieldTotalCards];
 
       Result := LResult;
     end
     else
     begin
       // If there's no "data" field, log an error but return an empty TSearchResult
-      LogStuff('ParseSearchResult -> Missing "data" key in JSON response.', ERROR);
+      LogStuff('ParseSearchResult -> Missing "data" key in JSON response.',
+        ERROR);
       Result := LResult;
     end;
   except
@@ -840,7 +878,6 @@ begin
     end;
   end;
 end;
-
 
 function TScryfallAPI.InternalSearchCards(const Query, SetCode, Rarity,
   Colors: string; Fuzzy, Unique: Boolean; Page: Integer): TSearchResult;
