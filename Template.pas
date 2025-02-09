@@ -227,10 +227,11 @@ HtmlTemplate: string = '''
     text-transform: capitalize;
   }
 
-  .rarity.common { background-color: #A9A9A9; color: black; }
-  .rarity.uncommon { background-color: #C0C0C0; color: black; }
-  .rarity.rare { background-color: #FFD700; color: black; }
-  .rarity.mythic { background-color: #FF8C00; color: #fff; }
+  .rarity.Common { background-color: #A9A9A9; color: black; }
+  .rarity.Uncommon { background-color: #C0C0C0; color: black; }
+  .rarity.Rare { background-color: #FFD700; color: black; }
+  .rarity.Mythic { background-color: #FF8C00; color: #fff; }
+  .rarity.Special { background-color: #FF8C01; color: #fff; }
 
   .oracle-text {
     margin-top: 10px;

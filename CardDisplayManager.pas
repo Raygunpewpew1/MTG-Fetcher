@@ -252,9 +252,23 @@ begin
 end;
 
 procedure TCardDisplayManager.ClearListViewItems;
+var
+  i: Integer;
+  Item: TListViewItem;
 begin
-  if Assigned(FListView) then
-    FListView.Items.Clear;
+  if not Assigned(FListView) then Exit;
+
+  for i := 0 to FListView.Items.Count - 1 do
+  begin
+    Item := FListView.Items[i];
+    if Assigned(Item.TagObject) then
+    begin
+      Item.TagObject.Free;
+      Item.TagObject := nil;
+    end;
+  end;
+
+  FListView.Items.Clear;
 end;
 
 procedure TCardDisplayManager.ExecuteQuery(const Query: TScryfallQuery;
@@ -465,45 +479,33 @@ var
   ListViewItem: TListViewItem;
   CardDetailsObj: TCardDetails;
   RareStr: string;
-  Rarity: TRarity;
 begin
-  if (not Assigned(FListView)) or Card.CardName.IsEmpty or Card.SFID.IsEmpty
-  then
+  if (not Assigned(FListView)) or Card.CardName.IsEmpty or Card.SFID.IsEmpty then
   begin
-    LogStuff(Format
-      ('AddCardToListView: Skipping card due to missing data. CardName: %s, SFID: %s',
-      [Card.CardName, Card.SFID]), ERROR);
+    LogStuff('Skipping invalid card.', ERROR);
     Exit;
   end;
 
-  // Convert rarity to a formatted string
-  Rarity := Card.Rarity;
-  RareStr := Rarity.ToString;
-  if not RareStr.IsEmpty then
-    RareStr := UpperCase(RareStr[1]) +
-      LowerCase(Copy(RareStr, 2, Length(RareStr) - 1));
-
-  //Create CardDetailsObj safely
- CardDetailsObj := TCardDetails.Create;
+  CardDetailsObj := TCardDetails.Create;
   try
+    RareStr := Card.Rarity.ToString;
     CardDetailsObj.Assign(Card);
-
-    // Create ListView item inside try-finally
     ListViewItem := FListView.Items.Add;
     try
       ListViewItem.Text := Card.CardName;
       ListViewItem.Detail := RareStr;
       ListViewItem.ButtonText := 'Rulings';
-      ListViewItem.TagObject := CardDetailsObj;
+      ListViewItem.TagObject := CardDetailsObj; // Assign ownership to ListViewItem
     except
-      ListViewItem.Free; // Ensure ListViewItem is freed if an error occurs
+      FreeAndNil(ListViewItem);
       raise;
     end;
   except
-    CardDetailsObj.Free; // Free if any issue occurs
+    FreeAndNil(CardDetailsObj);
     raise;
   end;
 end;
+
 
 procedure TCardDisplayManager.HandleSetDetails(const CardDetails: TCardDetails;
 const SetDetails: TSetDetails);
