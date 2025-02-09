@@ -3,12 +3,12 @@ unit SGlobalsX;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections;
-
+  System.Classes, System.SysUtils, System.Generics.Collections, JsonDataObjects,
+  APIConstants;
 
 type
-  TRarity = (rAll,rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus,
-             rTimeshifted, rMasterpiece, rToken, rBasic, rPromo);
+  TRarity = (rAll, rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus,
+    rTimeshifted, rMasterpiece, rToken, rBasic, rPromo);
 
   TLegalityFormat = (lfStandard, lfFuture, lfHistoric, lfGladiator, lfPioneer,
     lfExplorer, lfModern, lfLegacy, lfPauper, lfVintage, lfPenny, lfCommander,
@@ -22,7 +22,10 @@ type
     FEUR: Currency;
     FTix: Currency;
     procedure Assign(Source: TCardPrices);
+
   public
+    function ToJSON: string;
+    procedure FromJSON(const JSONStr: string);
     procedure Clear;
     property USD: Currency read FUSD write FUSD;
     property USD_Foil: Currency read FUSD_Foil write FUSD_Foil;
@@ -40,8 +43,11 @@ type
     FBorder_crop: string;
     FArt_crop: string;
     procedure Assign(Source: TImageUris);
+
   public
     procedure Clear;
+    procedure FromJSON(const JSONStr: string);
+    function ToJSON: string;
     property Small: string read FSmall write FSmall;
     property Normal: string read FNormal write FNormal;
     property Large: string read FLarge write FLarge;
@@ -55,7 +61,10 @@ type
   private
     FStatus: array [TLegalityFormat] of string;
     procedure Assign(Source: TCardLegalities);
+
   public
+    function ToJSON: string;
+    procedure FromJSON(const JSONStr: string);
     procedure Clear;
     function GetStatus(Format: TLegalityFormat): string;
     procedure SetStatus(Format: TLegalityFormat; const StatusStr: string);
@@ -210,12 +219,15 @@ type
     FScryfallID: string;
     FScryfallIllustrationID: string;
     FScryfallOracleID: string;
+
   public
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
     procedure Assign(Source: TCardDetails);
     constructor CreateFromCard(Source: TCardDetails);
+    function ToJSON: string;
+    procedure FromJSON(const JSONStr: string);
 
     // Properties
     property SFID: string read FSFID write FSFID;
@@ -404,6 +416,32 @@ type
   end;
 
 implementation
+
+function RarityFromString(const Value: string): TRarity;
+var
+  R: TRarity;
+begin
+  for R := Low(TRarity) to High(TRarity) do
+    if SameText(Value, R.ToString) then
+      Exit(R);
+  Result := rAll; // Default value if no match found
+end;
+
+function GetSafeString(JSON: TJsonObject; const FieldName: string): string;
+begin
+  if JSON.Contains(FieldName) then
+    Result := JSON.S[FieldName]
+  else
+    Result := '';
+end;
+
+function GetSafeFloat(JSON: TJsonObject; const FieldName: string): Double;
+begin
+  if JSON.Contains(FieldName) then
+    Result := JSON.F[FieldName]
+  else
+    Result := 0.0;
+end;
 
 { TCardPrices }
 
@@ -781,16 +819,16 @@ begin
 
   // Deep copy TList<string> (manual copying)
   ColorIdentity.Clear;
-  for var s in Source.ColorIdentity do
-    ColorIdentity.Add(s);
+  for var S in Source.ColorIdentity do
+    ColorIdentity.Add(S);
 
   Keywords.Clear;
-  for var s in Source.Keywords do
-    Keywords.Add(s);
+  for var S in Source.Keywords do
+    Keywords.Add(S);
 
   Games.Clear;
-  for var s in Source.Games do
-    Games.Add(s);
+  for var S in Source.Games do
+    Games.Add(S);
 
   // Deep copy AllParts
   AllParts.Clear;
@@ -1001,14 +1039,14 @@ begin
       Result := 'Masterpiece';
     rToken:
       Result := 'Token';
-//    rDoubleFacedToken:
-//      Result := 'Double_faced_token';
-//    rDraft:
-//      Result := 'Draft';
-//    rPlaneshifted:
-//      Result := 'Planeshifted';
-//    rUnique:
-//      Result := 'Unique';
+    // rDoubleFacedToken:
+    // Result := 'Double_faced_token';
+    // rDraft:
+    // Result := 'Draft';
+    // rPlaneshifted:
+    // Result := 'Planeshifted';
+    // rUnique:
+    // Result := 'Unique';
     rBasic:
       Result := 'Basic';
     rPromo:
@@ -1085,5 +1123,215 @@ begin
       Exit(L);
   raise Exception.CreateFmt('Unknown legality format: %s', [Value]);
 end;
+
+function TImageUris.ToJSON: string;
+var
+  JSON: TJsonObject;
+begin
+  JSON := TJsonObject.Create;
+  try
+    JSON.S[FieldSmall] := Self.Small;
+    JSON.S[FieldNormal] := Self.Normal;
+    JSON.S[FieldLarge] := Self.Large;
+    JSON.S[FieldBackFace] := Self.BackFace;
+    JSON.S[FieldPng] := Self.PNG;
+    JSON.S[FieldBorderCrop] := Self.Border_crop;
+    JSON.S[FieldArtCrop] := Self.Art_crop;
+    Result := JSON.ToJSON;
+  finally
+    JSON.Free;
+  end;
+end;
+
+function TCardPrices.ToJSON: string;
+var
+  JSON: TJsonObject;
+begin
+  JSON := TJsonObject.Create;
+  try
+    JSON.F[FieldUsd] := Self.USD;
+    JSON.F[FieldUsdFoil] := Self.USD_Foil;
+    JSON.F[FieldEur] := Self.EUR;
+    JSON.F[FieldTix] := Self.Tix;
+    Result := JSON.ToJSON;
+  finally
+    JSON.Free;
+  end;
+end;
+
+function TCardLegalities.ToJSON: string;
+var
+  JSON: TJsonObject;
+  Format: TLegalityFormat;
+begin
+  JSON := TJsonObject.Create;
+  try
+    for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
+      JSON.S[Format.ToString] := Self.GetStatus(Format);
+    Result := JSON.ToJSON;
+  finally
+    JSON.Free;
+  end;
+end;
+
+procedure TImageUris.FromJSON(const JSONStr: string);
+var
+  JSON: TJsonObject;
+begin
+  JSON := TJsonObject.Parse(JSONStr) as TJsonObject;
+  try
+    if Assigned(JSON) then
+    begin
+      Self.Small := GetSafeString(JSON, FieldSmall);
+      Self.Normal := GetSafeString(JSON, FieldNormal);
+      Self.Large := GetSafeString(JSON, FieldLarge);
+      Self.BackFace := GetSafeString(JSON, FieldBackFace);
+      Self.PNG := GetSafeString(JSON, FieldPng);
+      Self.Border_crop := GetSafeString(JSON, FieldBorderCrop);
+      Self.Art_crop := GetSafeString(JSON, FieldArtCrop);
+    end;
+  finally
+    JSON.Free;
+  end;
+end;
+
+procedure TCardPrices.FromJSON(const JSONStr: string);
+var
+  JSON: TJsonObject;
+begin
+  JSON := TJsonObject.Parse(JSONStr) as TJsonObject;
+  try
+    if Assigned(JSON) then
+    begin
+      Self.USD := GetSafeFloat(JSON, FieldUsd);
+      Self.USD_Foil := GetSafeFloat(JSON, FieldUsdFoil);
+      Self.EUR := GetSafeFloat(JSON, FieldEur);
+      Self.Tix := GetSafeFloat(JSON, FieldTix);
+    end;
+  finally
+    JSON.Free;
+  end;
+end;
+
+procedure TCardLegalities.FromJSON(const JSONStr: string);
+var
+  JSON: TJsonObject;
+  Format: TLegalityFormat;
+begin
+  JSON := TJsonObject.Parse(JSONStr) as TJsonObject;
+  try
+    if Assigned(JSON) then
+    begin
+      for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
+        if JSON.Contains(Format.ToString) then
+          Self.SetStatus(Format, GetSafeString(JSON, Format.ToString));
+    end;
+  finally
+    JSON.Free;
+  end;
+end;
+
+function TCardDetails.ToJSON: string;
+var
+  JSON: TJsonObject;
+  Arr: TJsonArray;
+  S: string;
+begin
+  JSON := TJsonObject.Create;
+  try
+    JSON.S[FieldID] := Self.SFID;
+    JSON.S[FieldOracleID] := Self.OracleID;
+    JSON.S[FieldName] := Self.CardName;
+    JSON.S[FieldSet] := Self.SetCode;
+    JSON.S[FieldSetName] := Self.SetName;
+    JSON.S[FieldRarity] := Self.Rarity.ToString;
+    JSON.S[FieldManaCost] := Self.ManaCost;
+    JSON.S[FieldTypeLine] := Self.TypeLine;
+    JSON.S[FieldOracleText] := Self.OracleText;
+    JSON.S[FieldFlavorText] := Self.FlavorText;
+    JSON.S[FieldPower] := Self.Power;
+    JSON.S[FieldToughness] := Self.Toughness;
+    JSON.S[FieldLoyalty] := Self.Loyalty;
+    JSON.S[FieldReleasedAt] := Self.ReleasedAt;
+
+
+    JSON.O[FieldImageUris] := TJsonObject.Parse(Self.ImageUris.ToJSON) as TJsonObject;
+    JSON.O[FieldPrices] := TJsonObject.Parse(Self.Prices.ToJSON) as TJsonObject;
+    JSON.O[FieldLegalities] := TJsonObject.Parse(Self.Legalities.ToJSON) as TJsonObject;
+
+
+    Arr := JSON.A[FieldKeywords];
+    for S in Self.Keywords do
+      Arr.Add(S);
+
+    Arr := JSON.A[FieldGames];
+    for S in Self.Games do
+      Arr.Add(S);
+
+
+    Result := JSON.ToJSON;
+  finally
+    JSON.Free;
+  end;
+end;
+
+
+procedure TCardDetails.FromJSON(const JSONStr: string);
+var
+  JSON: TJsonObject;
+  Arr: TJsonArray;
+  I: Integer;
+begin
+  JSON := TJsonObject.Parse(JSONStr) as TJsonObject;
+  try
+    if Assigned(JSON) then
+    begin
+      Self.SFID := GetSafeString(JSON, FieldID);
+      Self.OracleID := GetSafeString(JSON, FieldOracleID);
+      Self.CardName := GetSafeString(JSON, FieldName);
+      Self.SetCode := GetSafeString(JSON, FieldSet);
+      Self.SetName := GetSafeString(JSON, FieldSetName);
+      Self.Rarity := RarityFromString(GetSafeString(JSON, FieldRarity));
+      Self.ManaCost := GetSafeString(JSON, FieldManaCost);
+      Self.TypeLine := GetSafeString(JSON, FieldTypeLine);
+      Self.OracleText := GetSafeString(JSON, FieldOracleText);
+      Self.FlavorText := GetSafeString(JSON, FieldFlavorText);
+      Self.Power := GetSafeString(JSON, FieldPower);
+      Self.Toughness := GetSafeString(JSON, FieldToughness);
+      Self.Loyalty := GetSafeString(JSON, FieldLoyalty);
+      Self.ReleasedAt := GetSafeString(JSON, FieldReleasedAt);
+
+
+      if JSON.Contains(FieldImageUris) then
+        Self.ImageUris.FromJSON(JSON.O[FieldImageUris].ToJSON);
+
+      if JSON.Contains(FieldPrices) then
+        Self.Prices.FromJSON(JSON.O[FieldPrices].ToJSON);
+
+      if JSON.Contains(FieldLegalities) then
+        Self.Legalities.FromJSON(JSON.O[FieldLegalities].ToJSON);
+
+
+      Self.Keywords.Clear;
+      if JSON.Contains(FieldKeywords) then
+      begin
+        Arr := JSON.A[FieldKeywords];
+        for I := 0 to Arr.Count - 1 do
+          Self.Keywords.Add(Arr.S[I]);
+      end;
+
+      Self.Games.Clear;
+      if JSON.Contains(FieldGames) then
+      begin
+        Arr := JSON.A[FieldGames];
+        for I := 0 to Arr.Count - 1 do
+          Self.Games.Add(Arr.S[I]);
+      end;
+    end;
+  finally
+    JSON.Free;
+  end;
+end;
+
 
 end.

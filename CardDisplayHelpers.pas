@@ -107,7 +107,6 @@ begin
   Result := False;
 end;
 
-
 /// <summary>
 /// Maps a TRarity value to a simple CSS class string (e.g., "common", "rare").
 /// </summary>
@@ -163,51 +162,10 @@ end;
 /// parses them, and returns HTML that includes images for each symbol.
 /// </summary>
 function ProcessOracleText(const OracleText: string): string;
-var
-  Parts: TArray<string>;
-  Part: string;
-  EncodedPart: string;
-  Builder: TStringBuilder;
 begin
-  Builder := TStringBuilder.Create;
-  try
-    Parts := ParseTextWithSymbolsManual(OracleText);
-    for Part in Parts do
-    begin
-      // If it's a mana symbol, replace with an image
-      if Part.StartsWith('{') and Part.EndsWith('}') then
-        Builder.Append(ReplaceManaSymbolsWithImages(Part))
-      else
-      begin
-        // Avoid unnecessary encoding conversions for Windows-only
-{$IFDEF MSWINDOWS}
-        try
-          EncodedPart := Part;
-        except
-          on E: Exception do
-          begin
-            LogStuff('Error encoding part: ' + Part + '. Error: ' +
-              E.Message, ERROR);
-            EncodedPart := ''; // fallback to an empty string
-          end;
-        end;
-{$ELSE}
-        EncodedPart := Part;
-{$ENDIF}
-        // Replace newlines with <br>
-        EncodedPart := StringReplace(EncodedPart, #10, '<br>', [rfReplaceAll]);
-        Builder.Append(EncodedPart);
-      end;
-    end;
-    Result := Builder.ToString;
-  except
-    on E: Exception do
-    begin
-      LogStuff('Error in ProcessOracleText: ' + E.Message, ERROR);
-      Result := ''; // Return empty string if there's an error
-    end;
-  end;
-  Builder.Free;
+  Result := StringReplace(OracleText, #10, '<br>', [rfReplaceAll]);
+  // Faster replacement
+  Result := ReplaceManaSymbolsWithImages(Result); // Replace all mana symbols
 end;
 
 /// <summary>
@@ -488,31 +446,60 @@ end;
 /// Adds rows to {{Legalities}} placeholder for each known legality format.
 /// Each row has a color-coded label based on its status.
 /// </summary>
+// procedure AddLegalitiesReplacements(Replacements: TDictionary<string, string>;
+// const CardDetails: TCardDetails);
+// var
+// Format: TLegalityFormat;
+// LegalityName, LegalityStatus, StatusClass: string;
+// Builder: TStringBuilder;
+// begin
+// Builder := TStringBuilder.Create;
+// try
+// for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
+// begin
+// LegalityName := Format.ToString;
+// LegalityStatus := CardDetails.Legalities.GetStatus(Format);
+//
+// if not LegalityStatus.IsEmpty then
+// begin
+// StatusClass := GetStatusClass(LegalityStatus);
+// LegalityStatus := FormatLegalityStatus(LegalityStatus);
+//
+// Builder.AppendFormat('<tr>' + '<td class="format-name">%s</td>' +
+// '<td class="status"><span class="%s">%s</span></td>' + '</tr>',
+// [EncodeHTML(CapitalizeFirstLetter(LegalityName)), StatusClass,
+// EncodeHTML(LegalityStatus)]);
+// end;
+// end;
+// AddReplacement(Replacements, '{{Legalities}}', Builder.ToString);
+// finally
+// Builder.Free;
+// end;
+// end;
 procedure AddLegalitiesReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);
 var
   Format: TLegalityFormat;
-  LegalityName, LegalityStatus, StatusClass: string;
   Builder: TStringBuilder;
+  LegalityName, LegalityStatus, StatusClass: string;
 begin
   Builder := TStringBuilder.Create;
   try
     for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
     begin
-      LegalityName := Format.ToString;
       LegalityStatus := CardDetails.Legalities.GetStatus(Format);
+      if LegalityStatus.IsEmpty then
+        Continue; // Skip empty legalities
 
-      if not LegalityStatus.IsEmpty then
-      begin
-        StatusClass := GetStatusClass(LegalityStatus);
-        LegalityStatus := FormatLegalityStatus(LegalityStatus);
+      LegalityName := CapitalizeFirstLetter(Format.ToString);
+      StatusClass := GetStatusClass(LegalityStatus);
+      LegalityStatus := FormatLegalityStatus(LegalityStatus);
 
-        Builder.AppendFormat('<tr>' + '<td class="format-name">%s</td>' +
-          '<td class="status"><span class="%s">%s</span></td>' + '</tr>',
-          [EncodeHTML(CapitalizeFirstLetter(LegalityName)), StatusClass,
-          EncodeHTML(LegalityStatus)]);
-      end;
+      Builder.AppendFormat
+        ('<tr><td class="format-name">%s</td><td class="status"><span class="%s">%s</span></td></tr>',
+        [LegalityName, StatusClass, LegalityStatus]);
     end;
+
     AddReplacement(Replacements, '{{Legalities}}', Builder.ToString);
   finally
     Builder.Free;
@@ -565,21 +552,24 @@ end;
 /// whichever is relevant to the card.
 /// </summary>
 function BuildPowerToughnessHtml(const CardDetails: TCardDetails): string;
+var
+  Power, Toughness, Loyalty: string;
 begin
-  Result := '';
-  if (CardDetails.Power <> '') and (CardDetails.Toughness <> '') then
-  begin
-    Result := Format('<div class="power-toughness">' +
-      '<span class="label">Power/Toughness:</span>' +
-      '<span class="value">%s/%s</span>' + '</div>',
-      [EncodeHTML(CardDetails.Power), EncodeHTML(CardDetails.Toughness)]);
-  end
-  else if CardDetails.Loyalty <> '' then
-  begin
-    Result := Format('<div class="power-toughness">' +
-      '<span class="label">Loyalty:</span>' + '<span class="value">%s</span>' +
-      '</div>', [EncodeHTML(CardDetails.Loyalty)]);
-  end;
+  Power := EncodeHTML(CardDetails.Power);
+  Toughness := EncodeHTML(CardDetails.Toughness);
+  Loyalty := EncodeHTML(CardDetails.Loyalty);
+
+  if (Power <> '') and (Toughness <> '') then
+    Exit(Format
+      ('<div class="power-toughness"><span class="label">P/T:</span><span class="value">%s/%s</span></div>',
+      [Power, Toughness]));
+
+  if Loyalty <> '' then
+    Exit(Format
+      ('<div class="power-toughness"><span class="label">Loyalty:</span><span class="value">%s</span></div>',
+      [Loyalty]));
+
+  Result := ''; // No output if neither is set
 end;
 
 initialization

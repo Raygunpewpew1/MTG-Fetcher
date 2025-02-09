@@ -50,7 +50,6 @@ type
     procedure ListViewCardsButtonClick(const Sender: TObject;
       const AItem: TListItem; const AObject: TListItemSimpleControl);
     procedure ButtonPrevPageClick(Sender: TObject);
-    procedure Button3Click(Sender: TObject);
 
   private
     WebBrowserInitialized: Boolean;
@@ -286,6 +285,7 @@ begin
   if AItem.TagObject is TCardDetails then
   begin
     CardDetails := TCardDetails(AItem.TagObject);
+  //  CardDetails.ToJSON;
     FCardDisplayManager.ShowCardDetails(CardDetails);
   end
   else
@@ -316,6 +316,7 @@ var
 begin
   if ComboBoxEditSearch.Text.Trim.IsEmpty then
     Exit;
+ // ShowSkiaToast('Starting Search',Self);
 
   Button1.Enabled := False;
   MultiViewFilters.HideMaster;
@@ -375,11 +376,6 @@ end;
 procedure TForm1.Button2Click(Sender: TObject);
 begin
   MultiViewFilters.ShowMaster;
-end;
-
-procedure TForm1.Button3Click(Sender: TObject);
-begin
-ShowSkiaToast('Toast at the top!', Self, 0.8);
 end;
 
 procedure TForm1.ButtonNextPageClick(Sender: TObject);

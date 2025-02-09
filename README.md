@@ -45,7 +45,7 @@ To run or contribute to MTG Fetcher, you’ll need:
    git clone https://github.com/Raygunpewpew1/MTG-Fetcher.git
    ```
 2. **Install Required Libraries**:
-   - Make sure you have the `JsonDataObjects` library installed in your Delphi IDE.
+   - Make sure you have the [`JsonDataObjects`](https://github.com/ahausladen/JsonDataObjects) library installed in your Delphi IDE.
 
 3. **Configure the Project**:
    - Open the project in Delphi.
@@ -97,3 +97,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Contact
 
 Have questions or suggestions? Feel free to reach out or open an issue. Every bit of help is appreciated!
+

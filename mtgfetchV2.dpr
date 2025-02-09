@@ -8,7 +8,6 @@ uses
   ScryfallData in 'ScryfallData.pas',
   DataModuleUnit in 'DataModuleUnit.pas' {DataModule1: TDataModule},
   MLogic in 'MLogic.pas',
-  JsonDataObjects in 'JsonDataObjects.pas',
   CardDisplayHelpers in 'CardDisplayHelpers.pas',
   ScryfallDataHelper in 'ScryfallDataHelper.pas',
   APIConstants in 'APIConstants.pas',

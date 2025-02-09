@@ -121,6 +121,7 @@ const
   FieldEur = 'eur';
   FieldTix = 'tix';
   FieldLegalities = 'legalities';
+  FieldBackFace = 'BackFace';
 
   // Legalities fields
   FieldStandard = 'standard';

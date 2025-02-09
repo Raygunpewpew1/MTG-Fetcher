@@ -1,7 +1,7 @@
 ﻿unit Template;
 
 interface
-var
+const
 HtmlTemplate: string = '''
   <!DOCTYPE html>
   <html lang="en">
@@ -466,7 +466,7 @@ HtmlTemplate: string = '''
     </div>
 
     <div class="oracle-text">{{OracleText}}</div>
-    <!--
+
     {{PowerToughness}}
     <div class="flavor-text">{{FlavorText}}</div>
 
@@ -477,7 +477,7 @@ HtmlTemplate: string = '''
     <div class="keywords {{KeywordsClass}}">
       <strong>Keywords:</strong> {{Keywords}}
     </div>
-    -->
+
         <div class="prices">
       <h2>Prices</h2>
       <table class="prices-grid">
@@ -489,12 +489,13 @@ HtmlTemplate: string = '''
     </div>
 
   <div class="legalities">
-  <h2>Legalities</h2>
-  <button onclick="toggleLegalities()" style="margin-bottom: 10px;">Toggle Legalities</button>
-  <table id="legalities-grid" class="legalities-grid">
-    {{Legalities}}
-  </table>
+    <h2>Legalities</h2>
+    <button onclick="toggleLegalities()" style="margin-bottom: 10px;">Toggle Legalities</button>
+    <table id="legalities-grid" class="legalities-grid" style="display:none;">
+      {{Legalities}}
+    </table>
   </div>
+
 
 
     <div class="additional-details">
@@ -515,26 +516,22 @@ HtmlTemplate: string = '''
 
   const
   JScript: string = '''
-    <script>
-    document.addEventListener("contextmenu", function (e) {
-    e.preventDefault();
-    });
+     <script>
+      document.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+      });
 
-
-    document.querySelectorAll(".flip-card").forEach(card => {
-    card.addEventListener("click", function () {
-        this.classList.toggle("show-back");
-    });
+     document.querySelectorAll(".flip-card").forEach(card => {
+       card.addEventListener("click", function () {
+      this.classList.toggle("show-back");
+      });
     });
 
     function toggleLegalities() {
-    const legalitiesGrid = document.getElementById("legalities-grid");
-    if (legalitiesGrid.style.display === "none") {
-      legalitiesGrid.style.display = "table"; // Show the table
-    } else {
-      legalitiesGrid.style.display = "none"; // Hide the table
-    }
-    }
+      const legalitiesGrid = document.getElementById("legalities-grid");
+    legalitiesGrid.style.display =
+    (legalitiesGrid.style.display === "none" || legalitiesGrid.style.display === "") ? "table" : "none";
+      }
     </script>
     ''';
 

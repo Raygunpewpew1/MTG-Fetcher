@@ -4,9 +4,10 @@ interface
 
 uses
   FMX.Types, FMX.Controls, FMX.Layouts, FMX.Objects, FMX.Ani, FMX.Skia,
-  System.UITypes, FMX.Forms, System.Types, System.Skia, System.Classes, System.SysUtils;
+  System.UITypes, FMX.Forms, System.Types, System.Skia, System.Classes, System.SysUtils, System.Math;
 
-procedure ShowSkiaToast(const AMessage: string; AOwner: TForm; APosition: Single = 0.8);
+procedure ShowSkiaToast(const AMessage: string; AOwner: TForm;
+  APosition: Single = 0.9; ADuration: Integer = 2000);
 
 implementation
 
@@ -72,7 +73,7 @@ begin
     Canvas.DrawTextBlob(
       TextBlob,
       Dest.CenterPoint.X - (TextBounds.Width / 2), // Center horizontally
-      Dest.CenterPoint.Y + (TextBounds.Height / 2), // Center vertically
+      Dest.CenterPoint.Y + (TextBounds.Height / 4), // Center vertically
       Paint
     );
   end;
@@ -120,8 +121,10 @@ begin
 
   // Free stored message
   if Assigned(ToastBox.TagObject) then
+  begin
     ToastBox.TagObject.Free;
-
+    ToastBox.TagObject := nil;
+  end;
   // Remove layout and toast
   Layout.Free;
 end;
@@ -129,22 +132,44 @@ end;
 
 
 { Show the toast message at a custom position }
-procedure ShowSkiaToast(const AMessage: string; AOwner: TForm; APosition: Single);
+procedure ShowSkiaToast(const AMessage: string; AOwner: TForm;
+  APosition: Single = 0.9; ADuration: Integer = 2000);
+const
+  PADDING = 20;
 var
   Layout: TLayout;
   ToastBox: TSkPaintBox;
   Animation: TFloatAnimation;
   HideTimer: TTimer;
   MsgHolder: TStringList;
+  Paint: ISkPaint;
+  Font: ISkFont;
+  TextBounds: TRectF;
+  TextWidth: Single;
 begin
   // Create a container layout
   Layout := TLayout.Create(AOwner);
   Layout.Parent := AOwner;
   Layout.Align := TAlignLayout.None;
-  Layout.Width := 200;   // Set fixed width
-  Layout.Height := 40;   // Set height
-  Layout.Position.X := 20;
-  Layout.Position.Y := AOwner.Height * APosition - Layout.Height / 2; // Adjust position
+  Layout.Height := 40; // Fixed height
+
+  // Initialize Skia Paint and Font
+  Paint := TSkPaint.Create;
+  Paint.AntiAlias := True;
+
+  Font := TSkFont.Create(nil, 22);
+
+  // Measure text width dynamically
+  Font.MeasureText(AMessage, TextBounds, Paint);
+  TextWidth := TextBounds.Width + PADDING * 2;
+
+  // Set width dynamically (min 100px, max 300px)
+  Layout.Width := Min(300, Max(100, TextWidth));
+
+  // 🔹 Position at the **Lower Left Corner**
+  Layout.Position.X := 20; // ✅ Left side, 20px margin from the left
+  Layout.Position.Y := AOwner.Height * APosition - Layout.Height; // ✅ Lower part
+
   Layout.BringToFront;
 
   // Create the toast box
@@ -170,12 +195,13 @@ begin
 
   // Timer to keep toast visible before fade-out
   HideTimer := TTimer.Create(AOwner);
-  HideTimer.Interval := 2000; // Show for 2 seconds
-  HideTimer.OnTimer := TToastHelper.HideToast; // ✅ Correct method reference
+  HideTimer.Interval := ADuration; // ✅ Supports custom duration
+  HideTimer.OnTimer := TToastHelper.HideToast;
   HideTimer.TagObject := ToastBox; // Store reference to toast for cleanup
   HideTimer.Enabled := True;
-
 end;
+
+
 
 end.
 
