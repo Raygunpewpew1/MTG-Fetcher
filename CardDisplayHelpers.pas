@@ -4,7 +4,7 @@ interface
 
 uses
   System.Generics.Collections, System.SysUtils, SGlobalsX, System.StrUtils,
-  ScryfallData;
+  ScryfallData,CardMetaData;
 
 procedure AddCoreReplacements(Replacements: TDictionary<string, string>;
   const CardDetails: TCardDetails);

@@ -10,7 +10,7 @@ uses
   FMX.Controls.Presentation, FMX.ListView.Types,
   FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
   FMX.ListBox, MLogic, FMX.ComboEdit, CardDisplayManager, ScryfallQuery,
-  System.IOUtils, System.StrUtils, FMX.MultiView, FMX.Platform, ISmellToast;
+  System.IOUtils, System.StrUtils, FMX.MultiView, FMX.Platform, CardMetaData;
 
 type
   TForm1 = class(TForm)

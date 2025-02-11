@@ -6,8 +6,8 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView, FMX.WebBrowser,
   ScryfallData, System.Threading, FMX.Dialogs, FMX.ListBox, CardDisplayHelpers,
-  Template, Logger, SGlobalsX, MLogic, APIConstants, ScryfallTypes,
-  ScryfallQuery, System.SyncObjs, FMX.StdCtrls, FMX.Types, Math;
+  Template, Logger, SGlobalsX, MLogic, APIConstants, ScryfallFilterType,
+  ScryfallQuery, System.SyncObjs, FMX.StdCtrls, FMX.Types, Math,CardMetaData;
 
 type
   TOnQueryComplete = reference to procedure(Success: Boolean;

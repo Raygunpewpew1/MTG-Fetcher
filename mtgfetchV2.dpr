@@ -15,10 +15,11 @@ uses
   Logger in 'Logger.pas',
   Template in 'Template.pas',
   CardDisplayManager in 'CardDisplayManager.pas',
-  ScryfallTypes in 'ScryfallTypes.pas',
+  ScryfallFilterType in 'ScryfallFilterType.pas',
   ScryfallQuery in 'ScryfallQuery.pas',
   SGlobalsX in 'SGlobalsX.pas',
-  ISmellToast in 'ISmellToast.pas';
+  ISmellToast in 'ISmellToast.pas',
+  CardMetaData in 'CardMetaData.pas';
 
 {$R *.res}
 

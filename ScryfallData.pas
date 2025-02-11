@@ -14,9 +14,10 @@ uses
   System.SyncObjs,
   MLogic,
   System.IOUtils,
-  ScryfallTypes,
+  ScryfallFilterType,
   ScryfallQuery,
-  System.Diagnostics;
+  System.Diagnostics,
+  CardMetaData;
 
 type
   EScryfallAPIError = class(Exception);

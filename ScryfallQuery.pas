@@ -5,8 +5,8 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
 
-  SGlobalsX, APIConstants, ScryfallTypes, Logger, System.NetEncoding,
-  System.Math, System.SyncObjs, System.StrUtils;
+  SGlobalsX, APIConstants, ScryfallFilterType, Logger, System.NetEncoding,
+  System.Math, System.SyncObjs, System.StrUtils,CardMetaData;
 
 type
   TScryfallQuery = class(TInterfacedObject)

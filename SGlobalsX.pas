@@ -3,164 +3,9 @@ unit SGlobalsX;
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Generics.Collections, JsonDataObjects,
-  APIConstants;
+  System.Classes, System.SysUtils, System.Generics.Collections, CardMetaData;
 
 type
-  TRarity = (rAll, rCommon, rUncommon, rRare, rMythic, rSpecial, rBonus,
-    rTimeshifted, rMasterpiece, rToken, rBasic, rPromo);
-
-  TLegalityFormat = (lfStandard, lfFuture, lfHistoric, lfGladiator, lfPioneer,
-    lfExplorer, lfModern, lfLegacy, lfPauper, lfVintage, lfPenny, lfCommander,
-    lfAlchemy, lfBrawl, lfPauperCommander, lfDuel, lfOldschool, lfPremodern,
-    lfOathbreaker);
-
-  TCardPrices = class
-  private
-    FUSD: Currency;
-    FUSD_Foil: Currency;
-    FEUR: Currency;
-    FTix: Currency;
-    procedure Assign(Source: TCardPrices);
-
-  public
-    function ToJSON: string;
-    procedure FromJSON(const JSONStr: string);
-    procedure Clear;
-    property USD: Currency read FUSD write FUSD;
-    property USD_Foil: Currency read FUSD_Foil write FUSD_Foil;
-    property EUR: Currency read FEUR write FEUR;
-    property Tix: Currency read FTix write FTix;
-  end;
-
-  TImageUris = class
-  private
-    FSmall: string;
-    FNormal: string;
-    FLarge: string;
-    FBackFace: string;
-    FPNG: string;
-    FBorder_crop: string;
-    FArt_crop: string;
-    procedure Assign(Source: TImageUris);
-
-  public
-    procedure Clear;
-    procedure FromJSON(const JSONStr: string);
-    function ToJSON: string;
-    property Small: string read FSmall write FSmall;
-    property Normal: string read FNormal write FNormal;
-    property Large: string read FLarge write FLarge;
-    property BackFace: string read FBackFace write FBackFace;
-    property PNG: string read FPNG write FPNG;
-    property Border_crop: string read FBorder_crop write FBorder_crop;
-    property Art_crop: string read FArt_crop write FArt_crop;
-  end;
-
-  TCardLegalities = class
-  private
-    FStatus: array [TLegalityFormat] of string;
-    procedure Assign(Source: TCardLegalities);
-
-  public
-    function ToJSON: string;
-    procedure FromJSON(const JSONStr: string);
-    procedure Clear;
-    function GetStatus(Format: TLegalityFormat): string;
-    procedure SetStatus(Format: TLegalityFormat; const StatusStr: string);
-  end;
-
-  TCardFace = class
-  private
-    FName: string;
-    FFlavorText: string;
-    FManaCost: string;
-    FTypeLine: string;
-    FOracleText: string;
-    FPower: string;
-    FToughness: string;
-    FImageUris: TImageUris;
-    FLoyalty: string;
-    FCMC: Double;
-    procedure Assign(Source: TCardFace);
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure Clear;
-    property Name: string read FName write FName;
-    property FlavorText: string read FFlavorText write FFlavorText;
-    property ManaCost: string read FManaCost write FManaCost;
-    property TypeLine: string read FTypeLine write FTypeLine;
-    property OracleText: string read FOracleText write FOracleText;
-    property Power: string read FPower write FPower;
-    property Toughness: string read FToughness write FToughness;
-    property ImageUris: TImageUris read FImageUris write FImageUris;
-    property Loyalty: string read FLoyalty write FLoyalty;
-    property CMC: Double read FCMC write FCMC;
-  end;
-
-  TCardPart = class
-  private
-    FObjectType: string;
-    FID: string;
-    FComponent: string;
-    FName: string;
-    FTypeLine: string;
-    FURI: string;
-    procedure Assign(Source: TCardPart);
-  public
-    procedure Clear;
-    property ObjectType: string read FObjectType write FObjectType;
-    property ID: string read FID write FID;
-    property Component: string read FComponent write FComponent;
-    property Name: string read FName write FName;
-    property TypeLine: string read FTypeLine write FTypeLine;
-    property URI: string read FURI write FURI;
-  end;
-
-  TMeldDetails = class
-  private
-    FMeldParts: TObjectList<TCardPart>;
-    FMeldResult: TCardPart;
-    procedure Assign(Source: TMeldDetails);
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure Clear;
-    property MeldParts: TObjectList<TCardPart> read FMeldParts;
-    property MeldResult: TCardPart read FMeldResult write FMeldResult;
-  end;
-
-  TRelatedURIs = class
-  private
-    FGatherer: string;
-    FTcgplayerInfiniteArticles: string;
-    FTcgplayerInfiniteDecks: string;
-    FEdhrec: string;
-    procedure Assign(Source: TRelatedURIs);
-  public
-    procedure Clear;
-    property Gatherer: string read FGatherer write FGatherer;
-    property TcgplayerInfiniteArticles: string read FTcgplayerInfiniteArticles
-      write FTcgplayerInfiniteArticles;
-    property TcgplayerInfiniteDecks: string read FTcgplayerInfiniteDecks
-      write FTcgplayerInfiniteDecks;
-    property Edhrec: string read FEdhrec write FEdhrec;
-  end;
-
-  TPurchaseURIs = class
-  private
-    FTcgplayer: string;
-    FCardmarket: string;
-    FCardhoarder: string;
-    procedure Assign(Source: TPurchaseURIs);
-  public
-    procedure Clear;
-    property Tcgplayer: string read FTcgplayer write FTcgplayer;
-    property Cardmarket: string read FCardmarket write FCardmarket;
-    property Cardhoarder: string read FCardhoarder write FCardhoarder;
-  end;
-
   TCardDetails = class
   private
     FSFID: string;
@@ -219,15 +64,12 @@ type
     FScryfallID: string;
     FScryfallIllustrationID: string;
     FScryfallOracleID: string;
-
   public
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
     procedure Assign(Source: TCardDetails);
     constructor CreateFromCard(Source: TCardDetails);
-    function ToJSON: string;
-    procedure FromJSON(const JSONStr: string);
 
     // Properties
     property SFID: string read FSFID write FSFID;
@@ -404,103 +246,7 @@ type
     property TotalCards: Integer read FTotalCards write FTotalCards;
   end;
 
-  // Helper classes for enum conversions
-  TRarityHelper = record helper for TRarity
-    function ToString: string;
-    class function FromString(const Value: string): TRarity; static;
-  end;
-
-  TLegalityFormatHelper = record helper for TLegalityFormat
-    function ToString: string;
-    class function FromString(const Value: string): TLegalityFormat; static;
-  end;
-
 implementation
-
-function RarityFromString(const Value: string): TRarity;
-var
-  R: TRarity;
-begin
-  for R := Low(TRarity) to High(TRarity) do
-    if SameText(Value, R.ToString) then
-      Exit(R);
-  Result := rAll; // Default value if no match found
-end;
-
-function GetSafeString(JSON: TJsonObject; const FieldName: string): string;
-begin
-  if JSON.Contains(FieldName) then
-    Result := JSON.S[FieldName]
-  else
-    Result := '';
-end;
-
-function GetSafeFloat(JSON: TJsonObject; const FieldName: string): Double;
-begin
-  if JSON.Contains(FieldName) then
-    Result := JSON.F[FieldName]
-  else
-    Result := 0.0;
-end;
-
-{ TCardPrices }
-
-procedure TCardPrices.Clear;
-begin
-  FUSD := 0;
-  FUSD_Foil := 0;
-  FEUR := 0;
-  FTix := 0;
-end;
-
-{ TImageUris }
-procedure TImageUris.Clear;
-begin
-  FSmall := '';
-  FNormal := '';
-  FLarge := '';
-  FBackFace := '';
-  FPNG := '';
-  FBorder_crop := '';
-  FArt_crop := '';
-end;
-
-{ TCardLegalities }
-procedure TCardLegalities.Clear;
-var
-  Format: TLegalityFormat;
-begin
-  for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
-    FStatus[Format] := '';
-end;
-
-{ TCardPart }
-procedure TCardPart.Clear;
-begin
-  FObjectType := '';
-  FID := '';
-  FComponent := '';
-  FName := '';
-  FTypeLine := '';
-  FURI := '';
-end;
-
-{ TRelatedURIs }
-procedure TRelatedURIs.Clear;
-begin
-  FGatherer := '';
-  FTcgplayerInfiniteArticles := '';
-  FTcgplayerInfiniteDecks := '';
-  FEdhrec := '';
-end;
-
-{ TPurchaseURIs }
-procedure TPurchaseURIs.Clear;
-begin
-  FTcgplayer := '';
-  FCardmarket := '';
-  FCardhoarder := '';
-end;
 
 { TSetDetails }
 procedure TSetDetails.Clear;
@@ -579,188 +325,63 @@ begin
   FTotalCards := 0;
 end;
 
-function TCardLegalities.GetStatus(Format: TLegalityFormat): string;
-begin
-  Result := FStatus[Format];
-end;
-
-procedure TCardLegalities.SetStatus(Format: TLegalityFormat;
-  const StatusStr: string);
-begin
-  FStatus[Format] := StatusStr;
-end;
-
-{ TCardFace }
-constructor TCardFace.Create;
-begin
-  FImageUris := TImageUris.Create;
-end;
-
-destructor TCardFace.Destroy;
-begin
-  FImageUris.Free;
-  inherited;
-end;
-
-procedure TCardFace.Clear;
-begin
-  FName := '';
-  FFlavorText := '';
-  FManaCost := '';
-  FTypeLine := '';
-  FOracleText := '';
-  FPower := '';
-  FToughness := '';
-  FLoyalty := '';
-  FCMC := 0;
-  FImageUris.Clear;
-end;
-
-{ TMeldDetails }
-constructor TMeldDetails.Create;
-begin
-  FMeldParts := TObjectList<TCardPart>.Create(True);
-  FMeldResult := TCardPart.Create;
-end;
-
-destructor TMeldDetails.Destroy;
-begin
-  FMeldParts.Free;
-  FMeldResult.Free;
-  inherited;
-end;
-
-procedure TMeldDetails.Clear;
-begin
-  FMeldParts.Clear;
-  FMeldResult.Clear;
-end;
-
 { TCardDetails }
 constructor TCardDetails.Create;
 begin
-  FColorIdentity := TList<string>.Create;
-  FColorIdentity.Capacity := 5;
-  FKeywords := TList<string>.Create;
-  FKeywords.Capacity := 10;
-  FAllParts := TObjectList<TCardPart>.Create(True);
+  inherited;
+  if not Assigned(FColorIdentity) then
+    FColorIdentity := TList<string>.Create;
+  FColorIdentity.Capacity := 3;
+
+  if not Assigned(FKeywords) then
+    FKeywords := TList<string>.Create;
+  FKeywords.Capacity := 5;
+
+  if not Assigned(FAllParts) then
+    FAllParts := TObjectList<TCardPart>.Create(True);
   FAllParts.Capacity := 5;
-  FMeldDetails := TMeldDetails.Create;
-  FLegalities := TCardLegalities.Create;
-  FPrices := TCardPrices.Create;
-  FImageUris := TImageUris.Create;
-  FGames := TList<string>.Create;
+
+  if not Assigned(FMeldDetails) then
+    FMeldDetails := TMeldDetails.Create;
+  if not Assigned(FLegalities) then
+    FLegalities := TCardLegalities.Create;
+  if not Assigned(FPrices) then
+    FPrices := TCardPrices.Create;
+  if not Assigned(FImageUris) then
+    FImageUris := TImageUris.Create;
+
+  if not Assigned(FGames) then
+    FGames := TList<string>.Create;
   FGames.Capacity := 3;
-  FCardFaces := TObjectList<TCardFace>.Create(True);
+
+  if not Assigned(FCardFaces) then
+    FCardFaces := TObjectList<TCardFace>.Create(True);
   FCardFaces.Capacity := 2;
-  FRelatedURIs := TRelatedURIs.Create;
-  FPurchaseURIs := TPurchaseURIs.Create;
+
+  if not Assigned(FRelatedURIs) then
+    FRelatedURIs := TRelatedURIs.Create;
+  if not Assigned(FPurchaseURIs) then
+    FPurchaseURIs := TPurchaseURIs.Create;
 end;
+
 
 destructor TCardDetails.Destroy;
 begin
-  FColorIdentity.Free;
-  FKeywords.Free;
-  FAllParts.Free;
-  FMeldDetails.Free;
-  FLegalities.Free;
-  FPrices.Free;
-  FImageUris.Free;
-  FGames.Free;
-  FCardFaces.Free;
-  FRelatedURIs.Free;
-  FPurchaseURIs.Free;
+  if Assigned(FColorIdentity) then FreeAndNil(FColorIdentity);
+  if Assigned(FKeywords) then FreeAndNil(FKeywords);
+  if Assigned(FAllParts) then FreeAndNil(FAllParts);
+  if Assigned(FGames) then FreeAndNil(FGames);
+  if Assigned(FCardFaces) then FreeAndNil(FCardFaces);
+  if Assigned(FMeldDetails) then FreeAndNil(FMeldDetails);
+  if Assigned(FLegalities) then FreeAndNil(FLegalities);
+  if Assigned(FPrices) then FreeAndNil(FPrices);
+  if Assigned(FImageUris) then FreeAndNil(FImageUris);
+  if Assigned(FRelatedURIs) then FreeAndNil(FRelatedURIs);
+  if Assigned(FPurchaseURIs) then FreeAndNil(FPurchaseURIs);
   inherited;
 end;
 
-procedure TCardPrices.Assign(Source: TCardPrices);
-begin
-  if Self = Source then
-    Exit;
-  USD := Source.USD;
-  USD_Foil := Source.USD_Foil;
-  EUR := Source.EUR;
-  Tix := Source.Tix;
-end;
 
-procedure TImageUris.Assign(Source: TImageUris);
-begin
-  if Self = Source then
-    Exit;
-  Small := Source.Small;
-  Normal := Source.Normal;
-  Large := Source.Large;
-  BackFace := Source.BackFace;
-  PNG := Source.PNG;
-  Border_crop := Source.Border_crop;
-  Art_crop := Source.Art_crop;
-end;
-
-procedure TCardLegalities.Assign(Source: TCardLegalities);
-var
-  Format: TLegalityFormat;
-begin
-  for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
-    FStatus[Format] := Source.FStatus[Format];
-end;
-
-procedure TCardPart.Assign(Source: TCardPart);
-begin
-  if Self = Source then
-    Exit;
-  ObjectType := Source.ObjectType;
-  ID := Source.ID;
-  Component := Source.Component;
-  Name := Source.Name;
-  TypeLine := Source.TypeLine;
-  URI := Source.URI;
-end;
-
-procedure TMeldDetails.Assign(Source: TMeldDetails);
-var
-  i: Integer;
-  NewPart: TCardPart;
-begin
-  if not Assigned(Source) then
-    Exit;
-
-  // Ensure FMeldParts exists.
-  if not Assigned(FMeldParts) then
-    FMeldParts := TObjectList<TCardPart>.Create(True)
-  else
-    FMeldParts.Clear;
-
-  // If the source has meld parts, copy them.
-  if Assigned(Source.MeldParts) then
-  begin
-    for i := 0 to Source.MeldParts.Count - 1 do
-    begin
-      NewPart := TCardPart.Create;
-      NewPart.Assign(Source.MeldParts[i]);
-      FMeldParts.Add(NewPart);
-    end;
-  end;
-
-  // Deep copy MeldResult (optional).
-  if Assigned(Source.MeldResult) then
-  begin
-    if Assigned(FMeldResult) then
-      FMeldResult.Assign(Source.MeldResult)
-    else
-    begin
-      FMeldResult := TCardPart.Create;
-      FMeldResult.Assign(Source.MeldResult);
-    end;
-  end
-  else
-  begin
-    if Assigned(FMeldResult) then
-    begin
-      FMeldResult.Free;
-      FMeldResult := nil;
-    end;
-  end;
-end;
 
 procedure TCardDetails.Assign(Source: TCardDetails);
 var
@@ -770,6 +391,15 @@ var
 begin
   if Self = Source then
     Exit;
+
+
+   // Free old objects
+  FreeAndNil(FMeldDetails);
+  FreeAndNil(FLegalities);
+  FreeAndNil(FPrices);
+  FreeAndNil(FImageUris);
+  FreeAndNil(FRelatedURIs);
+  FreeAndNil(FPurchaseURIs);
 
   // Copy primitive fields
   SFID := Source.SFID;
@@ -817,18 +447,18 @@ begin
   ScryfallOracleID := Source.ScryfallOracleID;
   IsMeld := Source.IsMeld;
 
-  // Deep copy TList<string> (manual copying)
+  // Deep copy TList<string>
   ColorIdentity.Clear;
-  for var S in Source.ColorIdentity do
-    ColorIdentity.Add(S);
+  for var s in Source.ColorIdentity do
+    ColorIdentity.Add(s);
 
   Keywords.Clear;
-  for var S in Source.Keywords do
-    Keywords.Add(S);
+  for var s in Source.Keywords do
+    Keywords.Add(s);
 
   Games.Clear;
-  for var S in Source.Games do
-    Games.Add(S);
+  for var s in Source.Games do
+    Games.Add(s);
 
   // Deep copy AllParts
   AllParts.Clear;
@@ -848,105 +478,29 @@ begin
     CardFaces.Add(NewFace);
   end;
 
-  // Deep copy objects safely
+
+  // Create new instances
+  FMeldDetails := TMeldDetails.Create;
+  FLegalities := TCardLegalities.Create;
+  FPrices := TCardPrices.Create;
+  FImageUris := TImageUris.Create;
+  FRelatedURIs := TRelatedURIs.Create;
+  FPurchaseURIs := TPurchaseURIs.Create;
+
+  // Assign values
   if Assigned(Source.MeldDetails) then
-  begin
-    if not Assigned(FMeldDetails) then
-      FMeldDetails := TMeldDetails.Create;
     FMeldDetails.Assign(Source.MeldDetails);
-  end
-  else
-    FreeAndNil(FMeldDetails);
-
   if Assigned(Source.Legalities) then
-  begin
-    if not Assigned(FLegalities) then
-      FLegalities := TCardLegalities.Create;
     FLegalities.Assign(Source.Legalities);
-  end
-  else
-    FreeAndNil(FLegalities);
-
   if Assigned(Source.Prices) then
-  begin
-    if not Assigned(FPrices) then
-      FPrices := TCardPrices.Create;
     FPrices.Assign(Source.Prices);
-  end
-  else
-    FreeAndNil(FPrices);
-
   if Assigned(Source.ImageUris) then
-  begin
-    if not Assigned(FImageUris) then
-      FImageUris := TImageUris.Create;
     FImageUris.Assign(Source.ImageUris);
-  end
-  else
-    FreeAndNil(FImageUris);
-
   if Assigned(Source.RelatedURIs) then
-  begin
-    if not Assigned(FRelatedURIs) then
-      FRelatedURIs := TRelatedURIs.Create;
     FRelatedURIs.Assign(Source.RelatedURIs);
-  end
-  else
-    FreeAndNil(FRelatedURIs);
-
   if Assigned(Source.PurchaseURIs) then
-  begin
-    if not Assigned(FPurchaseURIs) then
-      FPurchaseURIs := TPurchaseURIs.Create;
     FPurchaseURIs.Assign(Source.PurchaseURIs);
-  end
-  else
-    FreeAndNil(FPurchaseURIs);
 
-  // // Copy ImageData (dynamic array of bytes).
-  // ImageData := Copy(Source.ImageData, 0, Length(Source.ImageData));
-end;
-
-procedure TRelatedURIs.Assign(Source: TRelatedURIs);
-begin
-  if Self = Source then
-    Exit;
-  Gatherer := Source.Gatherer;
-  TcgplayerInfiniteArticles := Source.TcgplayerInfiniteArticles;
-  TcgplayerInfiniteDecks := Source.TcgplayerInfiniteDecks;
-  Edhrec := Source.Edhrec;
-end;
-
-procedure TPurchaseURIs.Assign(Source: TPurchaseURIs);
-begin
-  if Self = Source then
-    Exit;
-  Tcgplayer := Source.Tcgplayer;
-  Cardmarket := Source.Cardmarket;
-  Cardhoarder := Source.Cardhoarder;
-end;
-
-procedure TCardFace.Assign(Source: TCardFace);
-begin
-  if Self = Source then
-    Exit;
-  Name := Source.Name;
-  FlavorText := Source.FlavorText;
-  ManaCost := Source.ManaCost;
-  TypeLine := Source.TypeLine;
-  OracleText := Source.OracleText;
-  Power := Source.Power;
-  Toughness := Source.Toughness;
-  Loyalty := Source.Loyalty;
-  CMC := Source.CMC;
-  // Deep copy ImageUris:
-  if Assigned(FImageUris) then
-    FImageUris.Assign(Source.ImageUris)
-  else
-  begin
-    FImageUris := TImageUris.Create;
-    FImageUris.Assign(Source.ImageUris);
-  end;
 end;
 
 constructor TCardDetails.CreateFromCard(Source: TCardDetails);
@@ -966,7 +520,6 @@ begin
   FArenaID := 0;
   FEDHRank := 0;
   FTypeLine := '';
-  FColorIdentity.Clear;
   FManaCost := '';
   FOracleText := '';
   FFlavorText := '';
@@ -979,15 +532,8 @@ begin
   FBorderColor := '';
   FFrame := '';
   FSecurityStamp := '';
-  FKeywords.Clear;
-  FAllParts.Clear;
-  FIsMeld := False;
-  FMeldDetails.Clear;
-  FLegalities.Clear;
   FPrintsSearchUri := '';
   FRulingsUri := '';
-  FPrices.Clear;
-  FImageUris.Clear;
   SetLength(FImageData, 0);
   FSetCode := '';
   FSetName := '';
@@ -1003,335 +549,25 @@ begin
   FFullArt := False;
   FTextless := False;
   FStorySpotlight := False;
-  FGames.Clear;
-  FCardFaces.Clear;
   FScryfallURI := '';
   FURI := '';
-  FRelatedURIs.Clear;
-  FPurchaseURIs.Clear;
   FScryfallCardBackID := '';
   FScryfallID := '';
   FScryfallIllustrationID := '';
   FScryfallOracleID := '';
+  if Assigned(FColorIdentity) then FColorIdentity.Clear;
+  if Assigned(FKeywords) then FKeywords.Clear;
+  if Assigned(FAllParts) then FAllParts.Clear;
+  if Assigned(FGames) then FGames.Clear;
+  if Assigned(FCardFaces) then FCardFaces.Clear;
+
+  if Assigned(FMeldDetails) then FMeldDetails.Clear;
+  if Assigned(FLegalities) then FLegalities.Clear;
+  if Assigned(FPrices) then FPrices.Clear;
+  if Assigned(FImageUris) then FImageUris.Clear;
+  if Assigned(FRelatedURIs) then FRelatedURIs.Clear;
+  if Assigned(FPurchaseURIs) then FPurchaseURIs.Clear;
+  FIsMeld := False;
 end;
-
-{ TRarityHelper }
-function TRarityHelper.ToString: string;
-begin
-  case Self of
-    rAll:
-      Result := '';
-    rCommon:
-      Result := 'Common';
-    rUncommon:
-      Result := 'Uncommon';
-    rRare:
-      Result := 'Rare';
-    rMythic:
-      Result := 'Mythic';
-    rSpecial:
-      Result := 'Special';
-    rBonus:
-      Result := 'Bonus';
-    rTimeshifted:
-      Result := 'Timeshifted';
-    rMasterpiece:
-      Result := 'Masterpiece';
-    rToken:
-      Result := 'Token';
-    // rDoubleFacedToken:
-    // Result := 'Double_faced_token';
-    // rDraft:
-    // Result := 'Draft';
-    // rPlaneshifted:
-    // Result := 'Planeshifted';
-    // rUnique:
-    // Result := 'Unique';
-    rBasic:
-      Result := 'Basic';
-    rPromo:
-      Result := 'Promo';
-  else
-    Result := '';
-  end;
-end;
-
-class function TRarityHelper.FromString(const Value: string): TRarity;
-var
-  R: TRarity;
-begin
-  for R := Low(TRarity) to High(TRarity) do
-    if SameText(Value, R.ToString) then
-      Exit(R);
-  raise Exception.CreateFmt('Invalid rarity string: "%s"', [Value]);
-end;
-
-{ TLegalityFormatHelper }
-function TLegalityFormatHelper.ToString: string;
-begin
-  case Self of
-    lfStandard:
-      Result := 'standard';
-    lfFuture:
-      Result := 'future';
-    lfHistoric:
-      Result := 'historic';
-    lfGladiator:
-      Result := 'gladiator';
-    lfPioneer:
-      Result := 'pioneer';
-    lfExplorer:
-      Result := 'explorer';
-    lfModern:
-      Result := 'modern';
-    lfLegacy:
-      Result := 'legacy';
-    lfPauper:
-      Result := 'pauper';
-    lfVintage:
-      Result := 'vintage';
-    lfPenny:
-      Result := 'penny';
-    lfCommander:
-      Result := 'commander';
-    lfAlchemy:
-      Result := 'alchemy';
-    lfBrawl:
-      Result := 'brawl';
-    lfPauperCommander:
-      Result := 'paupercommander';
-    lfDuel:
-      Result := 'duel';
-    lfOldschool:
-      Result := 'oldschool';
-    lfPremodern:
-      Result := 'premodern';
-    lfOathbreaker:
-      Result := 'oathbreaker';
-  else
-    Result := '';
-  end;
-end;
-
-class function TLegalityFormatHelper.FromString(const Value: string)
-  : TLegalityFormat;
-var
-  L: TLegalityFormat;
-begin
-  for L := Low(TLegalityFormat) to High(TLegalityFormat) do
-    if SameText(Value, L.ToString) then
-      Exit(L);
-  raise Exception.CreateFmt('Unknown legality format: %s', [Value]);
-end;
-
-function TImageUris.ToJSON: string;
-var
-  JSON: TJsonObject;
-begin
-  JSON := TJsonObject.Create;
-  try
-    JSON.S[FieldSmall] := Self.Small;
-    JSON.S[FieldNormal] := Self.Normal;
-    JSON.S[FieldLarge] := Self.Large;
-    JSON.S[FieldBackFace] := Self.BackFace;
-    JSON.S[FieldPng] := Self.PNG;
-    JSON.S[FieldBorderCrop] := Self.Border_crop;
-    JSON.S[FieldArtCrop] := Self.Art_crop;
-    Result := JSON.ToJSON;
-  finally
-    JSON.Free;
-  end;
-end;
-
-function TCardPrices.ToJSON: string;
-var
-  JSON: TJsonObject;
-begin
-  JSON := TJsonObject.Create;
-  try
-    JSON.F[FieldUsd] := Self.USD;
-    JSON.F[FieldUsdFoil] := Self.USD_Foil;
-    JSON.F[FieldEur] := Self.EUR;
-    JSON.F[FieldTix] := Self.Tix;
-    Result := JSON.ToJSON;
-  finally
-    JSON.Free;
-  end;
-end;
-
-function TCardLegalities.ToJSON: string;
-var
-  JSON: TJsonObject;
-  Format: TLegalityFormat;
-begin
-  JSON := TJsonObject.Create;
-  try
-    for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
-      JSON.S[Format.ToString] := Self.GetStatus(Format);
-    Result := JSON.ToJSON;
-  finally
-    JSON.Free;
-  end;
-end;
-
-procedure TImageUris.FromJSON(const JSONStr: string);
-var
-  JSON: TJsonObject;
-begin
-  JSON := TJsonObject.Parse(JSONStr) as TJsonObject;
-  try
-    if Assigned(JSON) then
-    begin
-      Self.Small := GetSafeString(JSON, FieldSmall);
-      Self.Normal := GetSafeString(JSON, FieldNormal);
-      Self.Large := GetSafeString(JSON, FieldLarge);
-      Self.BackFace := GetSafeString(JSON, FieldBackFace);
-      Self.PNG := GetSafeString(JSON, FieldPng);
-      Self.Border_crop := GetSafeString(JSON, FieldBorderCrop);
-      Self.Art_crop := GetSafeString(JSON, FieldArtCrop);
-    end;
-  finally
-    JSON.Free;
-  end;
-end;
-
-procedure TCardPrices.FromJSON(const JSONStr: string);
-var
-  JSON: TJsonObject;
-begin
-  JSON := TJsonObject.Parse(JSONStr) as TJsonObject;
-  try
-    if Assigned(JSON) then
-    begin
-      Self.USD := GetSafeFloat(JSON, FieldUsd);
-      Self.USD_Foil := GetSafeFloat(JSON, FieldUsdFoil);
-      Self.EUR := GetSafeFloat(JSON, FieldEur);
-      Self.Tix := GetSafeFloat(JSON, FieldTix);
-    end;
-  finally
-    JSON.Free;
-  end;
-end;
-
-procedure TCardLegalities.FromJSON(const JSONStr: string);
-var
-  JSON: TJsonObject;
-  Format: TLegalityFormat;
-begin
-  JSON := TJsonObject.Parse(JSONStr) as TJsonObject;
-  try
-    if Assigned(JSON) then
-    begin
-      for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
-        if JSON.Contains(Format.ToString) then
-          Self.SetStatus(Format, GetSafeString(JSON, Format.ToString));
-    end;
-  finally
-    JSON.Free;
-  end;
-end;
-
-function TCardDetails.ToJSON: string;
-var
-  JSON: TJsonObject;
-  Arr: TJsonArray;
-  S: string;
-begin
-  JSON := TJsonObject.Create;
-  try
-    JSON.S[FieldID] := Self.SFID;
-    JSON.S[FieldOracleID] := Self.OracleID;
-    JSON.S[FieldName] := Self.CardName;
-    JSON.S[FieldSet] := Self.SetCode;
-    JSON.S[FieldSetName] := Self.SetName;
-    JSON.S[FieldRarity] := Self.Rarity.ToString;
-    JSON.S[FieldManaCost] := Self.ManaCost;
-    JSON.S[FieldTypeLine] := Self.TypeLine;
-    JSON.S[FieldOracleText] := Self.OracleText;
-    JSON.S[FieldFlavorText] := Self.FlavorText;
-    JSON.S[FieldPower] := Self.Power;
-    JSON.S[FieldToughness] := Self.Toughness;
-    JSON.S[FieldLoyalty] := Self.Loyalty;
-    JSON.S[FieldReleasedAt] := Self.ReleasedAt;
-
-
-    JSON.O[FieldImageUris] := TJsonObject.Parse(Self.ImageUris.ToJSON) as TJsonObject;
-    JSON.O[FieldPrices] := TJsonObject.Parse(Self.Prices.ToJSON) as TJsonObject;
-    JSON.O[FieldLegalities] := TJsonObject.Parse(Self.Legalities.ToJSON) as TJsonObject;
-
-
-    Arr := JSON.A[FieldKeywords];
-    for S in Self.Keywords do
-      Arr.Add(S);
-
-    Arr := JSON.A[FieldGames];
-    for S in Self.Games do
-      Arr.Add(S);
-
-
-    Result := JSON.ToJSON;
-  finally
-    JSON.Free;
-  end;
-end;
-
-
-procedure TCardDetails.FromJSON(const JSONStr: string);
-var
-  JSON: TJsonObject;
-  Arr: TJsonArray;
-  I: Integer;
-begin
-  JSON := TJsonObject.Parse(JSONStr) as TJsonObject;
-  try
-    if Assigned(JSON) then
-    begin
-      Self.SFID := GetSafeString(JSON, FieldID);
-      Self.OracleID := GetSafeString(JSON, FieldOracleID);
-      Self.CardName := GetSafeString(JSON, FieldName);
-      Self.SetCode := GetSafeString(JSON, FieldSet);
-      Self.SetName := GetSafeString(JSON, FieldSetName);
-      Self.Rarity := RarityFromString(GetSafeString(JSON, FieldRarity));
-      Self.ManaCost := GetSafeString(JSON, FieldManaCost);
-      Self.TypeLine := GetSafeString(JSON, FieldTypeLine);
-      Self.OracleText := GetSafeString(JSON, FieldOracleText);
-      Self.FlavorText := GetSafeString(JSON, FieldFlavorText);
-      Self.Power := GetSafeString(JSON, FieldPower);
-      Self.Toughness := GetSafeString(JSON, FieldToughness);
-      Self.Loyalty := GetSafeString(JSON, FieldLoyalty);
-      Self.ReleasedAt := GetSafeString(JSON, FieldReleasedAt);
-
-
-      if JSON.Contains(FieldImageUris) then
-        Self.ImageUris.FromJSON(JSON.O[FieldImageUris].ToJSON);
-
-      if JSON.Contains(FieldPrices) then
-        Self.Prices.FromJSON(JSON.O[FieldPrices].ToJSON);
-
-      if JSON.Contains(FieldLegalities) then
-        Self.Legalities.FromJSON(JSON.O[FieldLegalities].ToJSON);
-
-
-      Self.Keywords.Clear;
-      if JSON.Contains(FieldKeywords) then
-      begin
-        Arr := JSON.A[FieldKeywords];
-        for I := 0 to Arr.Count - 1 do
-          Self.Keywords.Add(Arr.S[I]);
-      end;
-
-      Self.Games.Clear;
-      if JSON.Contains(FieldGames) then
-      begin
-        Arr := JSON.A[FieldGames];
-        for I := 0 to Arr.Count - 1 do
-          Self.Games.Add(Arr.S[I]);
-      end;
-    end;
-  finally
-    JSON.Free;
-  end;
-end;
-
 
 end.

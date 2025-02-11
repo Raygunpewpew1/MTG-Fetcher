@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.NetEncoding, System.Classes,
   JsonDataObjects, SGlobalsX, Logger, APIConstants, CardDisplayHelpers,
-  System.Generics.Collections;
+  System.Generics.Collections,CardMetaData;
 
 type
   TWrapperHelper = class

@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
   System.RegularExpressions, System.Classes, FMX.Dialogs, SGlobalsX,
   FMX.Graphics, System.Net.HttpClient, FMX.StdCtrls, FMX.ListView.Appearances,
-  FMX.ListView, JsonDataObjects, Logger,System.Notification;
+  FMX.ListView, JsonDataObjects, Logger,System.Notification,CardMetaData;
 
 procedure CopyDatabaseToInternalStorage;
 

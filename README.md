@@ -6,7 +6,7 @@
 
 ---
 
-## Features
+## **Features**
 
 - **Card Search**:
   - Search cards by name, set, rarity, or color.
@@ -24,39 +24,55 @@
 
 ---
 
-## Screenshots
+## **Screenshots**
 
 ![Screenshot of the application](Screenshots/Screenshot1.png)
 ![Screenshot of the application](Screenshots/Screenshot2.png)
 
 ---
 
-## Getting Started
+## **Getting Started**
 
-### Prerequisites
+### **Prerequisites**
 To run or contribute to MTG Fetcher, you’ll need:
 - **Delphi 12+** (Community Edition or higher).
 - A basic understanding of Delphi programming (optional for non-developers).
 - Internet connection for API requests.
 
-### Setup Instructions
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/Raygunpewpew1/MTG-Fetcher.git
-   ```
-2. **Install Required Libraries**:
-   - Make sure you have the [`JsonDataObjects`](https://github.com/ahausladen/JsonDataObjects) library installed in your Delphi IDE.
+---
 
-3. **Configure the Project**:
-   - Open the project in Delphi.
-   - Ensure all necessary paths and libraries are correctly set up.
+## **Setup Instructions**
 
-4. **Run the Application**:
-   - Compile and execute the project on Windows.
+### **1. Clone the Repository**  
+```bash
+git clone https://github.com/Raygunpewpew1/MTG-Fetcher.git
+```
+
+### **2. Install Required Libraries**
+- [`JsonDataObjects`](https://github.com/ahausladen/JsonDataObjects) (Install via GetIt).  
+
+### **3. Install WebView2 SDK (Required for UI Rendering)**
+- Open Delphi and go to **Tools > GetIt Package Manager**.  
+- Search for **WebView2 SDK** and install it.  
+- This ensures you have the correct `WebView2Loader.dll` that **Delphi’s WebView2 component requires**.
+
+### **4. Configure the Project**
+- Open the project in Delphi.
+- Ensure all necessary paths and libraries are correctly set up.
+
+### **5. Verify WebView2Loader.dll Deployment**
+The correct `WebView2Loader.dll` must be included in your project's output folder (`Win64\Debug\` or `Win64\Release\`).  
+
+- If missing, manually copy it from:  
+  ```
+  C:\Users\yourusername\Documents\Embarcadero\Studio\23.0\CatalogRepository\EdgeView2SDK-*\Bin\x64\WebView2Loader.dll
+  ```
+### **6. Run the Application**
+- Compile and execute the project on Windows.
 
 ---
 
-## How to Use
+## **How to Use**
 
 1. Launch the app and enter your search query (e.g., card name, set code).
 2. Apply filters for rarity, color, or other attributes to refine results.
@@ -64,7 +80,7 @@ To run or contribute to MTG Fetcher, you’ll need:
 
 ---
 
-## Contributing
+## **Contributing**
 
 Contributions are welcome! Here’s how you can help:
 
@@ -73,7 +89,7 @@ Contributions are welcome! Here’s how you can help:
 - **Code Contributions**: Fork the repository, make your changes, and submit a pull request.
 - **Help with Documentation**: Improve setup instructions, add examples, or clarify usage.
 
-### Looking for Help With:
+### **Looking for Help With:**
 - Improving the user interface (e.g., better card layouts, animations).
 - Adding new features like deck building or offline caching.
 - Optimizing performance and API integration.
@@ -81,20 +97,26 @@ Contributions are welcome! Here’s how you can help:
 
 ---
 
-## Acknowledgments
+## **Acknowledgments**
 
 - Card data and images are fetched using the [Scryfall API](https://scryfall.com/docs/api).
 - Magic: The Gathering is a trademark of **Wizards of the Coast**. This project is not affiliated with or endorsed by Wizards of the Coast.
 
 ---
 
-## License
+## **Why WebView2Loader.dll from GetIt Is Required**
+- The WebView2Loader.dll from the **GetIt SDK** is required because **Delphi's WebView2 implementation is tied to that version**.
+- Using a system-installed WebView2Loader.dll **may cause crashes or incompatibility issues**.
+- This ensures that all contributors use the correct DLL version.
+
+---
+
+## **License**
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ---
 
-## Contact
+## **Contact**
 
 Have questions or suggestions? Feel free to reach out or open an issue. Every bit of help is appreciated!
-

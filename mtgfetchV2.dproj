@@ -269,10 +269,11 @@
         <DCCReference Include="Logger.pas"/>
         <DCCReference Include="Template.pas"/>
         <DCCReference Include="CardDisplayManager.pas"/>
-        <DCCReference Include="ScryfallTypes.pas"/>
+        <DCCReference Include="ScryfallFilterType.pas"/>
         <DCCReference Include="ScryfallQuery.pas"/>
         <DCCReference Include="SGlobalsX.pas"/>
         <DCCReference Include="ISmellToast.pas"/>
+        <DCCReference Include="CardMetaData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -294,8 +295,6 @@
                     <Source Name="MainSource">mtgfetchV2.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgDXE15.bpl">TMS VCL UI Pack</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgExDXE15.bpl">TMS VCL UI Pack Extra</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgDEDXE15.bpl">TMS VCL UI Pack design time support</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgXlsDXE15.bpl">TMS TAdvStringGrid Excel support</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgWizDXE15.bpl">TMS VCL UI Pack Wizards</Excluded_Packages>
@@ -824,17 +823,27 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png" Configuration="Debug" Class="UWP_DelphiLogo150">
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png" Configuration="Debug" Class="File">
                     <Platform Name="Win64">
-                        <RemoteDir>Assets\</RemoteDir>
-                        <RemoteName>Logo150x150.png</RemoteName>
+                        <RemoteDir>Assest\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png" Configuration="Debug" Class="UWP_DelphiLogo44">
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png" Configuration="Release" Class="File">
                     <Platform Name="Win64">
-                        <RemoteDir>Assets\</RemoteDir>
-                        <RemoteName>Logo44x44.png</RemoteName>
+                        <RemoteDir>Assest\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png" Configuration="Debug" Class="File">
+                    <Platform Name="Win64">
+                        <RemoteDir>Assest\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png" Configuration="Release" Class="File">
+                    <Platform Name="Win64">
+                        <RemoteDir>Assest\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1264,18 +1273,6 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="WebView2Loader.dll" Configuration="Debug" Class="File">
-                    <Platform Name="Win64">
-                        <RemoteName>WebView2Loader.dll</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="WebView2Loader.dll" Configuration="Release" Class="File">
-                    <Platform Name="Win64">
-                        <RemoteName>WebView2Loader.dll</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="Win32\Debug\mtgfetchV2.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>mtgfetchV2.exe</RemoteName>
@@ -1291,12 +1288,6 @@
                 <DeployFile LocalName="Win64\Debug\mtgfetchV2.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>mtgfetchV2.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win64\Debug\mtgfetchV2.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win64">
-                        <RemoteName>mtgfetchV2.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
