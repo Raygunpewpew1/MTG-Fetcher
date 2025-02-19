@@ -184,7 +184,7 @@ begin
 
 //  ReportMemoryLeaksOnShutdown := True;
 
-  DataModule1.SetupDatabase('checker');
+  DataModule1.SetupDatabase('MTGSCards.db');
 end;
 
 

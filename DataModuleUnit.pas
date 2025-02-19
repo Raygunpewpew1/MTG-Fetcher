@@ -38,20 +38,30 @@ implementation
 { TDataModule1 }
 
 procedure TDataModule1.SetupDatabase(const DBPath: string);
+var
+SQLString: string;
 begin
   FDConnection1.Connected := False;
   FDConnection1.Params.DriverID := 'SQLite';
   FDConnection1.Params.Database := DBPath;
   FDConnection1.LoginPrompt := False;
   FDGUIxWaitCursor1.Provider := 'FMX';
-  // Just implanmenting the setup
-  // old code didnt work
+
+  SQLString := '''
+     CREATE TABLE IF NOT EXISTS CardDetails (
+     OracleID TEXT PRIMARY KEY,
+     Data TEXT  -- JSON data or other fields
+    );
+    ''';
+
   try
-
     try
-      FDConnection1.Connected := True;
-    finally
+    FDConnection1.Connected := True;
+    FDQuery1.Connection := FDConnection1;
+    FDQuery1.SQL.Text := SQLString;
 
+    finally
+     FDQuery1.ExecSQL;
     end;
   except
     on E: Exception do
@@ -74,6 +84,7 @@ begin
   UIDCard := MyCard.OracleID;
 
   NeonConfig := TNeonConfiguration.Default.SetMemberCase(TNeonCase.SnakeCase)
+
   // .SetMembers(TNeonMembers.Properties)
   // .SetIgnoreFieldPrefix(True)
   // .SetVisibility([ mvPublic])
@@ -87,12 +98,10 @@ begin
     LJSON.Free;
   end;
 
-  SQLString := '''
-    INSERT INTO CardDetails(OracleID, Data)VALUES(: OracleID, : Data)
+  SQLString := '''    INSERT INTO CardDetails(OracleID, Data)VALUES(:OracleID, :Data)
     ON CONFLICT(OracleID)
     DO UPDATE SET Data = excluded.Data;
-
-  ''';
+    ''';
 
   try
     FDQuery1.Connection := FDConnection1;
@@ -153,6 +162,12 @@ begin
     LJSON.Free;
   end;
 end;
+
+
+
+
+
+
 
 { var
   JSONString: string;
