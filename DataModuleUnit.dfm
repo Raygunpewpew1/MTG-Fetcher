@@ -16,4 +16,8 @@ object DataModule1: TDataModule1
     Left = 536
     Top = 584
   end
+  object FDPhysSQLiteDriverLink1: TFDPhysSQLiteDriverLink
+    Left = 792
+    Top = 640
+  end
 end

@@ -24,6 +24,8 @@ type
   public
     procedure Assign(Source: TCardPrices);
     procedure Clear;
+    destructor Destroy; override;
+    published
     property USD: Currency read FUSD write FUSD;
     property USD_Foil: Currency read FUSD_Foil write FUSD_Foil;
     property EUR: Currency read FEUR write FEUR;
@@ -43,6 +45,8 @@ type
   public
     procedure Assign(Source: TImageUris);
     procedure Clear;
+    destructor Destroy; override;
+    published
     property Small: string read FSmall write FSmall;
     property Normal: string read FNormal write FNormal;
     property Large: string read FLarge write FLarge;
@@ -57,10 +61,32 @@ type
     FStatus: array [TLegalityFormat] of string;
 
   public
+    destructor Destroy; override;
+  published
     procedure Assign(Source: TCardLegalities);
     procedure Clear;
     function GetStatus(Format: TLegalityFormat): string;
     procedure SetStatus(Format: TLegalityFormat; const StatusStr: string);
+    property Standard: string index Ord(lfStandard) read GetStatus write SetStatus;
+    property Future: string index Ord(lfFuture) read GetStatus write SetStatus;
+    property Historic: string index Ord(lfHistoric) read GetStatus write SetStatus;
+    property Gladiator: string index Ord(lfGladiator) read GetStatus write SetStatus;
+    property Pioneer: string index Ord(lfPioneer) read GetStatus write SetStatus;
+    property Explorer: string index Ord(lfExplorer) read GetStatus write SetStatus;
+    property Modern: string index Ord(lfModern) read GetStatus write SetStatus;
+    property Legacy: string index Ord(lfLegacy) read GetStatus write SetStatus;
+    property Pauper: string index Ord(lfPauper) read GetStatus write SetStatus;
+    property Vintage: string index Ord(lfVintage) read GetStatus write SetStatus;
+    property Penny: string index Ord(lfPenny) read GetStatus write SetStatus;
+    property Commander: string index Ord(lfCommander) read GetStatus write SetStatus;
+    property Alchemy: string index Ord(lfAlchemy) read GetStatus write SetStatus;
+    property Brawl: string index Ord(lfBrawl) read GetStatus write SetStatus;
+    property PauperCommander: string index Ord(lfPauperCommander) read GetStatus write SetStatus;
+    property Duel: string index Ord(lfDuel) read GetStatus write SetStatus;
+    property Oldschool: string index Ord(lfOldschool) read GetStatus write SetStatus;
+    property Premodern: string index Ord(lfPremodern) read GetStatus write SetStatus;
+    property Oathbreaker: string index Ord(lfOathbreaker) read GetStatus write SetStatus;
+
   end;
 
   TCardFace = class
@@ -81,6 +107,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
+    published
     property Name: string read FName write FName;
     property FlavorText: string read FFlavorText write FFlavorText;
     property ManaCost: string read FManaCost write FManaCost;
@@ -105,6 +132,7 @@ type
   public
     procedure Assign(Source: TCardPart);
     procedure Clear;
+    published
     property ObjectType: string read FObjectType write FObjectType;
     property ID: string read FID write FID;
     property Component: string read FComponent write FComponent;
@@ -123,6 +151,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
+    published
     property MeldParts: TObjectList<TCardPart> read FMeldParts;
     property MeldResult: TCardPart read FMeldResult write FMeldResult;
   end;
@@ -137,6 +166,8 @@ type
   public
     procedure Assign(Source: TRelatedURIs);
     procedure Clear;
+    destructor Destroy; override;
+    published
     property Gatherer: string read FGatherer write FGatherer;
     property TcgplayerInfiniteArticles: string read FTcgplayerInfiniteArticles
       write FTcgplayerInfiniteArticles;
@@ -154,6 +185,8 @@ type
   public
     procedure Assign(Source: TPurchaseURIs);
     procedure Clear;
+    destructor Destroy; override;
+    published
     property Tcgplayer: string read FTcgplayer write FTcgplayer;
     property Cardmarket: string read FCardmarket write FCardmarket;
     property Cardhoarder: string read FCardhoarder write FCardhoarder;
@@ -181,9 +214,10 @@ end;
 
 destructor TCardFace.Destroy;
 begin
-  FImageUris.Free;
+  FreeAndNil(FImageUris);
   inherited;
 end;
+
 
 { TMeldDetails }
 constructor TMeldDetails.Create;
@@ -194,10 +228,11 @@ end;
 
 destructor TMeldDetails.Destroy;
 begin
-  if Assigned(FMeldParts) then FreeAndNil(FMeldParts);
-  if Assigned(FMeldResult) then FreeAndNil(FMeldResult);
+  FreeAndNil(FMeldParts);
+  FreeAndNil(FMeldResult);
   inherited;
 end;
+
 
 
 procedure TCardPrices.Assign(Source: TCardPrices);
@@ -209,6 +244,34 @@ begin
   EUR := Source.EUR;
   Tix := Source.Tix;
 end;
+
+
+destructor TImageUris.Destroy;
+begin
+  inherited;
+end;
+
+destructor TRelatedURIs.Destroy;
+begin
+  inherited;
+end;
+
+destructor TPurchaseURIs.Destroy;
+begin
+  inherited;
+end;
+
+destructor TCardPrices.Destroy;
+begin
+  inherited;
+end;
+
+destructor TCardLegalities.Destroy;
+begin
+  inherited;
+end;
+
+
 
 procedure TImageUris.Assign(Source: TImageUris);
 begin
@@ -248,8 +311,7 @@ var
   i: Integer;
   NewPart: TCardPart;
 begin
-  if not Assigned(Source) then
-    Exit;
+  if not Assigned(Source) then Exit;
 
   // Ensure FMeldParts exists.
   if not Assigned(FMeldParts) then
@@ -257,7 +319,7 @@ begin
   else
     FMeldParts.Clear;
 
-  // If the source has meld parts, copy them.
+  // Copy meld parts
   if Assigned(Source.MeldParts) then
   begin
     for i := 0 to Source.MeldParts.Count - 1 do
@@ -268,22 +330,25 @@ begin
     end;
   end;
 
-  // Deep copy MeldResult
+  // Copy MeldResult
   if Assigned(Source.MeldResult) then
   begin
-  if not Assigned(FMeldResult) then
-    FMeldResult := TCardPart.Create;
-  FMeldResult.Assign(Source.MeldResult);
+    if not Assigned(FMeldResult) then
+      FMeldResult := TCardPart.Create;
+    FMeldResult.Assign(Source.MeldResult);
   end
-else
-  FreeAndNil(FMeldResult);
-
+  else
+  begin
+    FreeAndNil(FMeldResult);
+  end;
 end;
+
 
 procedure TCardFace.Assign(Source: TCardFace);
 begin
-  if Self = Source then
-    Exit;
+  if Self = Source then Exit;
+
+  // Copy primitive fields
   Name := Source.Name;
   FlavorText := Source.FlavorText;
   ManaCost := Source.ManaCost;
@@ -293,15 +358,21 @@ begin
   Toughness := Source.Toughness;
   Loyalty := Source.Loyalty;
   CMC := Source.CMC;
-  // Deep copy ImageUris:
+
+  // Deep copy ImageUris
   if Assigned(Source.ImageUris) then
   begin
-  FreeAndNil(FImageUris);
-  FImageUris := TImageUris.Create;
-  FImageUris.Assign(Source.ImageUris);
+    if not Assigned(FImageUris) then
+      FImageUris := TImageUris.Create;
+    FImageUris.Assign(Source.ImageUris);
+  end
+  else
+  begin
+    FreeAndNil(FImageUris);
   end;
-
 end;
+
+
 
 procedure TRelatedURIs.Assign(Source: TRelatedURIs);
 begin
@@ -344,9 +415,13 @@ end;
 
 { TCardLegalities }
 procedure TCardLegalities.Clear;
+var
+  Format: TLegalityFormat;
 begin
-  FillChar(FStatus, SizeOf(FStatus), 0);
+  for Format := Low(TLegalityFormat) to High(TLegalityFormat) do
+    FStatus[Format] := '';
 end;
+
 
 
 { TCardPart }

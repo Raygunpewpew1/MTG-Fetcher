@@ -271,7 +271,7 @@
         <DCCReference Include="CardDisplayManager.pas"/>
         <DCCReference Include="ScryfallFilterType.pas"/>
         <DCCReference Include="ScryfallQuery.pas"/>
-        <DCCReference Include="SGlobalsX.pas"/>
+        <DCCReference Include="CardMainData.pas"/>
         <DCCReference Include="ISmellToast.pas"/>
         <DCCReference Include="CardMetaData.pas"/>
         <BuildConfiguration Include="Base">
@@ -295,9 +295,6 @@
                     <Source Name="MainSource">mtgfetchV2.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgDEDXE15.bpl">TMS VCL UI Pack design time support</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgXlsDXE15.bpl">TMS TAdvStringGrid Excel support</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\raygu\AppData\Local\tmssoftware\academic\TMS VCL UI Pack RSXE15\Win32\TMSVCLUIPackPkgWizDXE15.bpl">TMS VCL UI Pack Wizards</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclIndyProtocols290.bpl">Indy 10 Protocols Design Time</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclsoapmidas290.bpl">Embarcadero SOAP Midas Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclsoapserver290.bpl">Embarcadero SOAP Server Components</Excluded_Packages>
@@ -1288,6 +1285,12 @@
                 <DeployFile LocalName="Win64\Debug\mtgfetchV2.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>mtgfetchV2.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win64\Debug\mtgfetchV2.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>mtgfetchV2.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

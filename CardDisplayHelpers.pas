@@ -3,7 +3,7 @@
 interface
 
 uses
-  System.Generics.Collections, System.SysUtils, SGlobalsX, System.StrUtils,
+  System.Generics.Collections, System.SysUtils, CardMainData, System.StrUtils,
   ScryfallData,CardMetaData;
 
 procedure AddCoreReplacements(Replacements: TDictionary<string, string>;
@@ -372,6 +372,11 @@ begin
     EncodeHTML(CardDetails.ArenaID.ToString));
   AddReplacement(Replacements, '{{BorderColor}}',
     EncodeHTML(CardDetails.BorderColor));
+
+   AddReplacement(Replacements, '{{EDHRank}}',
+    EncodeHTML(CardDetails.EDHRank.ToString));
+
+
   AddReplacement(Replacements, '{{ReleasedAt}}',
     EncodeHTML(CardDetails.ReleasedAt));
   AddReplacement(Replacements, '{{StorySpotlight}}',

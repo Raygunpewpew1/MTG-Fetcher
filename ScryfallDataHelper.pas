@@ -4,8 +4,11 @@ interface
 
 uses
   System.SysUtils, System.NetEncoding, System.Classes,
-  JsonDataObjects, SGlobalsX, Logger, APIConstants, CardDisplayHelpers,
-  System.Generics.Collections,CardMetaData;
+  JsonDataObjects, CardMainData, Logger, APIConstants, CardDisplayHelpers,
+  System.Generics.Collections,CardMetaData,System.SyncObjs;
+
+var
+  SetDetailsLock: TCriticalSection;
 
 type
   TWrapperHelper = class
@@ -31,6 +34,8 @@ type
       out SetDetails: TSetDetails);
     class procedure FillCardDetailsFromJson(const JsonObj: TJsonObject;
       out CardDetails: TCardDetails);
+    class procedure SFillSetDetailsFromJson(const JsonObj: TJsonObject;
+      out SetDetails: TSetDetails);
     class procedure ParsePurchaseURIs(const JsonObj: TJsonObject;
       out PurchaseURIs: TPurchaseURIs);
     // Helper Methods
@@ -321,7 +326,11 @@ end;
 class procedure TWrapperHelper.FillSetDetailsFromJson(const JsonObj
   : TJsonObject; out SetDetails: TSetDetails);
 begin
-  SetDetails.Clear;
+ if not Assigned(SetDetails) then
+  begin
+   // LogStuff('Creating new TSetDetails instance inside FillSetDetailsFromJson', DEBUG);
+    SetDetails := TSetDetails.Create;
+  end;
 
   SetDetails.SFID := GetSafeStringField(JsonObj, FieldID);
   SetDetails.Name := GetSafeStringField(JsonObj, FieldName);
@@ -343,6 +352,19 @@ begin
   SetDetails.URI := GetSafeStringField(JsonObj, FieldUri);
   SetDetails.SearchURI := GetSafeStringField(JsonObj, FieldSearchUri);
 end;
+
+
+class procedure TWrapperHelper.SFillSetDetailsFromJson(const JsonObj: TJsonObject;
+  out SetDetails: TSetDetails);
+begin
+  SetDetailsLock.Enter;
+  try
+    FillSetDetailsFromJson(JsonObj, SetDetails);
+  finally
+    SetDetailsLock.Leave;
+  end;
+end;
+
 
 class procedure TWrapperHelper.FillCardDetailsFromJson(const JsonObj
   : TJsonObject; out CardDetails: TCardDetails);
@@ -467,7 +489,10 @@ begin
     // TWrapperHelper.ParsePurchaseURIs(JsonObj, CardDetails.PurchaseURIs);
 
     // Parse "all_parts" field into a temporary dynamic array
-    ParseAllParts(JsonObj, AllParts);
+    AllParts := nil;
+    if JsonObj.Contains(FieldAllParts) and
+    (JsonObj.Types[FieldAllParts] = jdtArray) then
+      ParseAllParts(JsonObj, AllParts);
 
     // Process "all_parts" to set up meld details
     if Length(AllParts) > 0 then
@@ -520,5 +545,12 @@ begin
   else
     Rulings := [];
 end;
+
+initialization
+  SetDetailsLock := TCriticalSection.Create;
+
+finalization
+  SetDetailsLock.Free;
+
 
 end.

@@ -6,11 +6,12 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
   System.Generics.Collections, FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics,
   FMX.Dialogs, FMX.Layouts, FMX.ExtCtrls, FMX.Ani, FMX.Edit, FMX.StdCtrls,
-  FMX.WebBrowser, FMX.Skia, SGlobalsX, ScryfallData, System.TypInfo, Math,
+  FMX.WebBrowser, FMX.Skia, CardMainData, ScryfallData, System.TypInfo, Math,
   FMX.Controls.Presentation, FMX.ListView.Types,
   FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
   FMX.ListBox, MLogic, FMX.ComboEdit, CardDisplayManager, ScryfallQuery,
-  System.IOUtils, System.StrUtils, FMX.MultiView, FMX.Platform, CardMetaData;
+  System.IOUtils, System.StrUtils, FMX.MultiView, FMX.Platform, CardMetaData,
+  DataModuleUnit, ISmellToast;
 
 type
   TForm1 = class(TForm)
@@ -57,6 +58,7 @@ type
     BrIsLoaded: Boolean;
     AmOnline: Boolean;
     procedure OnSearchComplete(Success: Boolean; const ErrorMsg: string);
+    function GetSelectedRarity: TRarity;
 
   public
 
@@ -77,18 +79,40 @@ var
   FScryfallAPI: TScryfallAPI;
   FCardDisplayManager: TCardDisplayManager;
 
+function TForm1.GetSelectedRarity: TRarity;
+var
+  RarityStr: string;
+  RarityMap: TDictionary<string, TRarity>;
+begin
+  RarityStr := Trim(ComboBoxRarity.Text);
+
+  if AnsiSameText(RarityStr, S_ALL_RARITIES) then
+    Exit(rAll);
+
+  RarityMap := TDictionary<string, TRarity>.Create;
+  try
+    RarityMap.Add(LowerCase(S_MYTHIC_RARE), rMythic);
+    RarityMap.Add(LowerCase(S_RARE), rRare);
+    RarityMap.Add(LowerCase(S_UNCOMMON), rUncommon);
+    RarityMap.Add(LowerCase(S_COMMON), rCommon);
+    RarityMap.Add(LowerCase(S_SPECIAL), rSpecial);
+
+    if not RarityMap.TryGetValue(LowerCase(RarityStr), Result) then
+      raise Exception.Create('Invalid rarity selected.');
+  finally
+    RarityMap.Free;
+  end;
+end;
+
 procedure TForm1.FormCreate(Sender: TObject);
 var
   SetDetailsArray: TArray<TSetDetails>;
   ComboBoxMap: TDictionary<string, TComboBox>;
   CacheFileName: string;
 begin
-  // LoadingLayout.Visible := True;
-  // AniIndicator1.Enabled := True;
-
   try
     AmOnline := FScryfallAPI.IsInternetAvailable;
-    if AmOnline = False then
+    if not AmOnline then
     begin
       ShowMessage('Error checking internet connection, Shutting Down');
 {$IF DEFINED(MSWINDOWS) OR DEFINED(MACOS)}
@@ -97,7 +121,6 @@ begin
       Halt;
 {$ENDIF}
     end;
-
   except
     on E: Exception do
     begin
@@ -113,8 +136,7 @@ begin
   WebBrowserInitialized := False;
   FIsProgrammaticChange := False;
 
-  FCardDisplayManager := TCardDisplayManager.Create(ListViewCards, WebBrowser1,
-    FScryfallAPI);
+  FCardDisplayManager := TCardDisplayManager.Create(ListViewCards, WebBrowser1, FScryfallAPI);
 
   ComboBoxMap := TDictionary<string, TComboBox>.Create;
   try
@@ -132,17 +154,14 @@ begin
 
   if TFile.Exists(CacheFileName) then
   begin
-
     LogStuff('Loading set details from cache...');
     SetDetailsArray := LoadSetDetailsFromJson(CacheFileName);
   end
   else
   begin
-
     LogStuff('Fetching set details from Scryfall...');
     try
       SetDetailsArray := FScryfallAPI.GetAllSets;
-
       SaveSetDetailsToJson(CacheFileName, SetDetailsArray);
     except
       on E: Exception do
@@ -157,47 +176,53 @@ begin
     for var SetDetails in SetDetailsArray do
       ComboBoxSetCode.Items.Add(SetDetails.Code + ' - ' + SetDetails.Name);
   finally
-    ComboBoxSetCode.ItemIndex := 0;
-    ComboBoxRarity.ItemIndex := 0;
+    FreeSetDetailsArray(SetDetailsArray);
   end;
 
-  // AniIndicator1.Enabled := False;
-  // LoadingLayout.Visible := False;
-  // DelayTimer.Enabled := True;
+  ComboBoxSetCode.ItemIndex := 0;
+  ComboBoxRarity.ItemIndex := 0;
+
+//  ReportMemoryLeaksOnShutdown := True;
+
+  DataModule1.SetupDatabase('checker');
 end;
+
 
 procedure TForm1.OnSearchComplete(Success: Boolean; const ErrorMsg: string);
 var
   TotalPages: Integer;
-  FTotalCards: Integer;
 begin
+  // Hide loading UI
   LoadingLayout.Visible := False;
   AniIndicator1.Enabled := False;
-
   Button1.Enabled := True;
+
+  // Update pagination buttons
   ButtonNextPage.Enabled := FCardDisplayManager.HasMorePages;
   ButtonPrevPage.Enabled := FCardDisplayManager.CurrentPage > 1;
+
+  // Handle failure case
   if not Success then
-    ShowMessage('Search failed: ' + ErrorMsg)
-  else if ListViewCards.Items.Count = 0 then
-    ShowMessage('No cards found.')
-  else
+  begin
+    ShowMessage('Search failed: ' + ErrorMsg);
+    Exit;
+  end;
+
+  // Success
+  if ListViewCards.Items.Count > 0 then
   begin
     ListViewCards.SearchVisible := True;
     ListViewCards.ItemIndex := 0;
+
     // Calculate total pages
-
-     FTotalCards := FCardDisplayManager.TotalCards;
-     TotalPages := Ceil(FTotalCards / 175);
-
-
+    TotalPages := Ceil(FCardDisplayManager.TotalCards / 175);
 
     // Update page number display
     LabelPageNumber.Text := Format('Page %d of %d',
       [FCardDisplayManager.CurrentPage, TotalPages]);
+
     ListViewCards.OnItemClick(ListViewCards, ListViewCards.Items[0]);
   end;
-
 end;
 
 procedure TForm1.FormDestroy(Sender: TObject);
@@ -205,12 +230,6 @@ begin
   try
     if Assigned(ListViewCards) then
       ListViewCards.OnItemClick := nil;
-    // if Assigned(FScryfallAPI) then
-    // begin
-    // FScryfallAPI.Free;
-    // FScryfallAPI := nil;
-    // // ColorCheckBoxes.Free;
-    // end;
   except
     on E: Exception do
     begin
@@ -243,7 +262,6 @@ begin
           FCardDisplayManager.ShowCardDetails(TCardDetails(ListViewCards.Items
             [0].TagObject));
         end;
-
       end
       else
       begin
@@ -257,15 +275,17 @@ end;
 procedure TForm1.ListViewCardsButtonClick(const Sender: TObject;
 const AItem: TListItem; const AObject: TListItemSimpleControl);
 var
-  Rulings: TArray<TRuling>;
+  // Rulings: TArray<TRuling>;
   CardDetails: TCardDetails;
 begin
   if AItem.TagObject is TCardDetails then
   begin
     CardDetails := TCardDetails(AItem.TagObject);
-    Rulings := FCardDisplayManager.GetCardRulings(CardDetails.SFID);
-    FCardDisplayManager.DisplayCardInBrowser(CardDetails, Rulings);
-    // FCardDisplayManager.ShowCardDetails(CardDetails);
+    DataModule1.SaveCardJson(CardDetails);
+    ShowSkiaToast('Card ' + CardDetails.CardName + ' Saved', Self);
+    // Rulings := FCardDisplayManager.GetCardRulings(CardDetails.SFID);
+    // FCardDisplayManager.DisplayCardInBrowser(CardDetails, Rulings);
+    // // FCardDisplayManager.ShowCardDetails(CardDetails);
   end
   else
     ShowMessage('TagObject is not TCardDetails');
@@ -285,7 +305,7 @@ begin
   if AItem.TagObject is TCardDetails then
   begin
     CardDetails := TCardDetails(AItem.TagObject);
-  //  CardDetails.ToJSON;
+    // CardDetails.ToJSON;
     FCardDisplayManager.ShowCardDetails(CardDetails);
   end
   else
@@ -312,11 +332,11 @@ var
   SelectedSetCode: string;
   SelectedColors: string;
   UniqueMode: string;
-  SelectedName:string;
+  SelectedName: string;
 begin
   if ComboBoxEditSearch.Text.Trim.IsEmpty then
     Exit;
- // ShowSkiaToast('Starting Search',Self);
+  // ShowSkiaToast('Starting Search',Self);
 
   Button1.Enabled := False;
   MultiViewFilters.HideMaster;
@@ -324,31 +344,12 @@ begin
   LoadingLayout.Visible := True;
   AniIndicator1.Enabled := True;
 
-  SelectedRarity := rAll;
-  if ComboBoxRarity.Text <> S_ALL_RARITIES then
-  begin
-    if AnsiSameText(ComboBoxRarity.Text.Trim, S_MYTHIC_RARE) then
-      SelectedRarity := rMythic
-    else if AnsiSameText(ComboBoxRarity.Text.Trim, S_RARE) then
-      SelectedRarity := rRare
-    else if AnsiSameText(ComboBoxRarity.Text.Trim, S_UNCOMMON) then
-      SelectedRarity := rUncommon
-    else if AnsiSameText(ComboBoxRarity.Text.Trim, S_COMMON) then
-      SelectedRarity := rCommon
-    else if AnsiSameText(ComboBoxRarity.Text.Trim, S_SPECIAL) then
-      SelectedRarity := rSpecial
-    else
-      raise Exception.Create('Invalid rarity selected.');
-  end;
-
-
+  SelectedRarity := GetSelectedRarity;
   SelectedName := ComboBoxEditSearch.Text.Trim;
 
   Query := TScryfallQuery.Create;
   try
-
-    if (ComboBoxSetCode.Selected <> nil) and
-      (ComboBoxSetCode.Selected.Text <> S_ALL_SETS) then
+    if ComboBoxSetCode.Selected.Text <> S_ALL_SETS then
       SelectedSetCode := ComboBoxSetCode.Selected.Text.Split([S])[0]
     else
       SelectedSetCode := '';
@@ -359,8 +360,8 @@ begin
 
     Query.WithName(SelectedName).WithSet(SelectedSetCode)
       .WithRarity(SelectedRarity).WithColors(SelectedColors).Unique(UniqueMode)
-      .OrderBy('released').IncludeExtras(False);
-   //   .WithKeyword(ComboBoxAbility.Text);
+      .OrderBy(FieldReleased).IncludeExtras(False);
+    // .WithKeyword(ComboBoxAbility.Text);
 
     FCardDisplayManager.ExecuteQuery(Query, OnSearchComplete);
 

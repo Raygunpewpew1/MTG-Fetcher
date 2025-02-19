@@ -502,6 +502,7 @@ HtmlTemplate: string = '''
 
       <p><strong>Artist:</strong> {{Artist}}</p>
       <p><strong>Collector Number:</strong> {{CollectorNumber}}</p>
+      <p><strong>EDH Rank:</strong> {{EDHRank}}</p>
       <p><strong>Release Date:</strong> {{ReleasedAt}}</p>
       <p><strong>Arena ID:</strong> {{Arena Id}}</p>
       <p><strong>Border Color:</strong> {{BorderColor}}</p>

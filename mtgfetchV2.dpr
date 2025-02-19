@@ -17,7 +17,7 @@ uses
   CardDisplayManager in 'CardDisplayManager.pas',
   ScryfallFilterType in 'ScryfallFilterType.pas',
   ScryfallQuery in 'ScryfallQuery.pas',
-  SGlobalsX in 'SGlobalsX.pas',
+  CardMainData in 'CardMainData.pas',
   ISmellToast in 'ISmellToast.pas',
   CardMetaData in 'CardMetaData.pas';
 
@@ -25,6 +25,7 @@ uses
 
 begin
   GlobalUseSkia := True;
+//  ReportMemoryLeaksOnShutdown := True;
   Application.Initialize;
   Application.CreateForm(TDataModule1, DataModule1);
   Application.CreateForm(TForm1, Form1);

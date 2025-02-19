@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView, FMX.WebBrowser,
   ScryfallData, System.Threading, FMX.Dialogs, FMX.ListBox, CardDisplayHelpers,
-  Template, Logger, SGlobalsX, MLogic, APIConstants, ScryfallFilterType,
+  Template, Logger, CardMainData, MLogic, APIConstants, ScryfallFilterType,
   ScryfallQuery, System.SyncObjs, FMX.StdCtrls, FMX.Types, Math,CardMetaData;
 
 type
@@ -18,7 +18,7 @@ type
     FListView: TListView;
     FWebBrowser: TWebBrowser;
     FScryfallAPI: TScryfallAPI;
-    FCardDataList: TList<TCardDetails>;
+   // FCardDataList: TList<TCardDetails>;
     FOnProgressUpdate: TProc<Integer>;
     FCurrentPage: Integer;
     FHasMorePages: Boolean;
@@ -75,7 +75,7 @@ type
       write FOnProgressUpdate;
     property CurrentPage: Integer read FCurrentPage;
     property HasMorePages: Boolean read FHasMorePages;
-    property CardDataList: TList<TCardDetails> read FCardDataList;
+//    property CardDataList: TList<TCardDetails> read FCardDataList;
     property TotalCards: Integer read FTotalCards write FTotalCards;
   end;
 
@@ -85,12 +85,6 @@ uses
   ScryfallDataHelper;
 
 { TCardDisplayManager }
-
-// FCardDisplayManager.OnProgressUpdate := procedure(Progress: Integer)
-// begin
-
-// end;
-
 constructor TCardDisplayManager.Create(AListView: TListView;
   AWebBrowser: TWebBrowser; AScryfallAPI: TScryfallAPI);
 begin
@@ -98,7 +92,7 @@ begin
   FListView := AListView;
   FWebBrowser := AWebBrowser;
   FScryfallAPI := AScryfallAPI;
-  FCardDataList := TList<TCardDetails>.Create;
+//  FCardDataList := TList<TCardDetails>.Create;
   FCurrentPage := 1;
   FHasMorePages := False;
   FCurrentQuery := TScryfallQuery.Create;
@@ -109,7 +103,7 @@ end;
 
 destructor TCardDisplayManager.Destroy;
 begin
-  SafeFreeAndNil < TList < TCardDetails >> (FCardDataList);
+  //SafeFreeAndNil < TList < TCardDetails >> (FCardDataList);
   SafeFreeAndNil<TScryfallQuery>(FCurrentQuery);
   FCriticalSection.Free;
   FColorCheckBoxes.Free;
@@ -343,6 +337,7 @@ begin
         end;
       end);
   finally
+
     // Do NOT free ClonedQuery here since DisplayCardArtworks is still using it
   end;
 end;
@@ -395,7 +390,7 @@ end;
 procedure TCardDisplayManager.DisplayCardArtworks(const Query: TScryfallQuery;
 const OnComplete: TOnQueryComplete);
 begin
-  FCardDataList.Clear;
+//  FCardDataList.Clear;
   SetupDefaultFilters(Query);
 
   FScryfallAPI.SearchAllCardsAsync(Query,
@@ -419,7 +414,7 @@ begin
           try
             for var Card in Cards do
             begin
-              FCardDataList.Add(Card);
+           //   FCardDataList.Add(Card);
               AddCardToListView(Card);
             end;
           finally
@@ -452,8 +447,9 @@ begin
           procedure
           begin
             ClearListViewItems;
-            FCardDataList.Clear;
+       //     FCardDataList.Clear;
             AddCardToListView(RandomCard);
+            RandomCard.Free;
             OnComplete(True);
           end);
       except
@@ -494,7 +490,7 @@ begin
     try
       ListViewItem.Text := Card.CardName;
       ListViewItem.Detail := RareStr;
-      ListViewItem.ButtonText := 'Rulings';
+      ListViewItem.ButtonText := 'Save Card';
       ListViewItem.TagObject := CardDetailsObj; // Assign ownership to ListViewItem
     except
       FreeAndNil(ListViewItem);
@@ -531,37 +527,42 @@ begin
     Exit;
 
   CachedSets := LoadSetDetailsFromJson(GetCacheFilePath(SetCacheFile));
-  FoundInCache := False;
+  try
+    FoundInCache := False;
 
-  for var CachedSet in CachedSets do
-  begin
-    if CachedSet.Code = CardDetails.SetCode then
+    for var CachedSet in CachedSets do
     begin
-      SetDetails := CachedSet;
-      FoundInCache := True;
-      Break;
-    end;
-  end;
-
-  if FoundInCache then
-    HandleSetDetails(CardDetails, SetDetails)
-  else
-    TTask.Run(
-      procedure
+      if CachedSet.Code = CardDetails.SetCode then
       begin
-        try
-          SetDetails := FScryfallAPI.GetSetByCode(CardDetails.SetCode);
-          TThread.Synchronize(nil,
-            procedure
-            begin
-              HandleSetDetails(CardDetails, SetDetails);
-            end);
-        except
-          on E: Exception do
-            LogStuff('Failed to fetch set details: ' + E.Message, ERROR);
-        end;
-      end);
+        SetDetails := CachedSet;
+        FoundInCache := True;
+        Break;
+      end;
+    end;
+
+    if FoundInCache then
+      HandleSetDetails(CardDetails, SetDetails)
+    else
+      TTask.Run(
+        procedure
+        begin
+          try
+            SetDetails := FScryfallAPI.GetSetByCode(CardDetails.SetCode);
+            TThread.Synchronize(nil,
+              procedure
+              begin
+                HandleSetDetails(CardDetails, SetDetails);
+              end);
+          except
+            on E: Exception do
+              LogStuff('Failed to fetch set details: ' + E.Message, ERROR);
+          end;
+        end);
+  finally
+    FreeSetDetailsArray(CachedSets);
+  end;
 end;
+
 
 procedure TCardDisplayManager.DisplayCardInBrowser(const CardDetails
   : TCardDetails; const Rulings: TArray<TRuling>);
@@ -609,12 +610,13 @@ begin
     end);
 end;
 
-procedure TCardDisplayManager.LoadAllCatalogs(const ComboBoxes
-  : TDictionary<string, TComboBox>);
+procedure TCardDisplayManager.LoadAllCatalogs(const ComboBoxes: TDictionary<string, TComboBox>);
 var
   Catalogs: TDictionary<string, TScryfallCatalog>;
   FileName: string;
   CatalogName: string;
+  SortedList: TStringList;
+  Item: string;
 begin
   FileName := SCatalogsJson;
   Catalogs := TDictionary<string, TScryfallCatalog>.Create;
@@ -623,7 +625,7 @@ begin
 
     if Catalogs.Count = 0 then
     begin
-      Catalogs.Free; // Free the initially created dictionary.
+      Catalogs.Free;
       Catalogs := FScryfallAPI.FetchAllCatalogs;
       SaveCatalogsToFile(FileName, Catalogs);
     end;
@@ -632,17 +634,36 @@ begin
     begin
       if Catalogs.ContainsKey(CatalogName) then
       begin
-        ComboBoxes[CatalogName].Items.Clear;
-        ComboBoxes[CatalogName].Items.AddStrings(Catalogs[CatalogName].Data);
-        ComboBoxes[CatalogName].ItemIndex := 0;
+        SortedList := TStringList.Create;
+        try
+          for Item in Catalogs[CatalogName].Data do
+            SortedList.Add(Item);
+
+          SortedList.Sort; // Alphabetically sort the items
+
+          with ComboBoxes[CatalogName] do
+          begin
+            Items.BeginUpdate;
+            try
+              Items.Clear;
+              Items.Assign(SortedList); // Assign sorted items
+              ItemIndex := 0; // Ensure first item is selected
+            finally
+              Items.EndUpdate;
+            end;
+          end;
+        finally
+          SortedList.Free; // Free temporary sorted list
+        end;
       end
       else
-        LogStuff(Format('Catalog "%s" is missing from the fetched data.',
-          [CatalogName]), ERROR);
+        LogStuff(Format('Catalog "%s" is missing from the fetched data.', [CatalogName]), ERROR);
     end;
   finally
     Catalogs.Free;
   end;
 end;
+
+
 
 end.

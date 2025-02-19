@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.IOUtils, System.Generics.Collections,
-  System.RegularExpressions, System.Classes, FMX.Dialogs, SGlobalsX,
+  System.RegularExpressions, System.Classes, FMX.Dialogs, CardMainData,
   FMX.Graphics, System.Net.HttpClient, FMX.StdCtrls, FMX.ListView.Appearances,
   FMX.ListView, JsonDataObjects, Logger,System.Notification,CardMetaData;
 
@@ -45,6 +45,8 @@ procedure LoadSetIconCacheFromFile;
 function LoadSetDetailsFromJson(const FileName: string): TArray<TSetDetails>;
 
 procedure SaveSetDetailsToJson(const FileName: string; const SetDetailsArray: TArray<TSetDetails>);
+
+procedure FreeSetDetailsArray(var Arr: TArray<TSetDetails>);
 
 var
   SetIconCache: TDictionary<string, string>;
@@ -511,6 +513,16 @@ begin
     JsonObject.Free;
   end;
 end;
+
+procedure FreeSetDetailsArray(var Arr: TArray<TSetDetails>);
+var
+  I: Integer;
+begin
+  for I := Low(Arr) to High(Arr) do
+    Arr[I].Free;
+  SetLength(Arr, 0);
+end;
+
 
 initialization
   SetIconCache := TDictionary<string, string>.Create;

@@ -61,6 +61,7 @@ const
   FieldSource = 'source';
   FieldComment = 'comment';
   FieldEDHRank = 'edhrec_rank';
+  FieldEDHRSort = 'edhrec';
   FieldArena = 'arena_id';
   FieldData = 'data';
   FieldObject = 'object';
@@ -71,6 +72,7 @@ const
   FieldSymbol = 'symbol';
   FieldSVGUri = 'svg_uri';
   FieldColorIdentity = 'color_identity';
+  FieldColor = 'color';
   FieldID = 'id';
   FieldComponent = 'component';
   FieldName = 'name';
@@ -90,6 +92,7 @@ const
   FieldFlavorText = 'flavor_text';
   FieldLayout = 'layout';
   FieldLang = 'lang';
+  FieldReleased = 'released';
   FieldReleasedAt = 'released_at';
   FieldCMC = 'cmc';
   FieldReserved = 'reserved';

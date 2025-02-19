@@ -8,12 +8,11 @@ uses
   System.Generics.Collections,
   System.IOUtils,
   System.Net.HttpClient,
-  System.NetEncoding,
   JsonDataObjects,
   Logger,
   Template,
   MLogic,
-  APIConstants; // Ensure this unit contains necessary constants and functions
+  APIConstants;
 
 type
   TManaSymbolManager = class
@@ -61,9 +60,9 @@ type
     procedure PopulateSymbolCache;
   end;
 
-/// <summary>
-/// Replaces mana symbols in the given Oracle text with inlined SVG images.
-/// </summary>
+  /// <summary>
+  /// Replaces mana symbols in the given Oracle text with inlined SVG images.
+  /// </summary>
 function ReplaceManaSymbolsWithImages(const OracleText: string): string;
 
 implementation
@@ -86,7 +85,8 @@ begin
     SaveCacheToFile;
   except
     on E: Exception do
-      LogStuff('Error saving mana symbol cache during destruction: ' + E.Message, ERROR);
+      LogStuff('Error saving mana symbol cache during destruction: ' +
+        E.Message, ERROR);
   end;
   FSymbolCache.Free;
   inherited Destroy;
@@ -99,7 +99,8 @@ begin
     PopulateSymbolCache;
 end;
 
-function TManaSymbolManager.ReplaceManaSymbolsWithImages(const OracleText: string): string;
+function TManaSymbolManager.ReplaceManaSymbolsWithImages(const OracleText
+  : string): string;
 var
   Symbol, InlineSVG, RawSVG: string;
 begin
@@ -189,8 +190,8 @@ begin
       end;
     end
     else
-      raise Exception.CreateFmt(
-        'Failed to fetch symbols from Scryfall. HTTP status: %d. %s',
+      raise Exception.CreateFmt
+        ('Failed to fetch symbols from Scryfall. HTTP status: %d. %s',
         [Response.StatusCode, Response.StatusText]);
   finally
     HttpClient.Free;
@@ -209,8 +210,8 @@ begin
     if Response.StatusCode = 200 then
       Result := Response.ContentAsString(TEncoding.UTF8)
     else
-      LogStuff(Format(
-        'Failed to fetch SVG content from %s. HTTP status: %d. %s',
+      LogStuff(Format
+        ('Failed to fetch SVG content from %s. HTTP status: %d. %s',
         [SVG_URL, Response.StatusCode, Response.StatusText]), ERROR);
   finally
     HttpClient.Free;
@@ -248,8 +249,8 @@ begin
           CacheUpdated := True;
         end
         else
-          LogStuff(Format(
-            'No SVG content retrieved for mana symbol [%s] from URL [%s]',
+          LogStuff(Format
+            ('No SVG content retrieved for mana symbol [%s] from URL [%s]',
             [Symbol, SVGUrl]), WARNING);
       end;
     end;
@@ -270,13 +271,13 @@ begin
   Result := ManaSymbolManager.ReplaceManaSymbolsWithImages(OracleText);
 end;
 
-
 initialization
-  ManaSymbolManager := TManaSymbolManager.Create;
-  ManaSymbolManager.Initialize;
+
+ManaSymbolManager := TManaSymbolManager.Create;
+ManaSymbolManager.Initialize;
 
 finalization
-  ManaSymbolManager.Free;
+
+ManaSymbolManager.Free;
 
 end.
-

@@ -14,6 +14,7 @@ inherited Form1_Windows: TForm1_Windows
       Size.Width = 393.000000000000000000
       Size.Height = 576.000000000000000000
       ItemAppearanceObjects.ItemEditObjects.GlyphButton.Enabled = False
+      ItemAppearanceObjects.ItemEditObjects.GlyphButton.Visible = False
     end
     inherited WebBrowser1: TWebBrowser
       Size.Width = 479.000000000000000000

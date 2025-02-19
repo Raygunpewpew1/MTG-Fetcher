@@ -22,6 +22,10 @@ type
 
 { Paint the toast message using Skia }
 class procedure TToastHelper.PaintToast(Sender: TObject; const Canvas: ISkCanvas; const Dest: TRectF; const Opacity: Single);
+const
+  Padding = 10;       // Padding inside the rectangle
+  BaseFontSize = 15;  // Starting font size before scaling
+
 var
   Paint: ISkPaint;
   Font: ISkFont;
@@ -30,6 +34,7 @@ var
   TextBlob: ISkTextBlob;
   TextBounds: TRectF;
   BackgroundColor, TextColor: TAlphaColor;
+  ScaleFactor: Single;
 begin
   if not (Sender is TSkPaintBox) then Exit;
 
@@ -49,8 +54,9 @@ begin
   Canvas.DrawRoundRect(Dest, 20, 20, Paint);
 
   // Create and configure the font
-  Font := TSkFont.Create(nil, 22); // Set font size
+  Font := TSkFont.Create(nil, 15); // Set font size
   Font.Edging := TSkFontEdging.Antialias;
+
 
   // Set the text color
   Paint.Color := TextColor;
@@ -63,6 +69,19 @@ begin
 
 
   // Measure text using ISkFont.MeasureText
+  Font.MeasureText(AMessage, TextBounds, Paint);
+
+    if (TextBounds.Width > 0) and (TextBounds.Height > 0) then
+    ScaleFactor := Min((Dest.Width - 2 * Padding) / TextBounds.Width,
+                       (Dest.Height - 2 * Padding) / TextBounds.Height)
+  else
+    ScaleFactor := 1;
+
+
+   // Adjust the font size using the scale factor
+  Font.Size := BaseFontSize * ScaleFactor;
+
+  // Re-measure the text with the scaled font
   Font.MeasureText(AMessage, TextBounds, Paint);
 
   // Create text blob
@@ -195,7 +214,7 @@ begin
 
   // Timer to keep toast visible before fade-out
   HideTimer := TTimer.Create(AOwner);
-  HideTimer.Interval := ADuration; // ✅ Supports custom duration
+  HideTimer.Interval := ADuration; // Custom duration
   HideTimer.OnTimer := TToastHelper.HideToast;
   HideTimer.TagObject := ToastBox; // Store reference to toast for cleanup
   HideTimer.Enabled := True;

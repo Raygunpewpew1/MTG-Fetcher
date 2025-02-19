@@ -1,4 +1,4 @@
-unit SGlobalsX;
+unit CardMainData;
 
 interface
 
@@ -60,10 +60,10 @@ type
     FURI: string;
     FRelatedURIs: TRelatedURIs;
     FPurchaseURIs: TPurchaseURIs;
-    FScryfallCardBackID: string;
-    FScryfallID: string;
-    FScryfallIllustrationID: string;
-    FScryfallOracleID: string;
+//    FScryfallCardBackID: string;
+//    FScryfallID: string;
+//    FScryfallIllustrationID: string;
+//    FScryfallOracleID: string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -71,6 +71,7 @@ type
     procedure Assign(Source: TCardDetails);
     constructor CreateFromCard(Source: TCardDetails);
 
+published
     // Properties
     property SFID: string read FSFID write FSFID;
     property OracleID: string read FOracleID write FOracleID;
@@ -127,13 +128,13 @@ type
     property URI: string read FURI write FURI;
     property RelatedURIs: TRelatedURIs read FRelatedURIs write FRelatedURIs;
     property PurchaseURIs: TPurchaseURIs read FPurchaseURIs write FPurchaseURIs;
-    property ScryfallCardBackID: string read FScryfallCardBackID
-      write FScryfallCardBackID;
-    property ScryfallID: string read FScryfallID write FScryfallID;
-    property ScryfallIllustrationID: string read FScryfallIllustrationID
-      write FScryfallIllustrationID;
-    property ScryfallOracleID: string read FScryfallOracleID
-      write FScryfallOracleID;
+//    property ScryfallCardBackID: string read FScryfallCardBackID
+//      write FScryfallCardBackID;
+//    property ScryfallID: string read FScryfallID write FScryfallID;
+//    property ScryfallIllustrationID: string read FScryfallIllustrationID
+//      write FScryfallIllustrationID;
+//    property ScryfallOracleID: string read FScryfallOracleID
+//      write FScryfallOracleID;
   end;
 
 type
@@ -154,8 +155,10 @@ type
     FScryfallURI: string;
     FURI: string;
     FSearchURI: string;
-  public
+
+    public
     procedure Clear;
+    published
     property SFID: string read FSFID write FSFID;
     property Code: string read FCode write FCode;
     property Name: string read FName write FName;
@@ -178,7 +181,7 @@ type
     FSource: string;
     FPublishedAt: string;
     FComment: string;
-  public
+  published
     procedure Clear;
     property Source: string read FSource write FSource;
     property PublishedAt: string read FPublishedAt write FPublishedAt;
@@ -193,6 +196,7 @@ type
     FUpdatedAt: string;
   public
     procedure Clear;
+  published
     property ID: string read FID write FID;
     property DataType: string read FDataType write FDataType;
     property DownloadURI: string read FDownloadURI write FDownloadURI;
@@ -206,6 +210,7 @@ type
     FSVGURI: string;
   public
     procedure Clear;
+  published
     property Symbol: string read FSymbol write FSymbol;
     property English: string read FEnglish write FEnglish;
     property SVGURI: string read FSVGURI write FSVGURI;
@@ -220,6 +225,7 @@ type
     FObjectType: string;
   public
     procedure Clear;
+    published
     property Name: string read FName write FName;
     property Data: TArray<string> read FData write FData;
     property TotalItems: Integer read FTotalItems write FTotalItems;
@@ -367,18 +373,19 @@ end;
 
 destructor TCardDetails.Destroy;
 begin
-  if Assigned(FColorIdentity) then FreeAndNil(FColorIdentity);
-  if Assigned(FKeywords) then FreeAndNil(FKeywords);
-  if Assigned(FAllParts) then FreeAndNil(FAllParts);
-  if Assigned(FGames) then FreeAndNil(FGames);
-  if Assigned(FCardFaces) then FreeAndNil(FCardFaces);
-  if Assigned(FMeldDetails) then FreeAndNil(FMeldDetails);
-  if Assigned(FLegalities) then FreeAndNil(FLegalities);
-  if Assigned(FPrices) then FreeAndNil(FPrices);
-  if Assigned(FImageUris) then FreeAndNil(FImageUris);
-  if Assigned(FRelatedURIs) then FreeAndNil(FRelatedURIs);
-  if Assigned(FPurchaseURIs) then FreeAndNil(FPurchaseURIs);
-  inherited;
+  FreeAndNil(FColorIdentity);
+  FreeAndNil(FKeywords);
+  FreeAndNil(FGames);
+  FreeAndNil(FAllParts);
+  FreeAndNil(FCardFaces);
+  FreeAndNil(FMeldDetails);
+  FreeAndNil(FLegalities);
+  FreeAndNil(FPrices);
+  FreeAndNil(FImageUris);
+  FreeAndNil(FRelatedURIs);
+  FreeAndNil(FPurchaseURIs);
+
+  inherited Destroy;
 end;
 
 
@@ -391,7 +398,6 @@ var
 begin
   if Self = Source then
     Exit;
-
 
    // Free old objects
   FreeAndNil(FMeldDetails);
@@ -441,10 +447,10 @@ begin
   StorySpotlight := Source.StorySpotlight;
   ScryfallURI := Source.ScryfallURI;
   URI := Source.URI;
-  ScryfallCardBackID := Source.ScryfallCardBackID;
-  ScryfallID := Source.ScryfallID;
-  ScryfallIllustrationID := Source.ScryfallIllustrationID;
-  ScryfallOracleID := Source.ScryfallOracleID;
+//  ScryfallCardBackID := Source.ScryfallCardBackID;
+//  ScryfallID := Source.ScryfallID;
+//  ScryfallIllustrationID := Source.ScryfallIllustrationID;
+//  ScryfallOracleID := Source.ScryfallOracleID;
   IsMeld := Source.IsMeld;
 
   // Deep copy TList<string>
@@ -479,27 +485,42 @@ begin
   end;
 
 
-  // Create new instances
-  FMeldDetails := TMeldDetails.Create;
-  FLegalities := TCardLegalities.Create;
-  FPrices := TCardPrices.Create;
-  FImageUris := TImageUris.Create;
-  FRelatedURIs := TRelatedURIs.Create;
-  FPurchaseURIs := TPurchaseURIs.Create;
-
-  // Assign values
+  // Create new instances only if Source has data
   if Assigned(Source.MeldDetails) then
+  begin
+    FMeldDetails := TMeldDetails.Create;
     FMeldDetails.Assign(Source.MeldDetails);
+  end;
+
   if Assigned(Source.Legalities) then
+  begin
+    FLegalities := TCardLegalities.Create;
     FLegalities.Assign(Source.Legalities);
+  end;
+
   if Assigned(Source.Prices) then
+  begin
+    FPrices := TCardPrices.Create;
     FPrices.Assign(Source.Prices);
+  end;
+
   if Assigned(Source.ImageUris) then
+  begin
+    FImageUris := TImageUris.Create;
     FImageUris.Assign(Source.ImageUris);
+  end;
+
   if Assigned(Source.RelatedURIs) then
+  begin
+    FRelatedURIs := TRelatedURIs.Create;
     FRelatedURIs.Assign(Source.RelatedURIs);
+  end;
+
   if Assigned(Source.PurchaseURIs) then
+  begin
+    FPurchaseURIs := TPurchaseURIs.Create;
     FPurchaseURIs.Assign(Source.PurchaseURIs);
+  end;
 
 end;
 
@@ -551,23 +572,22 @@ begin
   FStorySpotlight := False;
   FScryfallURI := '';
   FURI := '';
-  FScryfallCardBackID := '';
-  FScryfallID := '';
-  FScryfallIllustrationID := '';
-  FScryfallOracleID := '';
-  if Assigned(FColorIdentity) then FColorIdentity.Clear;
-  if Assigned(FKeywords) then FKeywords.Clear;
-  if Assigned(FAllParts) then FAllParts.Clear;
-  if Assigned(FGames) then FGames.Clear;
-  if Assigned(FCardFaces) then FCardFaces.Clear;
 
-  if Assigned(FMeldDetails) then FMeldDetails.Clear;
-  if Assigned(FLegalities) then FLegalities.Clear;
-  if Assigned(FPrices) then FPrices.Clear;
-  if Assigned(FImageUris) then FImageUris.Clear;
-  if Assigned(FRelatedURIs) then FRelatedURIs.Clear;
-  if Assigned(FPurchaseURIs) then FPurchaseURIs.Clear;
-  FIsMeld := False;
+  // **Clear existing lists instead of recreating them**
+  FColorIdentity.Clear;
+  FKeywords.Clear;
+  FAllParts.Clear;
+  FGames.Clear;
+  FCardFaces.Clear;
+
+  // **Free objects**
+  FreeAndNil(FMeldDetails);
+  FreeAndNil(FLegalities);
+  FreeAndNil(FPrices);
+  FreeAndNil(FImageUris);
+  FreeAndNil(FRelatedURIs);
+  FreeAndNil(FPurchaseURIs);
 end;
+
 
 end.

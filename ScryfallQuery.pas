@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
 
-  SGlobalsX, APIConstants, ScryfallFilterType, Logger, System.NetEncoding,
+  APIConstants, ScryfallFilterType, Logger, System.NetEncoding,
   System.Math, System.SyncObjs, System.StrUtils,CardMetaData;
 
 type
@@ -122,6 +122,23 @@ type
       : TScryfallQuery;
   end;
 
+ type
+  TSortField = (
+    sfName, sfSet, sfReleased, sfRarity, sfColor, sfUsd, sfTix, sfEur,
+    sfCMC, sfPower, sfEDHRSort, sfPenny, sfArtist
+  );
+
+  TSortDirection = (sdAuto, sdAsc, sdDesc);
+
+const
+  VALID_SORT_FIELDS: array[TSortField] of string = (
+    FieldName, FieldSet, FieldReleased, FieldRarity, FieldColor,
+    FieldUsd, FieldTix, FieldEur, FieldCMC, FieldPower,
+    FieldEDHRSort, FieldPenny, FieldArtist
+  );
+
+  SORT_DIRECTION_NAMES: array[TSortDirection] of string = ('auto', 'asc', 'desc');
+
 implementation
 
 { TScryfallQuery }
@@ -145,6 +162,33 @@ begin
   FFilters.Free;
   FFilters := nil;
   inherited;
+end;
+
+function GetSortField(const FieldName: string; out Field: TSortField): Boolean;
+var
+  SortField: TSortField;
+begin
+  for SortField := Low(TSortField) to High(TSortField) do
+    if SameText(FieldName, VALID_SORT_FIELDS[SortField]) then
+    begin
+      Field := SortField;
+      Exit(True);
+    end;
+  Result := False;
+end;
+
+
+function GetSortDirection(const Dir: string; out Direction: TSortDirection): Boolean;
+var
+  I: TSortDirection;
+begin
+  for I := Low(TSortDirection) to High(TSortDirection) do
+    if SameText(Dir, SORT_DIRECTION_NAMES[I]) then
+    begin
+      Direction := I;
+      Exit(True);
+    end;
+  Result := False;
 end;
 
 function TScryfallQuery.AddFilterIfNotEmpty(FilterType: TScryfallFilterType;
@@ -189,27 +233,6 @@ begin
   end;
 end;
 
-// function TScryfallQuery.ValidateFilters: Boolean;
-// begin
-// if not Assigned(FFilters) then
-// begin
-// LogStuff('Error: FFilters is nil in ValidateFilters. Initializing to an empty list.',
-// WARNING);
-// FFilters := TList<TScryfallFilter>.Create; // Initialize FFilters
-// end;
-//
-// // Further validation logic for filters
-// for var Filter in FFilters do
-// begin
-// if (Filter.Values = nil) or (Length(Filter.Values) = 0) then
-// begin
-// LogStuff('Error: A filter in FFilters has empty or nil Values.', ERROR);
-// Exit(False);
-// end;
-// end;
-//
-// Result := True; // Filters are valid
-// end;
 
 function TScryfallQuery.AreFiltersValid: Boolean;
 begin
@@ -410,12 +433,6 @@ end;
 
 
 
-
-// function TScryfallQuery.GetCacheKey: string;
-// begin
-// Result := TNetEncoding.Base64.Encode(BuildQuery);
-// end;
-
 procedure ValidateSortingOptions(const SortField, Direction: string);
 begin
   if not SortField.IsEmpty and not MatchStr(SortField,
@@ -547,20 +564,20 @@ function TScryfallQuery.WithColorIdentity(const Colors: string;
   ExactMatch: Boolean = False): TScryfallQuery;
 begin
   if ExactMatch then
-    Result := AddFilterIfNotEmpty(ftColorId, Colors, opExact)
+    Result := AddFilterIfNotEmpty(ftColorIdentity, Colors, opExact)
   else
-    Result := AddFilterIfNotEmpty(ftColorId, Colors);
+    Result := AddFilterIfNotEmpty(ftColorIdentity, Colors);
 end;
 
 function TScryfallQuery.WithType(const TypeLine: string): TScryfallQuery;
 begin
-  Result := AddFilter(ftType, TypeLine.ToLower);
+  Result := AddFilter(ftCardType, TypeLine.ToLower);
 end;
 
 function TScryfallQuery.WithCMC(const Value: Double;
   Operator: TScryfallOperator = opEquals): TScryfallQuery;
 begin
-  Result := AddFilter(ftCmc, FormatFloat('0.#', Value), Operator);
+  Result := AddFilter(ftManaValue, FormatFloat('0.#', Value), Operator);
 end;
 
 function TScryfallQuery.WithKeyword(const Keyword: string): TScryfallQuery;
@@ -601,36 +618,22 @@ end;
 
 function TScryfallQuery.OrderBy(const Field: string;
   const Direction: string = 'auto'): TScryfallQuery;
-const
-  VALID_SORT_FIELDS: array [0 .. 12] of string = ('name', 'set', 'released',
-    'rarity', 'color', 'usd', 'tix', 'eur', 'cmc', 'power', 'edhrec', 'penny',
-    'artist');
-  VALID_DIRECTIONS: array [0 .. 2] of string = ('auto', 'asc', 'desc');
+var
+  SortField: TSortField;
+  SortDir: TSortDirection;
 begin
-  // Ensure the Field parameter is not empty
-  if Field.Trim.IsEmpty then
-    raise Exception.Create('Sort field cannot be empty in OrderBy.');
+  if not GetSortField(Field, SortField) then
+    raise Exception.CreateFmt('Invalid sort field: "%s"', [Field]);
 
-  // Validate the sort Field (case-insensitive)
-  if not MatchText(Field.ToLower, VALID_SORT_FIELDS) then
-    raise Exception.CreateFmt('Invalid sort field "%s". Allowed fields are: %s',
-      [Field, String.Join(', ', VALID_SORT_FIELDS)]);
+  if not GetSortDirection(Direction, SortDir) then
+    raise Exception.CreateFmt('Invalid direction: "%s"', [Direction]);
 
-  // Validate the Direction parameter
-  if not MatchText(Direction.ToLower, VALID_DIRECTIONS) then
-    raise Exception.CreateFmt
-      ('Invalid direction "%s". Allowed directions are: auto, asc, desc.',
-      [Direction]);
+  FOptions.Sort := VALID_SORT_FIELDS[SortField];
+  FOptions.Direction := SORT_DIRECTION_NAMES[SortDir];
 
-  // Assign the validated options
-  FOptions.Sort := Field.ToLower;
-  FOptions.Direction := Direction.ToLower;
-
-  // Optional: Log the changes for debugging purposes
   LogStuff(Format('OrderBy set - Sort: %s, Direction: %s',
     [FOptions.Sort, FOptions.Direction]), DEBUG);
 
-  // Return the current instance for method chaining
   Result := Self;
 end;
 
@@ -695,7 +698,7 @@ class function TScryfallQueryHelper.CreateCollectorQuery(const SetCode,
   Number: string): TScryfallQuery;
 begin
   Result := TScryfallQuery.Create;
-  Result.WithSet(SetCode).AddFilter(ftCollector, Number);
+  Result.WithSet(SetCode).AddFilter(ftCollectorNumber, Number);
 end;
 
 class function TScryfallQueryHelper.CreateSetQuery(const SetCode: string;

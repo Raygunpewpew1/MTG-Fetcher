@@ -4,31 +4,31 @@ interface
 
 uses
   System.SysUtils, CardMetaData, Logger,
-  System.NetEncoding, SGlobalsX;
+  System.NetEncoding;
 
 type
   EScryfallFilterError = class(Exception);
 
-  TScryfallFilterType = (ftName, // name:
-    ftOracle, // o:
-    ftType, // t:
-    ftColor, // c:
-    ftColorId, // id:
-    ftSet, // s:
-    ftRarity, // r:
-    ftCmc, // cmc:
-    ftFormat, // f:
-    ftPrice, // various price filters
-    ftKeyword, // keyword:
-    ftArtist, // a:
-    ftPower, // pow:
-    ftToughness, // tou:
-    ftLegal, // legal:
-    ftBanned, // banned:
-    ftRestricted, // restricted:
-    ftBlock, // b:
-    ftCollector, // cn:
-    ftSet_Type // st:
+  TScryfallFilterType = (ftName, // Card name
+    ftOracleText, // Oracle text
+    ftCardType, // Type (e.g., Creature, Instant)
+    ftColor, // Card color (W, U, B, R, G)
+    ftColorIdentity, // Color Identity for Commander
+    ftSet, // Set Code
+    ftRarity, // Rarity (Common, Uncommon, etc.)
+    ftManaValue, // CMC (converted mana cost)
+    ftFormat, // Format legality (Standard, Modern, etc.)
+    ftPrice, // Price (USD, EUR, etc.)
+    ftKeyword, // Keyword abilities (Flying, Lifelink)
+    ftArtist, // Artist name
+    ftPower, // Power of a creature
+    ftToughness, // Toughness of a creature
+    ftLegality, // Legal in a specific format
+    ftBanned, // Banned in a format
+    ftRestricted, // Restricted in a format
+    ftBlock, // Block (e.g., Mirrodin, Kamigawa)
+    ftCollectorNumber, // Collector number of a card
+    ftSetType // Set type (e.g., Core, Expansion)
     );
 
   TScryfallOperator = (opEquals, // :
@@ -135,9 +135,8 @@ end;
 
 function MapRarityToString(Rarity: TRarity): string;
 begin
-  Result := Rarity.ToString;  // This calls the helper method.
+  Result := Rarity.ToString; // This calls the helper method.
 end;
-
 
 function EscapeQueryValue(const Value: string): string;
 var
@@ -175,7 +174,7 @@ begin
   if AValue.IsEmpty then
     raise EScryfallFilterError.Create('Filter value cannot be empty.');
 
-  if AType = ftColorId then
+  if AType = ftColorIdentity then
   begin
     for Ch in AValue.ToLower do
       if not CharInSet(Ch, ['w', 'u', 'b', 'r', 'g']) then
@@ -249,9 +248,10 @@ begin
   Result.Values := Copy(Values); // Creates a new array copy
 end;
 
+
 function TScryfallQueryOptions.Clone: TScryfallQueryOptions;
 begin
-  Result := Self; // Simple record assignment (no managed types to deep-copy)
+  Result := Self;
 end;
 
 { TScryfallQueryOptions }
