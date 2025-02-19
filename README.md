@@ -49,9 +49,7 @@ git clone https://github.com/Raygunpewpew1/MTG-Fetcher.git
 ```
 
 ### **2. Install Required Libraries**
-- [`JsonDataObjects`](https://github.com/ahausladen/JsonDataObjects)
-- [Neon](https://github.com/paolo-rossi/delphi-neon) - Testing this for the moment.
-
+- [`JsonDataObjects`](https://github.com/ahausladen/JsonDataObjects) (Install via GetIt).  
 
 ### **3. Install WebView2 SDK (Required for UI Rendering)**
 - Open Delphi and go to **Tools > GetIt Package Manager**.  
