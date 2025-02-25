@@ -1,6 +1,8 @@
 program mtgfetchV2;
 
 uses
+//  FastMM5,
+   System.SysUtils ,
   System.StartUpCopy,
   FMX.Forms,
   FMX.Skia,
@@ -24,8 +26,12 @@ uses
 {$R *.res}
 
 begin
+  ReportMemoryLeaksOnShutdown := True;
+ // FastMM_LogStateToFile(PWideChar(ExtractFilePath(ParamStr(0)) + 'FastMM_DetailedState.log'), nil, True);
+
+//  FastMM_LogToFileEvents := [mmetUnexpectedMemoryLeakDetail, mmetUnexpectedMemoryLeakSummary];
+//  FastMM_SetDebugModeStackTraceEntryCount(30);
   GlobalUseSkia := True;
-//  ReportMemoryLeaksOnShutdown := True;
   Application.Initialize;
   Application.CreateForm(TDataModule1, DataModule1);
   Application.CreateForm(TForm1, Form1);

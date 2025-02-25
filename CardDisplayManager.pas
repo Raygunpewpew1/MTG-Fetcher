@@ -7,7 +7,7 @@ uses
   FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView, FMX.WebBrowser,
   ScryfallData, System.Threading, FMX.Dialogs, FMX.ListBox, CardDisplayHelpers,
   Template, Logger, CardMainData, MLogic, APIConstants, ScryfallFilterType,
-  ScryfallQuery, System.SyncObjs, FMX.StdCtrls, FMX.Types, Math,CardMetaData;
+  ScryfallQuery, System.SyncObjs, FMX.StdCtrls, FMX.Types, Math, CardMetaData;
 
 type
   TOnQueryComplete = reference to procedure(Success: Boolean;
@@ -18,7 +18,7 @@ type
     FListView: TListView;
     FWebBrowser: TWebBrowser;
     FScryfallAPI: TScryfallAPI;
-   // FCardDataList: TList<TCardDetails>;
+    // FCardDataList: TList<TCardDetails>;
     FOnProgressUpdate: TProc<Integer>;
     FCurrentPage: Integer;
     FHasMorePages: Boolean;
@@ -27,6 +27,7 @@ type
     FListBoxColors: TListBox;
     FColorCheckBoxes: TObjectList<TCheckBox>;
     FTotalCards: Integer;
+    FCardDataList: TObjectList<TCardDetails>;
 
     procedure InitializeWebBrowser;
 
@@ -75,7 +76,7 @@ type
       write FOnProgressUpdate;
     property CurrentPage: Integer read FCurrentPage;
     property HasMorePages: Boolean read FHasMorePages;
-//    property CardDataList: TList<TCardDetails> read FCardDataList;
+    // property CardDataList: TList<TCardDetails> read FCardDataList;
     property TotalCards: Integer read FTotalCards write FTotalCards;
   end;
 
@@ -92,7 +93,8 @@ begin
   FListView := AListView;
   FWebBrowser := AWebBrowser;
   FScryfallAPI := AScryfallAPI;
-//  FCardDataList := TList<TCardDetails>.Create;
+  FCardDataList := TObjectList<TCardDetails>.Create(True);
+  // FCardDataList := TList<TCardDetails>.Create;
   FCurrentPage := 1;
   FHasMorePages := False;
   FCurrentQuery := TScryfallQuery.Create;
@@ -103,7 +105,8 @@ end;
 
 destructor TCardDisplayManager.Destroy;
 begin
-  //SafeFreeAndNil < TList < TCardDetails >> (FCardDataList);
+  FCardDataList.Free;
+  // SafeFreeAndNil < TList < TCardDetails >> (FCardDataList);
   SafeFreeAndNil<TScryfallQuery>(FCurrentQuery);
   FCriticalSection.Free;
   FColorCheckBoxes.Free;
@@ -248,30 +251,27 @@ end;
 procedure TCardDisplayManager.ClearListViewItems;
 var
   i: Integer;
-  Item: TListViewItem;
 begin
   if not Assigned(FListView) then Exit;
 
   for i := 0 to FListView.Items.Count - 1 do
-  begin
-    Item := FListView.Items[i];
-    if Assigned(Item.TagObject) then
-    begin
-      Item.TagObject.Free;
-      Item.TagObject := nil;
-    end;
-  end;
+    FListView.Items[i].TagObject := nil; // Break external references
 
   FListView.Items.Clear;
+  FCardDataList.Clear; // Now TObjectList can safely free objects
 end;
+
+
+
 
 procedure TCardDisplayManager.ExecuteQuery(const Query: TScryfallQuery;
   const OnComplete: TOnQueryComplete);
 begin
+  FWebBrowser.Navigate('about:blank');
   FCriticalSection.Enter;
   try
     // Clone and store the query
-    SafeFreeAndNil<TScryfallQuery>(FCurrentQuery);
+    FreeAndNil(FCurrentQuery);
     FCurrentQuery := Query.Clone;
     FCurrentPage := 1; // Reset pagination
     // LogStuff(Format('ExecuteQuery - After Cloning - Query State: %s',
@@ -310,40 +310,38 @@ var
 begin
   if not Assigned(FCurrentQuery) then
   begin
-    LogStuff('LoadNextPage: FCurrentQuery is nil.', ERROR);
     OnComplete(False, 'No current query to load next page.');
     Exit;
   end;
 
+  FWebBrowser.Navigate('about:blank');
   ClonedQuery := FCurrentQuery.Clone;
   try
     ClonedQuery.SetPage(FCurrentPage + 1);
-    // LogQueryState(ClonedQuery, 'LoadNextPage - Before DisplayCardArtworks');
 
     DisplayCardArtworks(ClonedQuery,
       procedure(Success: Boolean; const ErrorMsg: string)
       begin
-        if Success then
-        begin
-          Inc(FCurrentPage); // Only increment on success
-          LogStuff(Format('LoadNextPage: FCurrentPage incremented to %d.',
-            [FCurrentPage]), DEBUG);
-          OnComplete(True, '');
-        end
-        else
-        begin
-          LogStuff('LoadNextPage: Failed to load next page.', ERROR);
-          OnComplete(False, ErrorMsg);
+        try
+          if Success then
+          begin
+            Inc(FCurrentPage);
+            OnComplete(True, '');
+          end
+          else
+            OnComplete(False, ErrorMsg);
+        finally
+          ClonedQuery.Free; // Ensure it's freed
         end;
       end);
-  finally
-
-    // Do NOT free ClonedQuery here since DisplayCardArtworks is still using it
+  except
+    ClonedQuery.Free;
+    raise;
   end;
 end;
 
-procedure TCardDisplayManager.LoadPreviousPage(const OnComplete
-  : TOnQueryComplete);
+
+procedure TCardDisplayManager.LoadPreviousPage(const OnComplete: TOnQueryComplete);
 var
   ClonedQuery: TScryfallQuery;
 begin
@@ -361,6 +359,7 @@ begin
     Exit;
   end;
 
+  FWebBrowser.Navigate('about:blank');
   ClonedQuery := FCurrentQuery.Clone;
   try
     ClonedQuery.SetPage(FCurrentPage - 1); // Decrease the page number
@@ -368,37 +367,41 @@ begin
     DisplayCardArtworks(ClonedQuery,
       procedure(Success: Boolean; const ErrorMsg: string)
       begin
-        if Success then
-        begin
-          Dec(FCurrentPage); // Decrease the page counter only on success
-          LogStuff(Format('LoadPreviousPage: FCurrentPage decremented to %d.',
-            [FCurrentPage]), DEBUG);
-          OnComplete(True, '');
-        end
-        else
-        begin
-          LogStuff('LoadPreviousPage: Failed to load the previous page.',
-            ERROR);
-          OnComplete(False, ErrorMsg);
+        try
+          if Success then
+          begin
+            Dec(FCurrentPage); // Decrease the page counter only on success
+            LogStuff(Format('LoadPreviousPage: FCurrentPage decremented to %d.', [FCurrentPage]), DEBUG);
+            OnComplete(True, '');
+          end
+          else
+          begin
+            LogStuff('LoadPreviousPage: Failed to load the previous page.', ERROR);
+            OnComplete(False, ErrorMsg);
+          end;
+        finally
+          ClonedQuery.Free; // Same as LoadNextPage, free it
         end;
       end);
-  finally
-    // Do NOT free ClonedQuery here since DisplayCardArtworks is still using it
+  except
+    ClonedQuery.Free;
+    raise;
   end;
 end;
+
 
 procedure TCardDisplayManager.DisplayCardArtworks(const Query: TScryfallQuery;
 const OnComplete: TOnQueryComplete);
 begin
-//  FCardDataList.Clear;
+  // FCardDataList.Clear;
   SetupDefaultFilters(Query);
 
   FScryfallAPI.SearchAllCardsAsync(Query,
     procedure(Success: Boolean; Cards: TArray<TCardDetails>; HasMore: Boolean;
       TotalCards: Integer; ErrorMsg: string)
     begin
-//      var
-//        TotalPages: Integer;
+      // var
+      // TotalPages: Integer;
       TThread.Synchronize(nil,
         procedure
         begin
@@ -408,13 +411,13 @@ begin
             Exit;
           end;
 
-//          FTotalCards := TotalCards;
-//          TotalPages := Ceil(FTotalCards / 175);
-           FListView.BeginUpdate;
+          // FTotalCards := TotalCards;
+          // TotalPages := Ceil(FTotalCards / 175);
+          FListView.BeginUpdate;
           try
             for var Card in Cards do
             begin
-           //   FCardDataList.Add(Card);
+              // FCardDataList.Add(Card);
               AddCardToListView(Card);
             end;
           finally
@@ -447,7 +450,7 @@ begin
           procedure
           begin
             ClearListViewItems;
-       //     FCardDataList.Clear;
+            // FCardDataList.Clear;
             AddCardToListView(RandomCard);
             RandomCard.Free;
             OnComplete(True);
@@ -472,34 +475,19 @@ end;
 
 procedure TCardDisplayManager.AddCardToListView(const Card: TCardDetails);
 var
-  ListViewItem: TListViewItem;
   CardDetailsObj: TCardDetails;
-  RareStr: string;
 begin
-  if (not Assigned(FListView)) or Card.CardName.IsEmpty or Card.SFID.IsEmpty then
-  begin
-    LogStuff('Skipping invalid card.', ERROR);
-    Exit;
-  end;
+  if (not Assigned(FListView)) or Card.CardName.IsEmpty then Exit;
 
   CardDetailsObj := TCardDetails.Create;
-  try
-    RareStr := Card.Rarity.ToString;
-    CardDetailsObj.Assign(Card);
-    ListViewItem := FListView.Items.Add;
-    try
-      ListViewItem.Text := Card.CardName;
-      ListViewItem.Detail := RareStr;
-      ListViewItem.ButtonText := 'Save Card';
-      ListViewItem.TagObject := CardDetailsObj; // Assign ownership to ListViewItem
-    except
-      FreeAndNil(ListViewItem);
-      raise;
-    end;
-  except
-    FreeAndNil(CardDetailsObj);
-    raise;
-  end;
+  CardDetailsObj.Assign(Card);
+  FCardDataList.Add(CardDetailsObj); // Stores card and owns it
+
+  var ListViewItem := FListView.Items.Add;
+  ListViewItem.Text := Card.CardName;
+  ListViewItem.Detail := Card.Rarity.ToString;
+  ListViewItem.ButtonText := 'Save Card';
+  ListViewItem.TagObject := CardDetailsObj; // Just a reference, no ownership
 end;
 
 
@@ -548,21 +536,25 @@ begin
         begin
           try
             SetDetails := FScryfallAPI.GetSetByCode(CardDetails.SetCode);
-            TThread.Synchronize(nil,
-              procedure
-              begin
-                HandleSetDetails(CardDetails, SetDetails);
-              end);
+            try
+              TThread.Synchronize(nil,
+                procedure
+                begin
+                  HandleSetDetails(CardDetails, SetDetails);
+                end);
+            finally
+              SetDetails.Free;
+            end;
           except
             on E: Exception do
               LogStuff('Failed to fetch set details: ' + E.Message, ERROR);
           end;
         end);
+
   finally
     FreeSetDetailsArray(CachedSets);
   end;
 end;
-
 
 procedure TCardDisplayManager.DisplayCardInBrowser(const CardDetails
   : TCardDetails; const Rulings: TArray<TRuling>);
@@ -610,13 +602,15 @@ begin
     end);
 end;
 
-procedure TCardDisplayManager.LoadAllCatalogs(const ComboBoxes: TDictionary<string, TComboBox>);
+procedure TCardDisplayManager.LoadAllCatalogs(const ComboBoxes
+  : TDictionary<string, TComboBox>);
 var
   Catalogs: TDictionary<string, TScryfallCatalog>;
   FileName: string;
   CatalogName: string;
   SortedList: TStringList;
   Item: string;
+  Catalog: TScryfallCatalog;
 begin
   FileName := SCatalogsJson;
   Catalogs := TDictionary<string, TScryfallCatalog>.Create;
@@ -625,7 +619,8 @@ begin
 
     if Catalogs.Count = 0 then
     begin
-      Catalogs.Free;
+      for Catalog in Catalogs.Values do
+        Catalog.Free;
       Catalogs := FScryfallAPI.FetchAllCatalogs;
       SaveCatalogsToFile(FileName, Catalogs);
     end;
@@ -657,13 +652,14 @@ begin
         end;
       end
       else
-        LogStuff(Format('Catalog "%s" is missing from the fetched data.', [CatalogName]), ERROR);
+        LogStuff(Format('Catalog "%s" is missing from the fetched data.',
+          [CatalogName]), ERROR);
     end;
   finally
+    for Catalog in Catalogs.Values do
+      Catalog.Free;
     Catalogs.Free;
   end;
 end;
-
-
 
 end.

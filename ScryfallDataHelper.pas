@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.NetEncoding, System.Classes,
   JsonDataObjects, CardMainData, Logger, APIConstants, CardDisplayHelpers,
-  System.Generics.Collections,CardMetaData,System.SyncObjs;
+  System.Generics.Collections, CardMetaData, System.SyncObjs;
 
 var
   SetDetailsLock: TCriticalSection;
@@ -99,10 +99,14 @@ end;
 class function TWrapperHelper.GetUtf8String(const S: string): string;
 begin
 {$IF DEFINED(MSWINDOWS)}
-  Result := TEncoding.UTF8.GetString(TEncoding.ANSI.GetBytes(S));
+  if S <> '' then
+    Result := TEncoding.UTF8.GetString(BytesOf(S))
+  else
+    Result := '';
 {$ELSE}
   // On other platforms, assume UTF-8.
-  Result := S;
+  if S <> '' then
+    Result := S;
 {$ENDIF}
 end;
 
@@ -153,10 +157,15 @@ var
   I: Integer;
   PartObj: TJsonObject;
 begin
+
+  for I := Low(AllParts) to High(AllParts) do
+    FreeAndNil(AllParts[I]);
+
   if JsonObj.Contains(FieldAllParts) and
     (JsonObj.Types[FieldAllParts] = jdtArray) then
   begin
     PartsArray := JsonObj.A[FieldAllParts];
+    Finalize(AllParts);
     SetLength(AllParts, PartsArray.Count);
     for I := 0 to PartsArray.Count - 1 do
     begin
@@ -168,13 +177,19 @@ begin
         AllParts[I].ID := GetSafeStringField(PartObj, FieldID);
         AllParts[I].Component := GetSafeStringField(PartObj, FieldComponent);
         AllParts[I].Name := GetSafeStringField(PartObj, FieldName);
-        AllParts[I].TypeLine := GetUtf8String(GetSafeStringField(PartObj, FieldTypeLine));
+        AllParts[I].TypeLine :=
+          GetUtf8String(GetSafeStringField(PartObj, FieldTypeLine));
         AllParts[I].URI := GetSafeStringField(PartObj, FieldUri);
       end;
     end;
   end
   else
     SetLength(AllParts, 0);
+  for I := 0 to Length(AllParts) - 1 do
+    AllParts[I].Free;
+
+  SetLength(AllParts, 0);
+
 end;
 
 class procedure TWrapperHelper.ParseRelatedURIs(const JsonObj: TJsonObject;
@@ -299,7 +314,8 @@ begin
       if FacesArray.Types[I] = jdtObject then
       begin
         FaceObj := FacesArray.O[I];
-        CardFaces[I] := TCardFace.Create; // Allocate new instance
+        CardFaces[I] := TCardFace.Create;
+
         CardFaces[I].Name := GetSafeStringField(FaceObj, FieldName);
         CardFaces[I].ManaCost := GetSafeStringField(FaceObj, FieldManaCost);
         CardFaces[I].TypeLine :=
@@ -313,8 +329,13 @@ begin
         CardFaces[I].Loyalty := GetSafeStringField(FaceObj,
           FieldCardFaceLoyalty);
         CardFaces[I].CMC := FaceObj.F[FieldCMC];
+
+        // Handle ImageUris correctly
         TempImageUris := nil;
         ParseImageUris(FaceObj, TempImageUris);
+        if Assigned(CardFaces[I].ImageUris) then
+          FreeAndNil(CardFaces[I].ImageUris); // Free any existing instance
+
         CardFaces[I].ImageUris := TempImageUris;
       end;
     end;
@@ -326,9 +347,9 @@ end;
 class procedure TWrapperHelper.FillSetDetailsFromJson(const JsonObj
   : TJsonObject; out SetDetails: TSetDetails);
 begin
- if not Assigned(SetDetails) then
+  if not Assigned(SetDetails) then
   begin
-   // LogStuff('Creating new TSetDetails instance inside FillSetDetailsFromJson', DEBUG);
+    // LogStuff('Creating new TSetDetails instance inside FillSetDetailsFromJson', DEBUG);
     SetDetails := TSetDetails.Create;
   end;
 
@@ -353,18 +374,20 @@ begin
   SetDetails.SearchURI := GetSafeStringField(JsonObj, FieldSearchUri);
 end;
 
-
-class procedure TWrapperHelper.SFillSetDetailsFromJson(const JsonObj: TJsonObject;
-  out SetDetails: TSetDetails);
+class procedure TWrapperHelper.SFillSetDetailsFromJson(const JsonObj
+  : TJsonObject; out SetDetails: TSetDetails);
 begin
+  if Assigned(SetDetails) then
+    FreeAndNil(SetDetails);
+
   SetDetailsLock.Enter;
   try
+    SetDetails := TSetDetails.Create;
     FillSetDetailsFromJson(JsonObj, SetDetails);
   finally
     SetDetailsLock.Leave;
   end;
 end;
-
 
 class procedure TWrapperHelper.FillCardDetailsFromJson(const JsonObj
   : TJsonObject; out CardDetails: TCardDetails);
@@ -416,7 +439,8 @@ begin
 
     CardDetails.SetCode := GetSafeStringField(JsonObj, FieldSet);
     CardDetails.SetName := GetSafeStringField(JsonObj, FieldSetName);
-    CardDetails.Rarity := TRarity.FromString(GetSafeStringField(JsonObj, FieldRarity));
+    CardDetails.Rarity := TRarity.FromString(GetSafeStringField(JsonObj,
+      FieldRarity));
 
     CardDetails.Power := GetSafeStringField(JsonObj, FieldPower);
     CardDetails.Toughness := GetSafeStringField(JsonObj, FieldToughness);
@@ -459,30 +483,45 @@ begin
     CardDetails.ColorIdentity := TempColorID;
 
     // Nested objects
-    TempImageUris := CardDetails.ImageUris;
+    // ImageUris
+    if Assigned(CardDetails.ImageUris) then
+      FreeAndNil(CardDetails.ImageUris);
+    TempImageUris := nil;
     ParseImageUris(JsonObj, TempImageUris);
     CardDetails.ImageUris := TempImageUris;
 
-    TempLegalities := CardDetails.Legalities;
+    // Legalities
+    if Assigned(CardDetails.Legalities) then
+      FreeAndNil(CardDetails.Legalities);
+    TempLegalities := TCardLegalities.Create;
     ParseLegalities(JsonObj, TempLegalities);
     CardDetails.Legalities := TempLegalities;
 
-    TempPrices := CardDetails.Prices;
+    // Prices
+    if Assigned(CardDetails.Prices) then
+      FreeAndNil(CardDetails.Prices);
+    TempPrices := TCardPrices.Create;
     ParsePrices(JsonObj, TempPrices);
     CardDetails.Prices := TempPrices;
+
+    // RelatedURIs
+    if Assigned(CardDetails.RelatedURIs) then
+      FreeAndNil(CardDetails.RelatedURIs);
+    TempRelatedURIs := TRelatedURIs.Create;
+    ParseRelatedURIs(JsonObj, TempRelatedURIs);
+    CardDetails.RelatedURIs := TempRelatedURIs;
+
+    // PurchaseURIs
+    if Assigned(CardDetails.PurchaseURIs) then
+      FreeAndNil(CardDetails.PurchaseURIs);
+    TempPurchaseURIs := TPurchaseURIs.Create;
+    ParsePurchaseURIs(JsonObj, TempPurchaseURIs);
+    CardDetails.PurchaseURIs := TempPurchaseURIs;
 
     ParseCardFaces(JsonObj, TempCardFaces);
     CardDetails.CardFaces.Clear;
     for I := 0 to High(TempCardFaces) do
       CardDetails.CardFaces.Add(TempCardFaces[I]);
-
-    TempRelatedURIs := CardDetails.RelatedURIs;
-    ParseRelatedURIs(JsonObj, TempRelatedURIs);
-    CardDetails.RelatedURIs := TempRelatedURIs;
-
-    TempPurchaseURIs := CardDetails.PurchaseURIs;
-    ParsePurchaseURIs(JsonObj, TempPurchaseURIs);
-    CardDetails.PurchaseURIs := TempPurchaseURIs;
 
     // TWrapperHelper.ParseCardFaces(JsonObj, CardDetails.CardFaces);
     // TWrapperHelper.ParseRelatedURIs(JsonObj, CardDetails.RelatedURIs);
@@ -491,12 +530,14 @@ begin
     // Parse "all_parts" field into a temporary dynamic array
     AllParts := nil;
     if JsonObj.Contains(FieldAllParts) and
-    (JsonObj.Types[FieldAllParts] = jdtArray) then
+      (JsonObj.Types[FieldAllParts] = jdtArray) then
       ParseAllParts(JsonObj, AllParts);
 
     // Process "all_parts" to set up meld details
     if Length(AllParts) > 0 then
+
     begin
+      CardDetails.MeldDetails.MeldParts.Clear;
       for I := 0 to Length(AllParts) - 1 do
       begin
         Part := AllParts[I];
@@ -547,10 +588,11 @@ begin
 end;
 
 initialization
-  SetDetailsLock := TCriticalSection.Create;
+
+SetDetailsLock := TCriticalSection.Create;
 
 finalization
-  SetDetailsLock.Free;
 
+SetDetailsLock.Free;
 
 end.

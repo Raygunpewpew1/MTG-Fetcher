@@ -40,7 +40,7 @@ type
   TScryfallAPI = class
   private
 
-    FCache: TDictionary<string, TJsonObject>;
+//    FCache: TObjectDictionary<string, TJsonObject>;
     FCacheLock: TCriticalSection;
     FHttpClient: THTTPClient;
     FAutocompleteCache: TDictionary<string, TArray<string>>;
@@ -79,10 +79,10 @@ type
     /// <summary>
     /// Checks the cache for a specific key and retrieves the result if available.
     /// </summary>
-    function GetCachedResult(const CacheKey: string;
-      out JsonResponse: TJsonObject): Boolean;
-    procedure CacheResult(const CacheKey: string;
-      const JsonResponse: TJsonObject);
+//    function GetCachedResult(const CacheKey: string;
+//      out JsonResponse: TJsonObject): Boolean;
+//    procedure CacheResult(const CacheKey: string;
+//      const JsonResponse: TJsonObject);
     /// <summary>
     /// Performs an HTTP request with retries for failure handling.
     /// </summary>
@@ -157,7 +157,7 @@ begin
   inherited Create;
 
   // Basic dictionary cache to store JSON results
-  FCache := TDictionary<string, TJsonObject>.Create;
+//  FCache := TObjectDictionary<string, TJsonObject>.Create([doOwnsValues]);
   FCacheLock := TCriticalSection.Create;
 
   // Single THTTPClient for all requests
@@ -172,24 +172,22 @@ begin
 end;
 
 destructor TScryfallAPI.Destroy;
-var
-  CachedJson: TJsonObject;
 begin
   FCacheLock.Enter;
   try
-    for CachedJson in FCache.Values do
-      CachedJson.Free;
-    FCache.Free;
+//    FreeAndNil(FCache); // TObjectDictionary will automatically free its objects
   finally
     FCacheLock.Leave;
   end;
 
-  FCacheLock.Free;
-  FHttpClient.Free;
-  FAutocompleteCache.Free;
+  FreeAndNil(FCacheLock);
+  FreeAndNil(FHttpClient);
+  FreeAndNil(FAutocompleteCache);
 
   inherited Destroy;
 end;
+
+
 
 function TScryfallAPI.CreateQuery: TScryfallQuery;
 begin
@@ -322,7 +320,7 @@ var
   Card: TCardDetails;
 begin
 
-  AllCards := TObjectList<TCardDetails>.Create(False);
+  AllCards := TObjectList<TCardDetails>.Create(true);
   try
     Page := 1;
     repeat
@@ -437,6 +435,7 @@ begin
 
     Result := CatalogDict;
   except
+    CatalogDict.Clear;
     CatalogDict.Free;
     raise;
   end;
@@ -747,9 +746,10 @@ begin
 end;
 
 function TScryfallAPI.ExecuteRequest(const Endpoint: string;
-const Payload: TJsonObject): TJsonObject;
+  const Payload: TJsonObject): TJsonObject;
 var
   URL, ResponseStr: string;
+  JsonObj: TJsonObject;
 begin
   if not IsInternetAvailable then
     raise EScryfallAPIError.Create('No internet connection available.');
@@ -760,16 +760,23 @@ begin
   ResponseStr := MakeRequestWithRetries(URL, Payload);
   Result := nil;
 
+  JsonObj := TJsonObject.Parse(ResponseStr) as TJsonObject;
   try
-    Result := TJsonObject.Parse(ResponseStr) as TJsonObject;
-  except
-    on E: Exception do
-    begin
-      FreeAndNil(Result); // cleanup
-      raise EScryfallAPIError.CreateFmt('Error parsing JSON: %s', [E.Message]);
+    try
+      Result := JsonObj.Clone as TJsonObject;
+    except
+      on E: Exception do
+      begin
+        if Assigned(Result) then
+          FreeAndNil(Result);
+        raise EScryfallAPIError.CreateFmt('Error parsing JSON: %s', [E.Message]);
+      end;
     end;
+  finally
+    JsonObj.Free; // Always free JsonObj
   end;
 end;
+
 
 /// //--- removed TParallel.For
 function TScryfallAPI.ParseSearchResult(const JsonResponse: TJsonObject)
@@ -862,20 +869,20 @@ function TScryfallAPI.InternalSearchCards(const Query, SetCode, Rarity,
   Colors: string; Fuzzy, Unique: Boolean; Page: Integer): TSearchResult;
 var
   CacheKey, SearchUrl: string;
-  CachedResponse, JsonResponse: TJsonObject;
+   JsonResponse: TJsonObject;   //CachedResponse
 begin
   // Build a unique key for this search
   CacheKey := Format('%s:%s:%s:%s:%d:%d', [Query, SetCode, Rarity, Colors, Page,
     Ord(Unique)]);
 
   // Check local memory cache
-  TMonitor.Enter(FCache);
-  try
-    if FCache.TryGetValue(CacheKey, CachedResponse) then
-      Exit(ParseSearchResult(CachedResponse));
-  finally
-    TMonitor.Exit(FCache);
-  end;
+//  TMonitor.Enter(FCache);
+//  try
+//    if FCache.TryGetValue(CacheKey, CachedResponse) then
+//      Exit(ParseSearchResult(CachedResponse));
+//  finally
+//    TMonitor.Exit(FCache);
+//  end;
 
   // Construct the actual search URL
   SearchUrl := TWrapperHelper.ConstructSearchUrl(Query, SetCode, Rarity, Colors,
@@ -887,12 +894,12 @@ begin
     Result := ParseSearchResult(JsonResponse);
 
     // Store in cache
-    TMonitor.Enter(FCache);
-    try
-      FCache.Add(CacheKey, JsonResponse.Clone as TJsonObject);
-    finally
-      TMonitor.Exit(FCache);
-    end;
+//    TMonitor.Enter(FCache);
+//    try
+//      FCache.Add(CacheKey, JsonResponse.Clone as TJsonObject);
+//    finally
+//      TMonitor.Exit(FCache);
+//    end;
   finally
     JsonResponse.Free;
     LogStuff('InternalSearchCards -> ' + SearchUrl);
@@ -908,11 +915,11 @@ begin
   CacheKey := Query.ToCacheKey;
 
   // Check cache
-  if GetCachedResult(CacheKey, JsonResponse) then
-  begin
-    LogStuff('Cache hit for query: ' + Query.BuildQuery);
-    Exit(ParseSearchResult(JsonResponse));
-  end;
+//  if GetCachedResult(CacheKey, JsonResponse) then
+//  begin
+//    LogStuff('Cache hit for query: ' + Query.BuildQuery);
+//    Exit(ParseSearchResult(JsonResponse));
+//  end;
 
   // Build URL
   if BaseUrl.EndsWith('/') then
@@ -925,43 +932,36 @@ begin
   JsonResponse := ExecuteRequest(URL);
   try
     Result := ParseSearchResult(JsonResponse);
-    CacheResult(CacheKey, JsonResponse.Clone as TJsonObject);
+  //  CacheResult(CacheKey, JsonResponse.Clone as TJsonObject);
   finally
     JsonResponse.Free;
   end;
 end;
 
-function TScryfallAPI.GetCachedResult(const CacheKey: string;
-out JsonResponse: TJsonObject): Boolean;
-begin
-  FCacheLock.Enter;
-  try
-    Result := FCache.TryGetValue(CacheKey, JsonResponse);
-  finally
-    FCacheLock.Leave;
-  end;
-end;
+//function TScryfallAPI.GetCachedResult(const CacheKey: string; out JsonResponse: TJsonObject): Boolean;
+//begin
+//  FCacheLock.Enter;
+//  try
+//    Result := FCache.TryGetValue(CacheKey, JsonResponse);
+//  finally
+//    FCacheLock.Leave;
+//  end;
+//end;
 
-procedure TScryfallAPI.CacheResult(const CacheKey: string;
-const JsonResponse: TJsonObject);
-var
-  OldJson: TJsonObject;
-begin
-  FCacheLock.Enter;
-  try
-    // If replacing an existing cache entry, free the old one
-    if FCache.TryGetValue(CacheKey, OldJson) then
-    begin
-      OldJson.Free;
-      FCache.Remove(CacheKey);
-    end;
 
-    // Add new entry
-    FCache.AddOrSetValue(CacheKey, JsonResponse.Clone as TJsonObject);
-  finally
-    FCacheLock.Leave;
-  end;
-end;
+//procedure TScryfallAPI.CacheResult(const CacheKey: string; const JsonResponse: TJsonObject);
+//begin
+//  FCacheLock.Enter;
+//  try
+//    if FCache.ContainsKey(CacheKey) then
+//      FCache.Remove(CacheKey); // Removes and frees the old object automatically
+//
+//    FCache.Add(CacheKey, JsonResponse.Clone as TJsonObject); // Cloned object will be owned by FCache
+//  finally
+//    FCacheLock.Leave;
+//  end;
+//end;
+
 
 function TScryfallAPI.ParseImageUris(const JsonObj: TJsonObject): TImageUris;
 begin

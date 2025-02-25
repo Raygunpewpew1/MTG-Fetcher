@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
 
   APIConstants, ScryfallFilterType, Logger, System.NetEncoding,
-  System.Math, System.SyncObjs, System.StrUtils,CardMetaData;
+  System.Math, System.SyncObjs, System.StrUtils,CardMetaData,Generics.Defaults;
 
 type
   TScryfallQuery = class(TInterfacedObject)
@@ -146,7 +146,7 @@ implementation
 constructor TScryfallQuery.Create;
 begin
   inherited Create;
-  FFilters := TList<TScryfallFilter>.Create;
+  FFilters := TList<TScryfallFilter>.Create(TComparer<TScryfallFilter>.Default);
   FOptions.IncludeExtras := False;
   FOptions.UniqueMode := 'cards';
   FOptions.Sort := '';
@@ -157,12 +157,11 @@ end;
 
 destructor TScryfallQuery.Destroy;
 begin
-  LogStuff(Format('TScryfallQuery destroyed. Address: %p',
-    [Pointer(Self)]), DEBUG);
-  FFilters.Free;
-  FFilters := nil;
+  if Assigned(FFilters) then
+    FFilters.Free;
   inherited;
 end;
+
 
 function GetSortField(const FieldName: string; out Field: TSortField): Boolean;
 var
@@ -226,12 +225,14 @@ end;
 
 procedure TScryfallQuery.SetFilters(const Value: TList<TScryfallFilter>);
 begin
-  if FFilters <> Value then
+  if Assigned(FFilters) then
   begin
-    FFilters.Free;
-    FFilters := Value;
+    FFilters.Clear; // Clear current filters
+    FFilters.AddRange(Value); // Copy records from Value
   end;
 end;
+
+
 
 
 function TScryfallQuery.AreFiltersValid: Boolean;
@@ -251,32 +252,25 @@ begin
   Result := True;
 end;
 
+
 function TScryfallQuery.Clone: TScryfallQuery;
 begin
   Result := TScryfallQuery.Create;
   try
-    // Initialize the filters list in the clone
     if Assigned(FFilters) then
     begin
-      Result.FFilters := TList<TScryfallFilter>.Create;
-      for var Filter in FFilters do
-        Result.FFilters.Add(Filter.Clone); // Ensure deep copy of filters
+      Result.FFilters.Clear; // Clear any existing filters
+      Result.FFilters.AddRange(FFilters); // Use AddRange for efficiency
     end;
-
-    // Copy all options to the cloned query
-    Result.FOptions := FOptions;
-
-    // LogStuff(Format
-    // ('Clone - After Cloning - Query State: Options: IncludeExtras: %s, UniqueMode: %s, Sort: %s, Direction: %s, Page: %d, Filters Count: %d',
-    // [BoolToStr(Result.FOptions.IncludeExtras, True),
-    // Result.FOptions.UniqueMode, Result.FOptions.Sort,
-    // Result.FOptions.Direction, Result.FOptions.Page,
-    // IfThen(Assigned(Result.FFilters), Result.FFilters.Count, 0)]), DEBUG);
+    Result.FOptions := FOptions; // Simple assignment for a record
   except
     Result.Free;
     raise;
   end;
 end;
+
+
+
 
 function TScryfallQuery.Page(const PageNum: Integer): TScryfallQuery;
 begin

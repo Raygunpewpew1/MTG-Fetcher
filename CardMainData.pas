@@ -334,7 +334,7 @@ end;
 { TCardDetails }
 constructor TCardDetails.Create;
 begin
-  inherited;
+
   if not Assigned(FColorIdentity) then
     FColorIdentity := TList<string>.Create;
   FColorIdentity.Capacity := 3;
@@ -368,46 +368,40 @@ begin
     FRelatedURIs := TRelatedURIs.Create;
   if not Assigned(FPurchaseURIs) then
     FPurchaseURIs := TPurchaseURIs.Create;
+    inherited;
 end;
 
 
 destructor TCardDetails.Destroy;
 begin
-  FreeAndNil(FColorIdentity);
-  FreeAndNil(FKeywords);
-  FreeAndNil(FGames);
-  FreeAndNil(FAllParts);
-  FreeAndNil(FCardFaces);
-  FreeAndNil(FMeldDetails);
-  FreeAndNil(FLegalities);
-  FreeAndNil(FPrices);
-  FreeAndNil(FImageUris);
-  FreeAndNil(FRelatedURIs);
-  FreeAndNil(FPurchaseURIs);
+  FColorIdentity.Free;
+  FKeywords.Free;
+  FGames.Free;
+  FAllParts.Free;
+  FCardFaces.Free;
+  FMeldDetails.Free;
+  FLegalities.Free;
+  FPrices.Free;
+  FImageUris.Free;
+  FRelatedURIs.Free;
+  FPurchaseURIs.Free;
 
-  inherited Destroy;
+  inherited;
 end;
+
 
 
 
 procedure TCardDetails.Assign(Source: TCardDetails);
 var
-  i: Integer;
   NewPart: TCardPart;
   NewFace: TCardFace;
 begin
-  if Self = Source then
-    Exit;
+  if Self = Source then Exit;
 
-   // Free old objects
-  FreeAndNil(FMeldDetails);
-  FreeAndNil(FLegalities);
-  FreeAndNil(FPrices);
-  FreeAndNil(FImageUris);
-  FreeAndNil(FRelatedURIs);
-  FreeAndNil(FPurchaseURIs);
+  Clear;
 
-  // Copy primitive fields
+  // Primitive fields
   SFID := Source.SFID;
   OracleID := Source.OracleID;
   CardName := Source.CardName;
@@ -447,88 +441,45 @@ begin
   StorySpotlight := Source.StorySpotlight;
   ScryfallURI := Source.ScryfallURI;
   URI := Source.URI;
-//  ScryfallCardBackID := Source.ScryfallCardBackID;
-//  ScryfallID := Source.ScryfallID;
-//  ScryfallIllustrationID := Source.ScryfallIllustrationID;
-//  ScryfallOracleID := Source.ScryfallOracleID;
   IsMeld := Source.IsMeld;
 
-  // Deep copy TList<string>
-  ColorIdentity.Clear;
-  for var s in Source.ColorIdentity do
-    ColorIdentity.Add(s);
+  // Lists
+  FColorIdentity.AddRange(Source.FColorIdentity);
+  FKeywords.AddRange(Source.FKeywords);
+  FGames.AddRange(Source.FGames);
 
-  Keywords.Clear;
-  for var s in Source.Keywords do
-    Keywords.Add(s);
-
-  Games.Clear;
-  for var s in Source.Games do
-    Games.Add(s);
-
-  // Deep copy AllParts
-  AllParts.Clear;
-  for i := 0 to Source.AllParts.Count - 1 do
+  // TObjectLists
+  for var Part in Source.AllParts do
   begin
     NewPart := TCardPart.Create;
-    NewPart.Assign(Source.AllParts[i]);
-    AllParts.Add(NewPart);
+    NewPart.Assign(Part);
+    FAllParts.Add(NewPart);
   end;
 
-  // Deep copy CardFaces
-  CardFaces.Clear;
-  for i := 0 to Source.CardFaces.Count - 1 do
+  for var Face in Source.CardFaces do
   begin
     NewFace := TCardFace.Create;
-    NewFace.Assign(Source.CardFaces[i]);
-    CardFaces.Add(NewFace);
+    NewFace.Assign(Face);
+    FCardFaces.Add(NewFace);
   end;
 
-
-  // Create new instances only if Source has data
-  if Assigned(Source.MeldDetails) then
-  begin
-    FMeldDetails := TMeldDetails.Create;
-    FMeldDetails.Assign(Source.MeldDetails);
-  end;
-
-  if Assigned(Source.Legalities) then
-  begin
-    FLegalities := TCardLegalities.Create;
-    FLegalities.Assign(Source.Legalities);
-  end;
-
-  if Assigned(Source.Prices) then
-  begin
-    FPrices := TCardPrices.Create;
-    FPrices.Assign(Source.Prices);
-  end;
-
-  if Assigned(Source.ImageUris) then
-  begin
-    FImageUris := TImageUris.Create;
-    FImageUris.Assign(Source.ImageUris);
-  end;
-
-  if Assigned(Source.RelatedURIs) then
-  begin
-    FRelatedURIs := TRelatedURIs.Create;
-    FRelatedURIs.Assign(Source.RelatedURIs);
-  end;
-
-  if Assigned(Source.PurchaseURIs) then
-  begin
-    FPurchaseURIs := TPurchaseURIs.Create;
-    FPurchaseURIs.Assign(Source.PurchaseURIs);
-  end;
-
+  // Deep Copy Objects
+  if Assigned(Source.FMeldDetails) then FMeldDetails.Assign(Source.FMeldDetails);
+  if Assigned(Source.FLegalities) then FLegalities.Assign(Source.FLegalities);
+  if Assigned(Source.FPrices) then FPrices.Assign(Source.FPrices);
+  if Assigned(Source.FImageUris) then FImageUris.Assign(Source.FImageUris);
+  if Assigned(Source.FRelatedURIs) then FRelatedURIs.Assign(Source.FRelatedURIs);
+  if Assigned(Source.FPurchaseURIs) then FPurchaseURIs.Assign(Source.FPurchaseURIs);
 end;
+
+
 
 constructor TCardDetails.CreateFromCard(Source: TCardDetails);
 begin
   Create;
   Assign(Source);
 end;
+
 
 procedure TCardDetails.Clear;
 begin
@@ -573,21 +524,32 @@ begin
   FScryfallURI := '';
   FURI := '';
 
-  // **Clear existing lists instead of recreating them**
+  // Clear lists and free memory
   FColorIdentity.Clear;
-  FKeywords.Clear;
-  FAllParts.Clear;
-  FGames.Clear;
-  FCardFaces.Clear;
+  FColorIdentity.Capacity := 0;
 
-  // **Free objects**
-  FreeAndNil(FMeldDetails);
-  FreeAndNil(FLegalities);
-  FreeAndNil(FPrices);
-  FreeAndNil(FImageUris);
-  FreeAndNil(FRelatedURIs);
-  FreeAndNil(FPurchaseURIs);
+  FKeywords.Clear;
+  FKeywords.Capacity := 0;
+
+  FAllParts.Clear;
+  FAllParts.Capacity := 0;
+
+  FGames.Clear;
+  FGames.Capacity := 0;
+
+  FCardFaces.Clear;
+  FCardFaces.Capacity := 0;
+
+  // Clear associated objects if assigned
+  if Assigned(FMeldDetails) then FMeldDetails.Clear;
+  if Assigned(FLegalities) then FLegalities.Clear;
+  if Assigned(FPrices) then FPrices.Clear;
+  if Assigned(FImageUris) then FImageUris.Clear;
+  if Assigned(FRelatedURIs) then FRelatedURIs.Clear;
+  if Assigned(FPurchaseURIs) then FPurchaseURIs.Clear;
 end;
+
+
 
 
 end.

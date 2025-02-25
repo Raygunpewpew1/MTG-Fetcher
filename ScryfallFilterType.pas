@@ -245,8 +245,9 @@ end;
 function TScryfallFilter.Clone: TScryfallFilter;
 begin
   Result.FilterType := FilterType;
-  Result.Values := Copy(Values); // Creates a new array copy
+  Result.Values := Copy(Values, 0, Length(Values)); // Deep copy the array
 end;
+
 
 
 function TScryfallQueryOptions.Clone: TScryfallQueryOptions;

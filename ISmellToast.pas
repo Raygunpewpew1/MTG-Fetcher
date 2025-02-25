@@ -4,7 +4,8 @@ interface
 
 uses
   FMX.Types, FMX.Controls, FMX.Layouts, FMX.Objects, FMX.Ani, FMX.Skia,
-  System.UITypes, FMX.Forms, System.Types, System.Skia, System.Classes, System.SysUtils, System.Math;
+  System.UITypes, FMX.Forms, System.Types, System.Skia, System.Classes,
+  System.SysUtils, System.Math, System.Generics.Collections, System.SyncObjs;
 
 procedure ShowSkiaToast(const AMessage: string; AOwner: TForm;
   APosition: Single = 0.9; ADuration: Integer = 2000);
@@ -12,94 +13,204 @@ procedure ShowSkiaToast(const AMessage: string; AOwner: TForm;
 implementation
 
 type
-  TToastHelper = class
-    class procedure PaintToast(Sender: TObject; const Canvas: ISkCanvas; const Dest: TRectF; const Opacity: Single);
-    class procedure HideToast(Sender: TObject);
-    class procedure OnFadeOutFinish(Sender: TObject); // handle animation finish
+  TToastItem = record
+    Message: string;
+    Duration: Integer;
+    Owner: TForm;
+    Position: Single;
   end;
 
+  TToastHelper = class
+  private
+    class var FToastQueue: TQueue<TToastItem>;
+    class var FIsShowing: Boolean;
+    class var FLock: TCriticalSection;
 
+    class procedure ShowNextToast;
+  public
+    class procedure Initialize;
+    class procedure Finalize;
+    class procedure PaintToast(Sender: TObject; const Canvas: ISkCanvas; const Dest: TRectF; const Opacity: Single);
+    class procedure HideToast(Sender: TObject);
+    class procedure OnFadeOutFinish(Sender: TObject);
+  end;
 
-{ Paint the toast message using Skia }
-class procedure TToastHelper.PaintToast(Sender: TObject; const Canvas: ISkCanvas; const Dest: TRectF; const Opacity: Single);
+{ TToastHelper }
+
+class procedure TToastHelper.Initialize;
+begin
+  FToastQueue := TQueue<TToastItem>.Create;
+  FLock := TCriticalSection.Create;
+  FIsShowing := False;
+end;
+
+class procedure TToastHelper.Finalize;
+begin
+  FLock.Free;
+  FToastQueue.Free;
+end;
+
+class procedure TToastHelper.ShowNextToast;
 const
-  Padding = 10;       // Padding inside the rectangle
-  BaseFontSize = 15;  // Starting font size before scaling
-
+  PADDING = 20;
 var
+  Layout: TLayout;
+  ToastBox: TSkPaintBox;
+  Animation: TFloatAnimation;
+  HideTimer: TTimer;
+  MsgHolder: TStringList;
   Paint: ISkPaint;
+  Font: ISkFont;
+  TextBounds: TRectF;
+  TextWidth: Single;
+  ToastItem: TToastItem;
+begin
+  FLock.Enter;
+  try
+    if FIsShowing or (FToastQueue.Count = 0) then
+      Exit;
+
+    FIsShowing := True;
+    ToastItem := FToastQueue.Dequeue;
+  finally
+    FLock.Leave;
+  end;
+
+  // Ensure owner is still valid
+  if not Assigned(ToastItem.Owner) then
+  begin
+    FLock.Enter;
+    try
+      FIsShowing := False;
+    finally
+      FLock.Leave;
+    end;
+    Exit;
+  end;
+
+  // Create a container layout
+  Layout := TLayout.Create(ToastItem.Owner);
+  Layout.Parent := ToastItem.Owner;
+  Layout.Align := TAlignLayout.None;
+  Layout.Height := 40; // Fixed height
+
+  // Initialize Skia Paint and Font
+  Paint := TSkPaint.Create;
+  Paint.AntiAlias := True;
+
+  Font := TSkFont.Create(nil, 22);
+
+  // Measure text width dynamically
+  Font.MeasureText(ToastItem.Message, TextBounds, Paint);
+  TextWidth := TextBounds.Width + PADDING * 2;
+
+  // Set width dynamically (min 100px, max 300px)
+  Layout.Width := Min(300, Max(100, TextWidth));
+
+  // 🔹 Position at the **Lower Left Corner**
+  Layout.Position.X := 20; //Left side, 20px margin
+  Layout.Position.Y := ToastItem.Owner.Height * ToastItem.Position - Layout.Height;
+
+  Layout.BringToFront;
+
+  // Create the toast box
+  ToastBox := TSkPaintBox.Create(Layout);
+  ToastBox.Parent := Layout;
+  ToastBox.Align := TAlignLayout.Contents;
+  ToastBox.Opacity := 0; // Initially hidden
+  ToastBox.OnDraw := TToastHelper.PaintToast;
+
+  // Store message in TagObject
+  MsgHolder := TStringList.Create;
+  MsgHolder.Text := Trim(ToastItem.Message);
+  ToastBox.TagObject := MsgHolder;
+
+  // Create fade-in animation
+  Animation := TFloatAnimation.Create(ToastBox);
+  Animation.Parent := ToastBox;
+  Animation.PropertyName := 'Opacity';
+  Animation.StartValue := 0;
+  Animation.StopValue := 1;
+  Animation.Duration := 0.5; // 0.5 seconds fade-in
+  Animation.Start;
+
+  // Timer to keep toast visible before fade-out
+  HideTimer := TTimer.Create(ToastItem.Owner);
+  HideTimer.Interval := ToastItem.Duration; // Custom duration
+  HideTimer.OnTimer := TToastHelper.HideToast;
+  HideTimer.TagObject := ToastBox; // Store reference to toast for cleanup
+  HideTimer.Enabled := True;
+end;
+
+class procedure TToastHelper.PaintToast(Sender: TObject; const Canvas: ISkCanvas;
+  const Dest: TRectF; const Opacity: Single);
+const
+  Padding = 12;       // Padding inside the rectangle
+  BaseFontSize = 16;  // Starting font size before scaling
+  CornerRadius = 16;  // Rounded corners
+var
+  Paint, ShadowPaint: ISkPaint;
   Font: ISkFont;
   AMessage: string;
   ToastBox: TSkPaintBox;
   TextBlob: ISkTextBlob;
   TextBounds: TRectF;
-  BackgroundColor, TextColor: TAlphaColor;
   ScaleFactor: Single;
 begin
   if not (Sender is TSkPaintBox) then Exit;
 
   ToastBox := TSkPaintBox(Sender);
 
-  // Set background and text colors
-  BackgroundColor := TAlphaColors.Black;
-  TextColor := TAlphaColors.White;
-
-  // Create paint for the background
-  Paint := TSkPaint.Create;
-  Paint.Color := BackgroundColor;
-  Paint.AlphaF := 0.85; // Slight transparency
-  Paint.AntiAlias := True;
-
-  // Draw the rounded background
-  Canvas.DrawRoundRect(Dest, 20, 20, Paint);
-
-  // Create and configure the font
-  Font := TSkFont.Create(nil, 15); // Set font size
-  Font.Edging := TSkFontEdging.Antialias;
-
-
-  // Set the text color
-  Paint.Color := TextColor;
-
-  // Retrieve message from TagObject
-   if Assigned(ToastBox.TagObject) and (ToastBox.TagObject is TStringList) then
+  // Retrieve Message
+  if Assigned(ToastBox.TagObject) and (ToastBox.TagObject is TStringList) then
     AMessage := Trim(TStringList(ToastBox.TagObject).Text)
-   else
+  else
     AMessage := 'Toast Message';
 
+  // === 🌙 Shadow Effect ===
+  ShadowPaint := TSkPaint.Create;
+  ShadowPaint.Color := $77000000; // Dark shadow with transparency
+  ShadowPaint.MaskFilter := TSkMaskFilter.MakeBlur(TSkBlurStyle.Normal, 8);
+  Canvas.DrawRoundRect(
+    TRectF.Create(Dest.Left + 2, Dest.Top + 4, Dest.Right, Dest.Bottom),
+    CornerRadius, CornerRadius, ShadowPaint
+  );
 
-  // Measure text using ISkFont.MeasureText
+
+  Paint := TSkPaint.Create;
+  Paint.Color := TAlphaColors.Dodgerblue; // Solid background
+  Paint.AntiAlias := True;
+
+  Canvas.DrawRoundRect(
+    TRectF.Create(Dest.Left, Dest.Top, Dest.Right, Dest.Bottom),
+    CornerRadius, CornerRadius, Paint
+  );
+
+  // Text Configuration
+  Font := TSkFont.Create(nil, BaseFontSize);
+  Font.Edging := TSkFontEdging.Antialias;
+  Font.Size := BaseFontSize;
+
+  Paint := TSkPaint.Create;
+  Paint.Color := TAlphaColors.White;
+  Paint.AntiAlias := True;
+
+  // Measure and scale text
   Font.MeasureText(AMessage, TextBounds, Paint);
-
-    if (TextBounds.Width > 0) and (TextBounds.Height > 0) then
-    ScaleFactor := Min((Dest.Width - 2 * Padding) / TextBounds.Width,
-                       (Dest.Height - 2 * Padding) / TextBounds.Height)
-  else
-    ScaleFactor := 1;
-
-
-   // Adjust the font size using the scale factor
+  ScaleFactor := Min((Dest.Width - 2 * Padding) / TextBounds.Width,
+                     (Dest.Height - 2 * Padding) / TextBounds.Height);
   Font.Size := BaseFontSize * ScaleFactor;
-
-  // Re-measure the text with the scaled font
   Font.MeasureText(AMessage, TextBounds, Paint);
 
-  // Create text blob
+  // Draw text centered in the toast
   TextBlob := TSkTextBlob.MakeFromText(AMessage, Font);
   if Assigned(TextBlob) then
-  begin
-    // Draw the text centered in the toast
-    Canvas.DrawTextBlob(
-      TextBlob,
-      Dest.CenterPoint.X - (TextBounds.Width / 2), // Center horizontally
-      Dest.CenterPoint.Y + (TextBounds.Height / 4), // Center vertically
-      Paint
-    );
-  end;
+    Canvas.DrawTextBlob(TextBlob,
+      Dest.CenterPoint.X - TextBounds.Width / 2,
+      Dest.CenterPoint.Y + TextBounds.Height / 4, Paint);
 end;
 
 
-{ Hides the toast with fade-out animation }
 class procedure TToastHelper.HideToast(Sender: TObject);
 var
   ToastBox: TSkPaintBox;
@@ -110,7 +221,6 @@ begin
   // Retrieve the TSkPaintBox stored in the Timer's TagObject
   ToastBox := TSkPaintBox(TTimer(Sender).TagObject);
   if not Assigned(ToastBox) then Exit;
-
 
   // Stop and free the timer
   TTimer(Sender).Free;
@@ -144,83 +254,49 @@ begin
     ToastBox.TagObject.Free;
     ToastBox.TagObject := nil;
   end;
+
   // Remove layout and toast
   Layout.Free;
+
+  // Show next toast if available
+  FLock.Enter;
+  try
+    FIsShowing := False;
+    if FToastQueue.Count > 0 then
+      ShowNextToast;
+  finally
+    FLock.Leave;
+  end;
 end;
 
-
-
-{ Show the toast message at a custom position }
 procedure ShowSkiaToast(const AMessage: string; AOwner: TForm;
   APosition: Single = 0.9; ADuration: Integer = 2000);
-const
-  PADDING = 20;
 var
-  Layout: TLayout;
-  ToastBox: TSkPaintBox;
-  Animation: TFloatAnimation;
-  HideTimer: TTimer;
-  MsgHolder: TStringList;
-  Paint: ISkPaint;
-  Font: ISkFont;
-  TextBounds: TRectF;
-  TextWidth: Single;
+  ToastItem: TToastItem;
 begin
-  // Create a container layout
-  Layout := TLayout.Create(AOwner);
-  Layout.Parent := AOwner;
-  Layout.Align := TAlignLayout.None;
-  Layout.Height := 40; // Fixed height
+  if not Assigned(AOwner) then Exit;
 
-  // Initialize Skia Paint and Font
-  Paint := TSkPaint.Create;
-  Paint.AntiAlias := True;
+  TToastHelper.FLock.Enter;
+  try
+    ToastItem.Message := AMessage;
+    ToastItem.Duration := ADuration;
+    ToastItem.Owner := AOwner;
+    ToastItem.Position := APosition;
 
-  Font := TSkFont.Create(nil, 22);
+    TToastHelper.FToastQueue.Enqueue(ToastItem);
 
-  // Measure text width dynamically
-  Font.MeasureText(AMessage, TextBounds, Paint);
-  TextWidth := TextBounds.Width + PADDING * 2;
-
-  // Set width dynamically (min 100px, max 300px)
-  Layout.Width := Min(300, Max(100, TextWidth));
-
-  // 🔹 Position at the **Lower Left Corner**
-  Layout.Position.X := 20; // ✅ Left side, 20px margin from the left
-  Layout.Position.Y := AOwner.Height * APosition - Layout.Height; // ✅ Lower part
-
-  Layout.BringToFront;
-
-  // Create the toast box
-  ToastBox := TSkPaintBox.Create(Layout);
-  ToastBox.Parent := Layout;
-  ToastBox.Align := TAlignLayout.Contents;
-  ToastBox.Opacity := 0; // Initially hidden
-  ToastBox.OnDraw := TToastHelper.PaintToast;
-
-  // Store message in TagObject
-  MsgHolder := TStringList.Create;
-  MsgHolder.Text := Trim(AMessage);
-  ToastBox.TagObject := MsgHolder;
-
-  // Create fade-in animation
-  Animation := TFloatAnimation.Create(ToastBox);
-  Animation.Parent := ToastBox;
-  Animation.PropertyName := 'Opacity';
-  Animation.StartValue := 0;
-  Animation.StopValue := 1;
-  Animation.Duration := 0.5; // 0.5 seconds fade-in
-  Animation.Start;
-
-  // Timer to keep toast visible before fade-out
-  HideTimer := TTimer.Create(AOwner);
-  HideTimer.Interval := ADuration; // Custom duration
-  HideTimer.OnTimer := TToastHelper.HideToast;
-  HideTimer.TagObject := ToastBox; // Store reference to toast for cleanup
-  HideTimer.Enabled := True;
+    if not TToastHelper.FIsShowing then
+      TToastHelper.ShowNextToast;
+  finally
+    TToastHelper.FLock.Leave;
+  end;
 end;
 
+initialization
+  TToastHelper.Initialize;
 
+finalization
+  TToastHelper.Finalize;
 
 end.
 

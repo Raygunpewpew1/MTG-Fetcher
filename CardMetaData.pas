@@ -308,41 +308,28 @@ end;
 
 procedure TMeldDetails.Assign(Source: TMeldDetails);
 var
-  i: Integer;
   NewPart: TCardPart;
 begin
-  if not Assigned(Source) then Exit;
+  if not Assigned(Source) then
+    Exit;
 
-  // Ensure FMeldParts exists.
-  if not Assigned(FMeldParts) then
-    FMeldParts := TObjectList<TCardPart>.Create(True)
-  else
-    FMeldParts.Clear;
-
-  // Copy meld parts
-  if Assigned(Source.MeldParts) then
+  FMeldParts.Clear;
+  for var Part in Source.FMeldParts do
   begin
-    for i := 0 to Source.MeldParts.Count - 1 do
-    begin
-      NewPart := TCardPart.Create;
-      NewPart.Assign(Source.MeldParts[i]);
-      FMeldParts.Add(NewPart);
-    end;
+    NewPart := TCardPart.Create;
+    NewPart.Assign(Part);
+    FMeldParts.Add(NewPart);
   end;
 
-  // Copy MeldResult
-  if Assigned(Source.MeldResult) then
+  if Assigned(Source.FMeldResult) then
   begin
     if not Assigned(FMeldResult) then
       FMeldResult := TCardPart.Create;
-    FMeldResult.Assign(Source.MeldResult);
+    FMeldResult.Assign(Source.FMeldResult);
   end
   else
-  begin
     FreeAndNil(FMeldResult);
-  end;
 end;
-
 
 procedure TCardFace.Assign(Source: TCardFace);
 begin

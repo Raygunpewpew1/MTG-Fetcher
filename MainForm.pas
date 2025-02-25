@@ -100,6 +100,7 @@ begin
     if not RarityMap.TryGetValue(LowerCase(RarityStr), Result) then
       raise Exception.Create('Invalid rarity selected.');
   finally
+    RarityMap.Clear;
     RarityMap.Free;
   end;
 end;
@@ -143,6 +144,7 @@ begin
     ComboBoxMap.Add(CatalogKeywordAbilities, ComboBoxAbility);
     FCardDisplayManager.LoadAllCatalogs(ComboBoxMap);
   finally
+    ComboBoxMap.Clear;
     ComboBoxMap.Free;
   end;
 
@@ -173,9 +175,11 @@ begin
   end;
 
   try
+    ComboBoxSetCode.BeginUpdate;
     for var SetDetails in SetDetailsArray do
       ComboBoxSetCode.Items.Add(SetDetails.Code + ' - ' + SetDetails.Name);
   finally
+  ComboBoxSetCode.EndUpdate;
     FreeSetDetailsArray(SetDetailsArray);
   end;
 
@@ -228,6 +232,11 @@ end;
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
   try
+    FCardDisplayManager.ClearListViewItems;
+
+   if Assigned(FCardDisplayManager) then
+       FreeAndNil(FCardDisplayManager);
+
     if Assigned(ListViewCards) then
       ListViewCards.OnItemClick := nil;
   except
@@ -336,11 +345,9 @@ var
 begin
   if ComboBoxEditSearch.Text.Trim.IsEmpty then
     Exit;
-  // ShowSkiaToast('Starting Search',Self);
 
   Button1.Enabled := False;
   MultiViewFilters.HideMaster;
-
   LoadingLayout.Visible := True;
   AniIndicator1.Enabled := True;
 
@@ -355,24 +362,25 @@ begin
       SelectedSetCode := '';
 
     SelectedColors := FCardDisplayManager.GetSelectedColors;
-
     UniqueMode := System.StrUtils.IfThen(Switch1.IsChecked, 'prints', '');
 
-    Query.WithName(SelectedName).WithSet(SelectedSetCode)
-      .WithRarity(SelectedRarity).WithColors(SelectedColors).Unique(UniqueMode)
-      .OrderBy(FieldReleased).IncludeExtras(False);
-    // .WithKeyword(ComboBoxAbility.Text);
+    Query.WithName(SelectedName)
+         .WithSet(SelectedSetCode)
+         .WithRarity(SelectedRarity)
+         .WithColors(SelectedColors)
+         .Unique(UniqueMode)
+         .OrderBy(FieldReleased)
+         .IncludeExtras(False);
 
+    // ExecuteQuery clones Query, so it's safe to free
     FCardDisplayManager.ExecuteQuery(Query, OnSearchComplete);
 
-  except
-    LoadingLayout.Visible := False;
-    AniIndicator1.Enabled := False;
+  finally
     Query.Free;
-    raise;
   end;
 
 end;
+
 
 procedure TForm1.Button2Click(Sender: TObject);
 begin
