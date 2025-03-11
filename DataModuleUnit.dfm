@@ -3,6 +3,7 @@ object DataModule1: TDataModule1
   Width = 1000
   PixelsPerInch = 120
   object FDConnection1: TFDConnection
+    LoginPrompt = False
     Left = 856
     Top = 456
   end

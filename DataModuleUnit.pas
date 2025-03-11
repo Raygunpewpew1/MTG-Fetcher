@@ -98,7 +98,8 @@ begin
     LJSON.Free;
   end;
 
-  SQLString := '''    INSERT INTO CardDetails(OracleID, Data)VALUES(:OracleID, :Data)
+  SQLString := '''
+    INSERT INTO CardDetails(OracleID, Data)VALUES(:OracleID, :Data)
     ON CONFLICT(OracleID)
     DO UPDATE SET Data = excluded.Data;
     ''';
@@ -130,7 +131,8 @@ begin
   Result := nil;
 
   // Query database for the given OracleID
-  FDQuery1.SQL.Text := '''
+  FDQuery1.SQL.Text := '''
+
 
     SELECT Data FROM CardDetails WHERE OracleID = : OracleID;
 

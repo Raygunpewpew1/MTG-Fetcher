@@ -39,40 +39,56 @@ inherited Form1_Windows: TForm1_Windows
       Position.X = 79.000000000000000000
       Size.Width = 69.000000000000000000
     end
+    inherited LabelPageNumber: TLabel
+      Visible = False
+    end
   end
   inherited MultiViewFilters: TMultiView
-    Size.Width = 389.000000000000000000
+    Size.Width = 345.000000000000000000
     Size.Height = 576.000000000000000000
     StyleLookup = 'multiviewstyle'
     inherited LayoutFilters: TLayout
-      Size.Width = 389.000000000000000000
+      Size.Width = 345.000000000000000000
       Size.Height = 576.000000000000000000
-      inherited ComboBoxSetCode: TComboBox
-        Position.X = 56.000000000000000000
-        Position.Y = 98.000000000000000000
-        Size.Width = 265.000000000000000000
-      end
-      inherited ComboBoxRarity: TComboBox
-        Position.X = 56.000000000000000000
-        Position.Y = 48.000000000000000000
-        Size.Width = 265.000000000000000000
-      end
-      inherited ComboBoxAbility: TComboBox
-        Position.X = 56.000000000000000000
-        Position.Y = 8.000000000000000000
-        Size.Width = 265.000000000000000000
-      end
-      inherited Switch1: TSwitch
-        Position.X = 56.000000000000000000
-        Position.Y = 297.000000000000000000
-      end
-      inherited ListBoxColors: TListBox
-        Position.X = 56.000000000000000000
-        Position.Y = 138.000000000000000000
-        Size.Width = 264.000000000000000000
-        Size.Height = 151.000000000000000000
-        Viewport.Width = 260.000000000000000000
-        Viewport.Height = 147.000000000000000000
+      inherited grp1: TGroupBox
+        Size.Width = 345.000000000000000000
+        Size.Height = 576.000000000000000000
+        Text = 
+          'Search Options'#13#10'    '#13#10' Unique Search'#13#10' '#13#10'By Set'#13#10#13#10'By Rarity'#13#10#13#10 +
+          'By Color(s)'#13#10#13#10#13#10#13#10#13#10#13#10#13#10#13#10#13#10#13#10'Sorting'
+        inherited Switch1: TSwitch
+          Position.X = 108.000000000000000000
+          Position.Y = 30.000000000000000000
+        end
+        inherited ComboBoxAbility: TComboBox
+          Position.X = 89.000000000000000000
+          Position.Y = 324.000000000000000000
+          Size.Width = 224.000000000000000000
+        end
+        inherited ComboBoxRarity: TComboBox
+          Position.X = 89.000000000000000000
+          Position.Y = 90.000000000000000000
+          Size.Width = 224.000000000000000000
+        end
+        inherited ComboBoxSetCode: TComboBox
+          Position.X = 89.000000000000000000
+          Position.Y = 58.000000000000000000
+          Size.Width = 224.000000000000000000
+        end
+        inherited ListBoxColors: TListBox
+          Position.X = 89.000000000000000000
+          Position.Y = 130.000000000000000000
+          Size.Width = 224.000000000000000000
+          Size.Height = 146.000000000000000000
+          Viewport.Width = 220.000000000000000000
+          Viewport.Height = 142.000000000000000000
+        end
+        inherited ComboSortDir: TComboBox
+          Position.X = 89.000000000000000000
+          Position.Y = 284.000000000000000000
+          Size.Width = 224.000000000000000000
+          Size.Height = 32.000000000000000000
+        end
       end
     end
   end

@@ -500,7 +500,8 @@ begin
   var
   UpdatedCard := CardDetails;
   UpdatedCard.SetName := SetDetails.Name;
-  UpdatedCard.SetIconURI := RawSvg;
+  RawSvg := Trim(RawSvg);
+  UpdatedCard.SetIconURI := Trim(RawSvg);
 
   DisplayCardInBrowser(UpdatedCard, []);
 end;

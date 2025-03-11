@@ -7,27 +7,21 @@ uses
   System.Generics.Collections, FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics,
   FMX.Dialogs, FMX.Layouts, FMX.ExtCtrls, FMX.Ani, FMX.Edit, FMX.StdCtrls,
   FMX.WebBrowser, FMX.Skia, CardMainData, ScryfallData, System.TypInfo, Math,
-  FMX.Controls.Presentation, FMX.ListView.Types,
-  FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.ListView,
-  FMX.ListBox, MLogic, FMX.ComboEdit, CardDisplayManager, ScryfallQuery,
-  System.IOUtils, System.StrUtils, FMX.MultiView, FMX.Platform, CardMetaData,
-  DataModuleUnit, ISmellToast;
+  FMX.Controls.Presentation, FMX.ListView.Types, FMX.ListView.Appearances,
+  FMX.ListView.Adapters.Base, FMX.ListView, FMX.ListBox, MLogic, FMX.ComboEdit,
+  CardDisplayManager, ScryfallQuery, System.IOUtils, System.StrUtils,
+  FMX.MultiView, FMX.Platform, CardMetaData, DataModuleUnit, ISmellToast;
 
 type
   TForm1 = class(TForm)
     StyleBook1: TStyleBook;
     MultiViewFilters: TMultiView;
     LayoutFilters: TLayout;
-    ComboBoxSetCode: TComboBox;
-    ComboBoxRarity: TComboBox;
-    ComboBoxAbility: TComboBox;
     LayoutContent: TLayout;
     ListViewCards: TListView;
     WebBrowser1: TWebBrowser;
     LayoutActions: TLayout;
-    Switch1: TSwitch;
     Button2: TButton;
-    ListBoxColors: TListBox;
     LoadingLayout: TLayout;
     AniIndicator1: TAniIndicator;
     Label1: TLabel;
@@ -36,20 +30,24 @@ type
     ComboBoxEditSearch: TComboEdit;
     ButtonPrevPage: TButton;
     LabelPageNumber: TLabel;
+    grp1: TGroupBox;
+    Switch1: TSwitch;
+    ComboBoxAbility: TComboBox;
+    ComboBoxRarity: TComboBox;
+    ComboBoxSetCode: TComboBox;
+    ListBoxColors: TListBox;
+    ComboSortDir: TComboBox;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure ListViewCardsItemClick(const Sender: TObject;
-      const AItem: TListViewItem);
+    procedure ListViewCardsItemClick(const Sender: TObject; const AItem: TListViewItem);
     procedure WebBrowser1DidFinishLoad(ASender: TObject);
     procedure ButtonNextPageClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
 
-    procedure ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word;
-      var KeyChar: WideChar; Shift: TShiftState);
+    procedure ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
     procedure Button2Click(Sender: TObject);
-    procedure ListViewCardsButtonClick(const Sender: TObject;
-      const AItem: TListItem; const AObject: TListItemSimpleControl);
+    procedure ListViewCardsButtonClick(const Sender: TObject; const AItem: TListItem; const AObject: TListItemSimpleControl);
     procedure ButtonPrevPageClick(Sender: TObject);
 
   private
@@ -58,10 +56,9 @@ type
     BrIsLoaded: Boolean;
     AmOnline: Boolean;
     procedure OnSearchComplete(Success: Boolean; const ErrorMsg: string);
-    function GetSelectedRarity: TRarity;
+//    function GetSelectedRarity: TRarity;
 
   public
-
   end;
 
 var
@@ -79,37 +76,38 @@ var
   FScryfallAPI: TScryfallAPI;
   FCardDisplayManager: TCardDisplayManager;
 
-function TForm1.GetSelectedRarity: TRarity;
-var
-  RarityStr: string;
-  RarityMap: TDictionary<string, TRarity>;
-begin
-  RarityStr := Trim(ComboBoxRarity.Text);
-
-  if AnsiSameText(RarityStr, S_ALL_RARITIES) then
-    Exit(rAll);
-
-  RarityMap := TDictionary<string, TRarity>.Create;
-  try
-    RarityMap.Add(LowerCase(S_MYTHIC_RARE), rMythic);
-    RarityMap.Add(LowerCase(S_RARE), rRare);
-    RarityMap.Add(LowerCase(S_UNCOMMON), rUncommon);
-    RarityMap.Add(LowerCase(S_COMMON), rCommon);
-    RarityMap.Add(LowerCase(S_SPECIAL), rSpecial);
-
-    if not RarityMap.TryGetValue(LowerCase(RarityStr), Result) then
-      raise Exception.Create('Invalid rarity selected.');
-  finally
-    RarityMap.Clear;
-    RarityMap.Free;
-  end;
-end;
+//function TForm1.GetSelectedRarity: TRarity;
+//var
+//  RarityStr: string;
+//  RarityMap: TDictionary<string, TRarity>;
+//begin
+//  RarityStr := Trim(ComboBoxRarity.Text);
+//
+//  if AnsiSameText(RarityStr, S_ALL_RARITIES) then
+//    Exit(rAll);
+//
+//  RarityMap := TDictionary<string, TRarity>.Create;
+//  try
+//    RarityMap.Add(LowerCase(S_MYTHIC_RARE), rMythic);
+//    RarityMap.Add(LowerCase(S_RARE), rRare);
+//    RarityMap.Add(LowerCase(S_UNCOMMON), rUncommon);
+//    RarityMap.Add(LowerCase(S_COMMON), rCommon);
+//    RarityMap.Add(LowerCase(S_SPECIAL), rSpecial);
+//
+//    if not RarityMap.TryGetValue(LowerCase(RarityStr), Result) then
+//      raise Exception.Create('Invalid rarity selected.');
+//  finally
+//    RarityMap.Clear;
+//    RarityMap.Free;
+//  end;
+//end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 var
   SetDetailsArray: TArray<TSetDetails>;
   ComboBoxMap: TDictionary<string, TComboBox>;
   CacheFileName: string;
+  Field: TSortField;
 begin
   try
     AmOnline := FScryfallAPI.IsInternetAvailable;
@@ -134,6 +132,16 @@ begin
     end;
   end;
 
+//  Application.ProcessMessages;
+
+
+
+//  {$IFDEF ANDROID}
+//  LayoutContent.Width := Screen.Width;
+//  LayoutContent.Height := Screen.Height;
+//  LayoutContent.Align := TAlignLayout.Client;
+//  {$ENDIF}
+
   WebBrowserInitialized := False;
   FIsProgrammaticChange := False;
 
@@ -147,6 +155,18 @@ begin
     ComboBoxMap.Clear;
     ComboBoxMap.Free;
   end;
+
+  ComboSortDir.Items.BeginUpdate;
+  try
+    ComboSortDir.Items.Clear;
+    for Field := Low(TSortField) to High(TSortField) do
+      ComboSortDir.Items.Add(VALID_SORT_FIELDS[Field].ToUpper);
+  finally
+    ComboSortDir.ItemIndex := 0;
+    ComboSortDir.Items.EndUpdate;
+  end;
+
+  ComboSortDir.Items.EndUpdate;
 
   BrIsLoaded := False;
   ListViewCards.OnItemClick := ListViewCardsItemClick;
@@ -179,18 +199,19 @@ begin
     for var SetDetails in SetDetailsArray do
       ComboBoxSetCode.Items.Add(SetDetails.Code + ' - ' + SetDetails.Name);
   finally
-  ComboBoxSetCode.EndUpdate;
+    ComboBoxSetCode.EndUpdate;
     FreeSetDetailsArray(SetDetailsArray);
   end;
 
   ComboBoxSetCode.ItemIndex := 0;
   ComboBoxRarity.ItemIndex := 0;
 
+  CacheFileName := GetCacheFilePath('MTGSCards.db');
+
 //  ReportMemoryLeaksOnShutdown := True;
 
-  DataModule1.SetupDatabase('MTGSCards.db');
+  DataModule1.SetupDatabase(CacheFileName);
 end;
-
 
 procedure TForm1.OnSearchComplete(Success: Boolean; const ErrorMsg: string);
 var
@@ -199,6 +220,7 @@ begin
   // Hide loading UI
   LoadingLayout.Visible := False;
   AniIndicator1.Enabled := False;
+  WebBrowser1.Visible := True;
   Button1.Enabled := True;
 
   // Update pagination buttons
@@ -220,10 +242,9 @@ begin
 
     // Calculate total pages
     TotalPages := Ceil(FCardDisplayManager.TotalCards / 175);
-
+    LabelPageNumber.Visible := True;
     // Update page number display
-    LabelPageNumber.Text := Format('Page %d of %d',
-      [FCardDisplayManager.CurrentPage, TotalPages]);
+    LabelPageNumber.Text := Format('Page %d of %d', [FCardDisplayManager.CurrentPage, TotalPages]);
 
     ListViewCards.OnItemClick(ListViewCards, ListViewCards.Items[0]);
   end;
@@ -232,10 +253,11 @@ end;
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
   try
+
     FCardDisplayManager.ClearListViewItems;
 
-   if Assigned(FCardDisplayManager) then
-       FreeAndNil(FCardDisplayManager);
+    if Assigned(FCardDisplayManager) then
+      FreeAndNil(FCardDisplayManager);
 
     if Assigned(ListViewCards) then
       ListViewCards.OnItemClick := nil;
@@ -268,8 +290,7 @@ begin
         begin
           ListViewCards.Selected := ListViewCards.Items[0];
           // TagObject is a TCardDetails instance:
-          FCardDisplayManager.ShowCardDetails(TCardDetails(ListViewCards.Items
-            [0].TagObject));
+          FCardDisplayManager.ShowCardDetails(TCardDetails(ListViewCards.Items[0].TagObject));
         end;
       end
       else
@@ -281,8 +302,7 @@ begin
   // MultiViewFilters.ShowMaster;
 end;
 
-procedure TForm1.ListViewCardsButtonClick(const Sender: TObject;
-const AItem: TListItem; const AObject: TListItemSimpleControl);
+procedure TForm1.ListViewCardsButtonClick(const Sender: TObject; const AItem: TListItem; const AObject: TListItemSimpleControl);
 var
   // Rulings: TArray<TRuling>;
   CardDetails: TCardDetails;
@@ -300,8 +320,7 @@ begin
     ShowMessage('TagObject is not TCardDetails');
 end;
 
-procedure TForm1.ListViewCardsItemClick(const Sender: TObject;
-const AItem: TListViewItem);
+procedure TForm1.ListViewCardsItemClick(const Sender: TObject; const AItem: TListViewItem);
 var
   CardDetails: TCardDetails;
 begin
@@ -329,19 +348,16 @@ begin
   end;
 end;
 
-function DecodeURL(const EncodedURL: string): string;
-begin
-  Result := TNetEncoding.URL.Decode(EncodedURL);
-end;
-
 procedure TForm1.Button1Click(Sender: TObject);
 var
   Query: TScryfallQuery;
   SelectedRarity: TRarity;
+
   SelectedSetCode: string;
   SelectedColors: string;
   UniqueMode: string;
   SelectedName: string;
+
 begin
   if ComboBoxEditSearch.Text.Trim.IsEmpty then
     Exit;
@@ -350,8 +366,12 @@ begin
   MultiViewFilters.HideMaster;
   LoadingLayout.Visible := True;
   AniIndicator1.Enabled := True;
+  WebBrowser1.Visible := False;
+//  RareStr := SelectedRarity.ToString;
 
-  SelectedRarity := GetSelectedRarity;
+ // SelectedRarity := GetSelectedRarity;
+  SelectedRarity := TRarity.FromString(ComboBoxRarity.Text);
+ // SelectedRarity := TRarityHelper.FromString(ComboBoxRarity.Text);
   SelectedName := ComboBoxEditSearch.Text.Trim;
 
   Query := TScryfallQuery.Create;
@@ -364,13 +384,7 @@ begin
     SelectedColors := FCardDisplayManager.GetSelectedColors;
     UniqueMode := System.StrUtils.IfThen(Switch1.IsChecked, 'prints', '');
 
-    Query.WithName(SelectedName)
-         .WithSet(SelectedSetCode)
-         .WithRarity(SelectedRarity)
-         .WithColors(SelectedColors)
-         .Unique(UniqueMode)
-         .OrderBy(FieldReleased)
-         .IncludeExtras(False);
+    Query.WithName(SelectedName).WithSet(SelectedSetCode).WithRarity(SelectedRarity).WithColors(SelectedColors).Unique(UniqueMode).OrderBy(ComboSortDir.Selected.Text).IncludeExtras(False);
 
     // ExecuteQuery clones Query, so it's safe to free
     FCardDisplayManager.ExecuteQuery(Query, OnSearchComplete);
@@ -380,7 +394,6 @@ begin
   end;
 
 end;
-
 
 procedure TForm1.Button2Click(Sender: TObject);
 begin
@@ -394,6 +407,7 @@ begin
 
   LoadingLayout.Visible := True;
   AniIndicator1.Enabled := True;
+  WebBrowser1.Visible := False;
 
   ButtonNextPage.Enabled := False;
   // MultiViewFilters.HideMaster;
@@ -407,6 +421,7 @@ begin
 
   if FCardDisplayManager.CurrentPage <= 1 then
     Exit;
+    WebBrowser1.Visible := False;
 
   LoadingLayout.Visible := True;
   AniIndicator1.Enabled := True;
@@ -416,8 +431,7 @@ begin
   FCardDisplayManager.LoadPreviousPage(OnSearchComplete);
 end;
 
-procedure TForm1.ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word;
-var KeyChar: WideChar; Shift: TShiftState);
+procedure TForm1.ComboBoxEditSearchKeyDown(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
 begin
   if FIsProgrammaticChange then
     Exit;
@@ -441,11 +455,11 @@ begin
 end;
 
 initialization
+  FScryfallAPI := TScryfallAPI.Create;
 
-FScryfallAPI := TScryfallAPI.Create;
 
 finalization
-
-FScryfallAPI.Free;
+  FScryfallAPI.Free;
 
 end.
+
